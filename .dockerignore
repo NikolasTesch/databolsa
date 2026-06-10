@@ -1,0 +1,29 @@
+# Dependências
+**/node_modules/
+
+# Builds
+apps/api/dist/
+apps/web/.next/
+apps/mobile/.expo/
+
+# Variáveis de ambiente (injetadas em runtime)
+.env
+.env.local
+.env.*.local
+
+# Git e editor
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Docs e testes (não vão para a imagem)
+docs/
+**/*.md
+**/coverage/
+**/*.test.ts
+**/*.spec.ts
+
+# Misc
+*.log
+.DS_Store

@@ -1,0 +1,20 @@
+# Overrides de desenvolvimento: monta o código-fonte nos containers para hot-reload.
+# Aplicado automaticamente junto com docker-compose.yml em `docker compose up`.
+# Em produção, NÃO usar este arquivo.
+services:
+  api:
+    build:
+      target: dev
+    volumes:
+      - ./apps/api/src:/app/apps/api/src:ro
+      - ./packages/core/src:/app/packages/core/src:ro
+      - ./packages/types/src:/app/packages/types/src:ro
+    command: pnpm --filter api run start:dev
+
+  web:
+    build:
+      target: dev
+    volumes:
+      - ./apps/web/src:/app/apps/web/src:ro
+      - ./apps/web/public:/app/apps/web/public:ro
+    command: pnpm --filter web run dev

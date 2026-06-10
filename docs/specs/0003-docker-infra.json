@@ -1,0 +1,117 @@
+{
+  "$schema": "./spec.schema.json",
+  "id": "SPEC-0003",
+  "title": "Infraestrutura Docker: ambiente de desenvolvimento local e imagens de produção",
+  "status": "verified",
+  "type": "infra",
+  "created": "2026-06-10",
+  "updated": "2026-06-10",
+  "authors": ["nikolasdtesch@gmail.com"],
+  "summary": "Adicionar configuração Docker ao monorepo: docker-compose.yml para dev local (api + web + postgres), Dockerfiles multi-stage para apps/api e apps/web, e documentação de uso. O mobile (Expo) não roda em container.",
+  "motivation": "Garantir ambiente reproduzível em qualquer máquina desde o início, independente de versão local de Node/Postgres. Também prepara as imagens de produção (NestJS e Next.js) para deploy em Railway/Render/Fly.io conforme SPEC §10.",
+  "related": {
+    "prd": [],
+    "spec_doc": ["SPEC §1", "SPEC §10"],
+    "business_rules": [],
+    "adrs": ["ADR-0001"],
+    "depends_on": ["SPEC-0002"]
+  },
+  "scope": {
+    "in_scope": [
+      "docker-compose.yml na raiz para dev (serviços: postgres, api, web).",
+      "docker-compose.override.yml com hot-reload para dev.",
+      "Dockerfile multi-stage para apps/api (NestJS).",
+      "Dockerfile multi-stage para apps/web (Next.js).",
+      ".dockerignore para api, web e raiz.",
+      "Seção Docker no docs/SPEC.md e instruções de uso."
+    ],
+    "out_of_scope": [
+      "CI/CD pipeline (GitHub Actions) — futuro.",
+      "Kubernetes / Helm charts.",
+      "Containerização do mobile (Expo não é containerizável).",
+      "Configuração real de segredos em produção (Vault, AWS SSM)."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "docker compose up sobe postgres + api + web com hot-reload em desenvolvimento.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Dockerfile da api usa build multi-stage (deps → build → runner) com imagem final mínima.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Dockerfile do web usa build multi-stage com output standalone do Next.js.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Variáveis de ambiente são injetadas via arquivo .env; nenhum segredo hardcoded nas imagens.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "O entrypoint da api roda prisma migrate deploy antes de iniciar o servidor em produção.",
+      "priority": "should"
+    }
+  ],
+  "data_model": [
+    { "entity": "n/a", "change": "none", "notes": "Infra pura, sem mudança de modelo." }
+  ],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "docker e docker compose instalados",
+      "when": "rodo docker compose up",
+      "then": "postgres, api e web sobem sem erro e api conecta ao banco"
+    },
+    {
+      "id": "AC-02",
+      "given": "os Dockerfiles gerados",
+      "when": "faço docker build de api ou web apontando o contexto para a raiz do monorepo",
+      "then": "a imagem final é construída em multi-stage sem erro"
+    },
+    {
+      "id": "AC-03",
+      "given": "as imagens finais",
+      "when": "inspeciono com docker image inspect",
+      "then": "não há node_modules de dev nem código-fonte exposto na imagem runner"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Verificar que docker-compose.yml existe na raiz e contém os serviços postgres, api, web.",
+      "kind": "integration",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "Verificar que Dockerfile de api e web têm stages FROM distintos (deps, build, runner).",
+      "kind": "unit",
+      "covers": ["REQ-02", "REQ-03", "AC-02"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    { "id": "T-01", "description": "Escrever SPEC-0003.", "target": "docs/specs", "done": true },
+    { "id": "T-02", "description": "Criar docker-compose.yml e docker-compose.override.yml na raiz.", "target": ".", "done": true },
+    { "id": "T-03", "description": "Criar apps/api/Dockerfile e apps/api/.dockerignore.", "target": "apps/api", "done": true },
+    { "id": "T-04", "description": "Criar apps/web/Dockerfile e apps/web/.dockerignore.", "target": "apps/web", "done": true },
+    { "id": "T-05", "description": "Criar .dockerignore na raiz.", "target": ".", "done": true },
+    { "id": "T-06", "description": "Criar apps/api/entrypoint.sh (migrate + start).", "target": "apps/api", "done": true },
+    { "id": "T-07", "description": "Atualizar docs/specs/README.md com SPEC-0003.", "target": "docs", "done": true }
+  ],
+  "risks": [
+    "Contexto de build para monorepo deve ser a raiz (não apps/api) para copiar packages/* — Dockerfiles documentam isso explicitamente.",
+    "prisma migrate deploy requer DATABASE_URL no container da api — variável obrigatória no .env."
+  ],
+  "observability": [],
+  "rollback": "Arquivos de infra somente; remover os Dockerfiles e docker-compose não afeta código de produção."
+}

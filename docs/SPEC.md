@@ -179,7 +179,35 @@ alocação_ativo_%     = valor_atual_BRL_ativo / patrimônio_total × 100
 - **Deploy web:** Vercel (Next.js).
 - **Deploy backend:** Railway, Render ou Fly.io (com Postgres gerenciado).
 - **Mobile:** Expo (EAS Build) para gerar os apps.
-- Migrations versionadas (Prisma Migrate / Alembic) aplicadas no deploy.
+- Migrations versionadas (Prisma Migrate) aplicadas no deploy via `entrypoint.sh`.
+
+## 10.1 Docker (SPEC-0003)
+
+| Arquivo | Propósito |
+|---------|-----------|
+| `docker-compose.yml` | Dev e produção: serviços `postgres`, `api`, `web` |
+| `docker-compose.override.yml` | Hot-reload em dev (monta `src/` como volume) |
+| `apps/api/Dockerfile` | Multi-stage: `deps → dev → build → runner` (NestJS) |
+| `apps/web/Dockerfile` | Multi-stage: `deps → dev → build → runner` (Next.js standalone) |
+| `apps/api/entrypoint.sh` | Executa `prisma migrate deploy` antes de subir a API |
+| `.dockerignore` (raiz) | Exclui `node_modules`, `.env`, docs e artefatos de build |
+
+**Contexto de build:** sempre a raiz do monorepo (`docker build -f apps/api/Dockerfile .`), para que `packages/core` e `packages/types` sejam copiados corretamente.
+
+**Uso rápido:**
+```bash
+# Subir ambiente de dev completo (postgres + api hot-reload + web hot-reload)
+docker compose up
+
+# Build de produção da API
+docker build -f apps/api/Dockerfile -t databolsa-api .
+
+# Build de produção do Web
+docker build -f apps/web/Dockerfile -t databolsa-web .
+```
+
+> `docker-compose.override.yml` é carregado automaticamente pelo Compose em dev.
+> Em CI/produção, usar `docker compose -f docker-compose.yml up`.
 
 ## 11. Roadmap técnico
 
