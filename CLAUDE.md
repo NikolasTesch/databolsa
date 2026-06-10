@@ -36,12 +36,12 @@ Client-server with a single backend serving both web and mobile and brokering al
 Intended monorepo layout (Turborepo):
 - `/apps/web` — Next.js + TypeScript + Tailwind (Recharts)
 - `/apps/mobile` — React Native + Expo (Victory Native)
-- `/apps/api` — backend: Node.js + NestJS **or** Python + FastAPI (decision pending; see `docs/SPEC.md §2`)
+- `/apps/api` — backend: **Node.js + NestJS** (decided in `docs/adr/0001-backend-stack-node-nestjs.md`; ORM: Prisma)
 - `/packages/core` — **financial calculations and business rules** (RN-01..RN-11), framework-agnostic and reusable
 - `/packages/types` — shared API contracts/types
 - `/packages/ui` — shared components (if applicable)
 
-Backend → PostgreSQL (ORM: Prisma for Node / SQLAlchemy for Python). Auth: JWT + refresh token. Every route except `/auth/*` requires JWT and filters by `user_id`.
+Backend → PostgreSQL (ORM: Prisma). Auth: JWT + refresh token. Every route except `/auth/*` requires JWT and filters by `user_id`.
 
 External quote sources (server-side, cached): **brapi.dev** (B3), **CoinGecko** (crypto, can return BRL directly), **Finnhub** (US stocks), **AwesomeAPI** (USD/BRL FX).
 

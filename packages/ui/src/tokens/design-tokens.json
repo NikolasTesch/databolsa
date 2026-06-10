@@ -1,0 +1,214 @@
+{
+  "$schema": "https://design-tokens.org/schema.json",
+  "meta": {
+    "name": "databolsa-design-tokens",
+    "version": "0.1.0",
+    "description": "Fonte única de tokens de design da marca databolsa, compartilhada por web (Next.js + Tailwind) e mobile (React Native). Derivada das logos em apps/*/public|assets. Ver docs/design-system.md.",
+    "spec": "SPEC-0002",
+    "updated": "2026-06-10"
+  },
+  "color": {
+    "brand": {
+      "navy": {
+        "900": "#15244A",
+        "800": "#1E3466",
+        "700": "#234080",
+        "600": "#2756A4",
+        "500": "#3A6BBE",
+        "400": "#5E8AD0",
+        "300": "#87C6E9",
+        "200": "#4EC3E4",
+        "100": "#C0E4F0",
+        "50": "#EAF6FB"
+      },
+      "primary": "#2756A4",
+      "primaryContent": "#FFFFFF",
+      "accent": "#4EC3E4",
+      "accentContent": "#0B2545"
+    },
+    "neutral": {
+      "950": "#0B1220",
+      "900": "#0F172A",
+      "800": "#1E293B",
+      "700": "#334155",
+      "600": "#475569",
+      "500": "#64748B",
+      "400": "#94A3B8",
+      "300": "#CBD5E1",
+      "200": "#E2E8F0",
+      "100": "#F1F5F9",
+      "50": "#F8FAFC",
+      "0": "#FFFFFF"
+    },
+    "finance": {
+      "profit": {
+        "light": "#16A34A",
+        "dark": "#22C55E",
+        "surface": "#DCFCE7",
+        "content": "#FFFFFF"
+      },
+      "loss": {
+        "light": "#DC2626",
+        "dark": "#F87171",
+        "surface": "#FEE2E2",
+        "content": "#FFFFFF"
+      },
+      "neutralChange": {
+        "light": "#64748B",
+        "dark": "#94A3B8"
+      },
+      "stale": {
+        "light": "#D97706",
+        "dark": "#F59E0B",
+        "surface": "#FEF3C7",
+        "content": "#0B1220"
+      }
+    },
+    "semantic": {
+      "light": {
+        "background": "#F8FAFC",
+        "surface": "#FFFFFF",
+        "surfaceMuted": "#F1F5F9",
+        "border": "#E2E8F0",
+        "text": "#0F172A",
+        "textMuted": "#475569",
+        "textSubtle": "#64748B",
+        "primary": "#2756A4",
+        "primaryHover": "#234080",
+        "accent": "#4EC3E4",
+        "focusRing": "#2756A4",
+        "success": "#16A34A",
+        "danger": "#DC2626",
+        "warning": "#D97706",
+        "info": "#2756A4"
+      },
+      "dark": {
+        "background": "#0B1220",
+        "surface": "#0F172A",
+        "surfaceMuted": "#1E293B",
+        "border": "#334155",
+        "text": "#F8FAFC",
+        "textMuted": "#CBD5E1",
+        "textSubtle": "#94A3B8",
+        "primary": "#5E8AD0",
+        "primaryHover": "#87C6E9",
+        "accent": "#4EC3E4",
+        "focusRing": "#87C6E9",
+        "success": "#22C55E",
+        "danger": "#F87171",
+        "warning": "#F59E0B",
+        "info": "#4EC3E4"
+      }
+    },
+    "chart": {
+      "categorical": [
+        "#1E3466",
+        "#2756A4",
+        "#4EC3E4",
+        "#87C6E9",
+        "#C0E4F0",
+        "#0E7490"
+      ],
+      "series": {
+        "patrimonio": "#2756A4",
+        "aporte": "#87C6E9",
+        "lucro": "#16A34A",
+        "prejuizo": "#DC2626"
+      },
+      "areaFillOpacity": 0.2
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "sans": ["IBM Plex Sans", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
+      "mono": ["IBM Plex Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"]
+    },
+    "note": "Use 'mono' (tabular figures) para todo valor monetário, quantidade, ticker e percentual em tabelas — alinhamento de dígitos é crítico em dados financeiros.",
+    "fontWeight": {
+      "light": 300,
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "fontSize": {
+      "xs": "0.75rem",
+      "sm": "0.875rem",
+      "base": "1rem",
+      "lg": "1.125rem",
+      "xl": "1.25rem",
+      "2xl": "1.5rem",
+      "3xl": "1.875rem",
+      "4xl": "2.25rem",
+      "5xl": "3rem"
+    },
+    "lineHeight": {
+      "tight": 1.2,
+      "snug": 1.35,
+      "normal": 1.5,
+      "relaxed": 1.625
+    },
+    "minBodyMobile": "1rem"
+  },
+  "spacing": {
+    "base": "4px",
+    "scale": {
+      "0": "0",
+      "1": "0.25rem",
+      "2": "0.5rem",
+      "3": "0.75rem",
+      "4": "1rem",
+      "5": "1.25rem",
+      "6": "1.5rem",
+      "8": "2rem",
+      "10": "2.5rem",
+      "12": "3rem",
+      "16": "4rem",
+      "20": "5rem",
+      "24": "6rem"
+    }
+  },
+  "radius": {
+    "none": "0",
+    "sm": "0.25rem",
+    "md": "0.5rem",
+    "lg": "0.75rem",
+    "xl": "1rem",
+    "2xl": "1.5rem",
+    "full": "9999px"
+  },
+  "shadow": {
+    "sm": "0 1px 2px 0 rgba(15, 23, 42, 0.06)",
+    "md": "0 4px 12px -2px rgba(15, 23, 42, 0.10)",
+    "lg": "0 12px 32px -8px rgba(15, 23, 42, 0.16)"
+  },
+  "motion": {
+    "duration": {
+      "fast": "150ms",
+      "base": "200ms",
+      "slow": "300ms"
+    },
+    "easing": {
+      "standard": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "decelerate": "cubic-bezier(0, 0, 0.2, 1)"
+    },
+    "note": "Respeitar prefers-reduced-motion. Animar transform/opacity, nunca width/height."
+  },
+  "zIndex": {
+    "base": 0,
+    "dropdown": 10,
+    "sticky": 20,
+    "overlay": 30,
+    "modal": 40,
+    "toast": 50
+  },
+  "breakpoint": {
+    "sm": "375px",
+    "md": "768px",
+    "lg": "1024px",
+    "xl": "1440px"
+  },
+  "touch": {
+    "minTargetSize": "44px"
+  }
+}

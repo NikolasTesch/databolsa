@@ -38,13 +38,13 @@ Arquitetura cliente-servidor com um backend único servindo dois clientes (web e
 | Mobile | React Native + Expo | Mesma linguagem/lógica da web, máximo reaproveitamento |
 | Estilização (web) | Tailwind CSS | Muito requisitado, produtividade alta |
 | Gráficos | Recharts (web) / Victory Native (mobile) | Visualização de alocação e evolução |
-| Backend | Node.js + NestJS **ou** Python + FastAPI | Node unifica a linguagem; Python brilha em cálculo/dados — escolher 1 |
+| Backend | **Node.js + NestJS** (decidido — ADR-0001) | Unifica a linguagem (TS de ponta a ponta); reusa `packages/core` e `packages/types` sem reescrita |
 | Banco de dados | PostgreSQL | Relacional, transacional, ideal para dados financeiros |
-| ORM | Prisma (Node) / SQLAlchemy (Python) | Migrations e tipagem do schema |
+| ORM | **Prisma** (decidido — ADR-0001) | Migrations e tipagem do schema |
 | Autenticação | JWT + refresh token | Padrão para clientes web + mobile |
 | Monorepo (opcional) | Turborepo | Compartilhar tipos e lógica entre web e mobile |
 
-> **Decisão pendente:** linguagem do backend. Recomendação: começar com **Node.js + NestJS** se o objetivo for unificar a stack e ter mais aderência a vagas full-stack JS; escolher **Python + FastAPI** se quiser destacar a camada de análise de dados financeiros.
+> **Decisão tomada ([ADR-0001](adr/0001-backend-stack-node-nestjs.md)):** backend em **Node.js + NestJS** com **Prisma**, para unificar a stack em TypeScript e reusar `packages/core`/`packages/types` sem reescrita. A opção Python + FastAPI foi descartada.
 
 ## 3. Estrutura de pastas (monorepo sugerido)
 

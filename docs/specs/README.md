@@ -68,8 +68,9 @@ e idealmente um check de CI.
 
 ## Índice de specs
 
-| ID        | Título                                              | Status |
-| --------- | --------------------------------------------------- | ------ |
-| SPEC-0001 | Cálculo de posição e P/L no `packages/core`         | draft  |
+| ID        | Título                                              | Status   |
+| --------- | --------------------------------------------------- | -------- |
+| SPEC-0001 | Cálculo de posição e P/L no `packages/core`         | draft    |
+| SPEC-0002 | Scaffold do monorepo e design system base           | verified |
 
 > Mantenha esta tabela ao adicionar specs.

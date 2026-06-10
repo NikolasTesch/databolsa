@@ -1,0 +1,146 @@
+{
+  "$schema": "./spec.schema.json",
+  "id": "SPEC-0002",
+  "title": "Scaffold do monorepo (estrutura de pastas) e design system base da marca databolsa",
+  "status": "verified",
+  "type": "infra",
+  "created": "2026-06-10",
+  "updated": "2026-06-10",
+  "authors": ["nikolasdtesch@gmail.com"],
+  "summary": "Fixar a decisão de stack do backend (Node.js + NestJS, ver ADR-0001), finalizar a árvore de pastas do monorepo conforme SPEC §3 — incluindo o esqueleto modular do /apps/api — e criar o design system base (tokens de cor, tipografia, espaçamento e paleta de gráficos) derivado da marca databolsa.",
+  "motivation": "O projeto é greenfield: as pastas existem apenas parcialmente e a linguagem do backend estava pendente (SPEC §2). Antes de codar o backend e a UI é preciso (1) decidir a stack, (2) ter a estrutura de pastas pronta e (3) ter um design system único para web e mobile, derivado das logos já entregues, para garantir consistência visual e reuso.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §1", "SPEC §2", "SPEC §3", "SPEC §11"],
+    "business_rules": [],
+    "adrs": ["ADR-0001"],
+    "depends_on": []
+  },
+  "scope": {
+    "in_scope": [
+      "Registrar a decisão de stack do backend (Node.js + NestJS + Prisma) em ADR-0001 e refletir em CLAUDE.md/SPEC.",
+      "Finalizar a árvore de pastas do monorepo: /apps (web, mobile, api), /packages (core, types, ui).",
+      "Esqueleto modular do /apps/api seguindo convenções NestJS (modules, common, config, prisma, test).",
+      "Design system base em docs/design-system.md (cores, tipografia, espaçamento, raio, sombra, gráficos).",
+      "Tokens legíveis por máquina em packages/ui/src/tokens/design-tokens.json para reuso web+mobile.",
+      "Cores semânticas de finanças: lucro (verde), prejuízo (vermelho), cotação stale (âmbar) — RN-10/RN-04 visual."
+    ],
+    "out_of_scope": [
+      "Inicializar projetos reais (package.json, nest new, next, expo) e instalar dependências.",
+      "Implementar qualquer endpoint, componente de UI ou schema Prisma.",
+      "Configurar Turborepo/CI de fato (apenas a estrutura de pastas).",
+      "Implementar os cálculos do packages/core (SPEC-0001)."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "A linguagem do backend está decidida e documentada: Node.js + NestJS + Prisma (ADR-0001).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "A árvore de pastas do monorepo existe conforme SPEC §3, com /apps/api em estrutura modular NestJS.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Existe um design system documentado (docs/design-system.md) derivado da paleta da marca databolsa.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Os tokens de design são legíveis por máquina (JSON) e estruturados para alimentar Tailwind (web) e tema do React Native (mobile).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "O design system define cores semânticas de lucro/prejuízo e estado 'stale' de cotação, suportando tema claro e escuro.",
+      "priority": "should"
+    }
+  ],
+  "data_model": [
+    { "entity": "n/a", "change": "none", "notes": "Spec de infra/design; sem mudança de modelo de dados." }
+  ],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "o repositório após esta spec",
+      "when": "inspeciono docs/adr",
+      "then": "ADR-0001 existe com status Accepted definindo Node.js + NestJS"
+    },
+    {
+      "id": "AC-02",
+      "given": "o monorepo",
+      "when": "listo /apps/api",
+      "then": "existe o esqueleto src/modules/{auth,users,assets,transactions,portfolio,quotes}, common, config, prisma e test"
+    },
+    {
+      "id": "AC-03",
+      "given": "um desenvolvedor de web ou mobile",
+      "when": "lê docs/design-system.md e packages/ui/src/tokens/design-tokens.json",
+      "then": "encontra cores, tipografia, espaçamento e paleta de gráficos consistentes com a marca"
+    },
+    {
+      "id": "AC-04",
+      "given": "o arquivo de tokens",
+      "when": "valido o JSON",
+      "then": "ele faz parse sem erro e contém tokens semânticos de lucro, prejuízo e stale para claro e escuro"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Verificar que a árvore de pastas esperada existe (apps/api modular + packages).",
+      "kind": "integration",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "Validar que design-tokens.json é JSON válido e contém os grupos brand, semantic, finance, typography, spacing, chart.",
+      "kind": "unit",
+      "covers": ["REQ-04", "REQ-05", "AC-04"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Escrever ADR-0001 (stack do backend) e refletir a decisão em CLAUDE.md e SPEC §2.",
+      "target": "docs",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Criar o esqueleto de pastas do /apps/api (NestJS modular) e demais pastas faltantes do monorepo.",
+      "target": "apps/api",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Escrever docs/design-system.md a partir da paleta da marca e da tipografia IBM Plex.",
+      "target": "docs",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Gerar packages/ui/src/tokens/design-tokens.json (tokens legíveis por máquina).",
+      "target": "packages/ui",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Atualizar o índice de specs (docs/specs/README.md).",
+      "target": "docs",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Tokens divergirem entre web (Tailwind) e mobile (RN) se não houver fonte única — mitigado por design-tokens.json compartilhado em packages/ui.",
+    "Scaffold de pastas vazias ser removido pelo git — mitigado com .gitkeep nas folhas."
+  ],
+  "observability": [],
+  "rollback": "Mudanças são apenas docs e diretórios vazios; reverter o commit é suficiente e sem efeito em runtime."
+}
