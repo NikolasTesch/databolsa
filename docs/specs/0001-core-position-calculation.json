@@ -1,0 +1,156 @@
+{
+  "$schema": "./spec.schema.json",
+  "id": "SPEC-0001",
+  "title": "Cálculo de posição e P/L no packages/core (preço médio, qtd atual, lucro/prejuízo)",
+  "status": "draft",
+  "type": "feature",
+  "created": "2026-06-10",
+  "updated": "2026-06-10",
+  "authors": ["nikolasdtesch@gmail.com"],
+  "summary": "Implementar, em packages/core, as funções puras que computam preço médio, quantidade atual, valor investido, valor atual e lucro/prejuízo de uma posição a partir da lista de transações. É a primeira entrega do projeto e a base de todo o resto.",
+  "motivation": "Os cálculos financeiros são o coração do produto e a demonstração central do projeto. Devem existir e estar 100% testados antes de qualquer UI ou API, de forma framework-agnostic e reutilizável por web, mobile e backend.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §7", "SPEC §11"],
+    "business_rules": ["RN-01", "RN-02", "RN-03"],
+    "adrs": [],
+    "depends_on": []
+  },
+  "scope": {
+    "in_scope": [
+      "Função de preço médio ponderado incluindo taxas de compra.",
+      "Função de quantidade atual (Σ compras − Σ vendas), bloqueando posição negativa.",
+      "Funções de valor investido, valor atual (na moeda) e lucro/prejuízo (R$ e %).",
+      "Uso de tipo decimal/numeric em todos os valores monetários e quantidades.",
+      "Cobertura de testes ~100% com todos os edge cases obrigatórios."
+    ],
+    "out_of_scope": [
+      "Conversão de câmbio para BRL (SPEC-0002).",
+      "Consolidação de patrimônio total e alocação (SPEC-0003).",
+      "Busca de cotações em APIs externas e QuoteCache.",
+      "Qualquer endpoint HTTP ou persistência."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Preço médio = (Σ(qtd_compra × preço_compra) + taxas) / Σ qtd_compra.",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Uma venda maior que a posição disponível na data deve ser rejeitada com erro.",
+      "rule_ref": "RN-02",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Uma venda não altera o preço médio das unidades remanescentes (custo médio brasileiro); apenas reduz a quantidade.",
+      "rule_ref": "RN-03",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Todos os valores monetários e quantidades usam decimal/numeric; nunca float.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "Transaction",
+      "change": "none",
+      "fields": ["type: BUY|SELL", "date", "unit_price: decimal", "quantity: decimal", "fees: decimal"],
+      "notes": "core consome a forma da transação como entrada pura; persistência fica fora desta spec."
+    }
+  ],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "duas compras a preços diferentes com taxas",
+      "when": "calculo o preço médio",
+      "then": "o resultado é a média ponderada incluindo as taxas, em decimal"
+    },
+    {
+      "id": "AC-02",
+      "given": "uma posição de 100 unidades",
+      "when": "registro uma venda de 150 unidades",
+      "then": "a operação é rejeitada e a posição permanece 100"
+    },
+    {
+      "id": "AC-03",
+      "given": "uma posição com preço médio definido",
+      "when": "realizo uma venda parcial",
+      "then": "a quantidade diminui mas o preço médio permanece inalterado"
+    },
+    {
+      "id": "AC-04",
+      "given": "uma posição totalmente vendida (qtd_atual = 0)",
+      "when": "calculo lucro/prejuízo %",
+      "then": "não há divisão por zero e a função retorna um valor definido/0 conforme regra"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Preço médio com múltiplas compras a preços diferentes e taxas.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "Venda parcial: reduz quantidade, mantém preço médio.",
+      "kind": "edge_case",
+      "covers": ["REQ-03", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "Venda total: posição vai a zero.",
+      "kind": "edge_case",
+      "covers": ["REQ-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "Venda maior que a posição é rejeitada.",
+      "kind": "edge_case",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "Posição zero: lucro/prejuízo % sem divisão por zero.",
+      "kind": "edge_case",
+      "covers": ["AC-04"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Scaffold do packages/core (tooling de teste + tipo decimal).",
+      "target": "packages/core",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Implementar funções puras de preço médio, quantidade e P/L.",
+      "target": "packages/core",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Escrever a suíte de testes cobrindo todos os edge cases.",
+      "target": "packages/core",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Erros de arredondamento se algum caminho usar float — mitigado por testes e lint contra float em valores monetários."
+  ],
+  "observability": [],
+  "rollback": "Feature isolada em packages/core sem efeitos externos; reverter o commit é suficiente."
+}

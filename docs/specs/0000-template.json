@@ -1,0 +1,77 @@
+{
+  "$schema": "./spec.schema.json",
+  "id": "SPEC-0000",
+  "title": "Template — copie para NNNN-titulo-curto.json",
+  "status": "draft",
+  "type": "feature",
+  "created": "AAAA-MM-DD",
+  "updated": "AAAA-MM-DD",
+  "authors": [],
+  "summary": "Uma a três frases: o quê e por quê. Legível por quem não conhece o código.",
+  "motivation": "Problema/oportunidade que justifica o trabalho.",
+  "related": {
+    "prd": ["PRD §X"],
+    "spec_doc": ["SPEC §X"],
+    "business_rules": ["RN-01"],
+    "adrs": [],
+    "depends_on": []
+  },
+  "scope": {
+    "in_scope": ["O que será entregue."],
+    "out_of_scope": ["O que NÃO será feito aqui."]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Requisito testável.",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "NomeDaEntidade",
+      "change": "none",
+      "fields": [],
+      "notes": "Dinheiro/quantidade em decimal/numeric, nunca float."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/exemplo",
+      "auth": true,
+      "request": "...",
+      "response": "...",
+      "errors": []
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "estado inicial",
+      "when": "ação",
+      "then": "resultado observável"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Caso de teste.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Passo de implementação.",
+      "target": "packages/core",
+      "done": false
+    }
+  ],
+  "risks": [],
+  "observability": [],
+  "rollback": "Como reverter com segurança."
+}
