@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://meupatrimonio.dev/schemas/spec.schema.json",
-  "title": "MeuPatrimônio Feature Spec",
+  "$id": "https://databolsa.dev/schemas/spec.schema.json",
+  "title": "DataBolsa Feature Spec",
   "description": "Especificação executável de uma unidade de trabalho (feature, bugfix, refactor, infra). Uma spec por task, sob docs/specs/. É a fonte da verdade do que será construído antes de escrever código (Spec-Driven Development).",
   "type": "object",
   "additionalProperties": false,

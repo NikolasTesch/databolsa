@@ -1,0 +1,84 @@
+/* ============================================================================
+ * theme.css — variáveis CSS de tema da databolsa.
+ *
+ * GERADO automaticamente por scripts/generate-theme-css.mjs a partir de
+ * src/tokens/design-tokens.json. NÃO edite à mão — rode o gerador.
+ *
+ * Importe uma vez no app (ex.: app/globals.css) e use os tokens via Tailwind
+ * (preset) ou diretamente com var(--color-*). Alterne para o tema escuro
+ * adicionando a classe .dark no elemento raiz.
+ * ========================================================================== */
+
+:root {
+  /* Tema claro (padrão) */
+  --color-navy-50: #EAF6FB;
+  --color-navy-100: #C0E4F0;
+  --color-navy-200: #4EC3E4;
+  --color-navy-300: #87C6E9;
+  --color-navy-400: #5E8AD0;
+  --color-navy-500: #3A6BBE;
+  --color-navy-600: #2756A4;
+  --color-navy-700: #234080;
+  --color-navy-800: #1E3466;
+  --color-navy-900: #15244A;
+  --color-brand-primary: #2756A4;
+  --color-brand-accent: #4EC3E4;
+  --color-neutral-0: #FFFFFF;
+  --color-neutral-50: #F8FAFC;
+  --color-neutral-100: #F1F5F9;
+  --color-neutral-200: #E2E8F0;
+  --color-neutral-300: #CBD5E1;
+  --color-neutral-400: #94A3B8;
+  --color-neutral-500: #64748B;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1E293B;
+  --color-neutral-900: #0F172A;
+  --color-neutral-950: #0B1220;
+  --color-profit-surface: #DCFCE7;
+  --color-loss-surface: #FEE2E2;
+  --color-stale-surface: #FEF3C7;
+  --color-background: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #F1F5F9;
+  --color-border: #E2E8F0;
+  --color-text: #0F172A;
+  --color-text-muted: #475569;
+  --color-text-subtle: #64748B;
+  --color-primary: #2756A4;
+  --color-primary-hover: #234080;
+  --color-accent: #4EC3E4;
+  --color-focus-ring: #2756A4;
+  --color-success: #16A34A;
+  --color-danger: #DC2626;
+  --color-warning: #D97706;
+  --color-info: #2756A4;
+  --color-profit: #16A34A;
+  --color-loss: #DC2626;
+  --color-neutral-change: #64748B;
+  --color-stale: #D97706;
+}
+
+.dark {
+  /* Tema escuro — sobrescreve só o que muda */
+  --color-background: #0B1220;
+  --color-surface: #0F172A;
+  --color-surface-muted: #1E293B;
+  --color-border: #334155;
+  --color-text: #F8FAFC;
+  --color-text-muted: #CBD5E1;
+  --color-text-subtle: #94A3B8;
+  --color-primary: #5E8AD0;
+  --color-primary-hover: #87C6E9;
+  --color-accent: #4EC3E4;
+  --color-focus-ring: #87C6E9;
+  --color-success: #22C55E;
+  --color-danger: #F87171;
+  --color-warning: #F59E0B;
+  --color-info: #4EC3E4;
+  --color-profit: #22C55E;
+  --color-loss: #F87171;
+  --color-neutral-change: #94A3B8;
+  --color-stale: #F59E0B;
+}
+

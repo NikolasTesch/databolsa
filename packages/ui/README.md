@@ -1,4 +1,4 @@
-# @meupatrimonio/ui
+# @databolsa/ui
 
 Camada de **design tokens** da databolsa. Fonte única da verdade visual da
 marca — alimenta a web (Next.js + Tailwind) e serve de referência canônica para
@@ -40,7 +40,7 @@ node packages/ui/scripts/generate-theme-dart.mjs --check
 `tailwind.config.ts`:
 
 ```ts
-import preset from '@meupatrimonio/ui/tailwind-preset';
+import preset from '@databolsa/ui/tailwind-preset';
 
 export default {
   presets: [preset],
@@ -52,7 +52,7 @@ export default {
 Importe o tema **uma vez** (ex.: `app/globals.css`):
 
 ```css
-@import '@meupatrimonio/ui/theme.css';
+@import '@databolsa/ui/theme.css';
 ```
 
 Utilitárias disponíveis: `bg-surface`, `text-content-muted`, `text-profit`,
@@ -123,7 +123,7 @@ quando a fonte externa falha — degradar com clareza, nunca quebrar o total.
 ## Tokens crus (gráficos)
 
 ```ts
-import { tokens, chartColors } from '@meupatrimonio/ui';
+import { tokens, chartColors } from '@databolsa/ui';
 chartColors.categorical;        // 6 cores para donut/barra (Recharts)
 chartColors.series.patrimonio;  // série de evolução do patrimônio
 ```

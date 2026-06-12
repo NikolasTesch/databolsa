@@ -1,4 +1,4 @@
-# SPEC.md — MeuPatrimônio (nome provisório)
+# SPEC.md — DataBolsa
 
 > Especificação técnica · Versão 0.1 — MVP
 > Documento companheiro do PRD.md

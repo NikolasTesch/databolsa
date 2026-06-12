@@ -1,7 +1,7 @@
 {
   "name": "@databolsa/core",
   "version": "0.1.0",
-  "description": "Financial calculation engine for MeuPatrimônio — position, average price, P/L (framework-agnostic)",
+  "description": "Financial calculation engine for DataBolsa — position, average price, P/L (framework-agnostic)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

@@ -56,7 +56,7 @@ Full process and lifecycle: `docs/specs/README.md`. Do not skip the spec for "sm
 
 ## What this product is
 
-**MeuPatrimônio** (provisional name) — a personal investment-portfolio tracker. The user manually records assets and buy/sell transactions; the system fetches current quotes, converts everything to BRL, and computes position, profit/loss, return, and allocation. Web is the primary client; a mobile app is complementary. Documents are written in Portuguese (pt-BR); domain/code identifiers are in English.
+**DataBolsa** — a personal investment-portfolio tracker. The user manually records assets and buy/sell transactions; the system fetches current quotes, converts everything to BRL, and computes position, profit/loss, return, and allocation. Web is the primary client; a mobile app is complementary. Documents are written in Portuguese (pt-BR); domain/code identifiers are in English.
 
 Three asset classes in the MVP: B3 securities (stocks, FIIs, ETFs, BDRs), crypto, and US/foreign stocks.
 

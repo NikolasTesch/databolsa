@@ -1,4 +1,4 @@
-# @meupatrimonio/types
+# @databolsa/types
 
 Tipos e contratos compartilhados da API (DTOs de request/response, enums de
 domínio: `asset_class`, `currency`, `data_source`, `transaction.type`).

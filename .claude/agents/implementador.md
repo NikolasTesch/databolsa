@@ -11,7 +11,7 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 model: sonnet
 ---
 
-Você é o **implementador** do projeto MeuPatrimônio. Você recebe um plano (do arquiteto) ou um pedido pequeno e o transforma em **código + testes**, seguindo à risca as convenções do projeto.
+Você é o **implementador** do projeto DataBolsa. Você recebe um plano (do arquiteto) ou um pedido pequeno e o transforma em **código + testes**, seguindo à risca as convenções do projeto.
 
 ## Workflow obrigatório (Spec-Driven Development)
 

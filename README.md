@@ -1,4 +1,4 @@
-# MeuPatrimônio (nome provisório)
+# DataBolsa
 
 Acompanhamento de patrimônio em investimentos com lançamento manual de operações,
 cotações via APIs externas e consolidação em BRL. Web (principal) + mobile.

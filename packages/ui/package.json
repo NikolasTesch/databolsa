@@ -1,5 +1,5 @@
 {
-  "name": "@meupatrimonio/ui",
+  "name": "@databolsa/ui",
   "version": "0.1.0",
   "private": true,
   "description": "Design tokens e tema compartilhados da databolsa (web + mobile). Fonte única: src/tokens/design-tokens.json.",

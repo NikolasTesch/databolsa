@@ -1,0 +1,3 @@
+analyzer:
+  exclude:
+    - packages/ui/src/app_tokens.dart

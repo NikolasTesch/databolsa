@@ -1,4 +1,4 @@
-# PRD — MeuPatrimônio (nome provisório)
+# PRD — DataBolsa
 
 > Documento de Requisitos de Produto (Product Requirements Document)
 > Versão 0.1 — MVP · Status: rascunho

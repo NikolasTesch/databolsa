@@ -1,4 +1,4 @@
-# @meupatrimonio/core
+# @databolsa/core
 
 Regras de negócio e cálculos financeiros (RN-01..RN-11), independentes de
 framework e reutilizáveis por `apps/api`, `apps/web` e `apps/mobile`.
