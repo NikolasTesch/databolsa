@@ -73,5 +73,6 @@ e idealmente um check de CI.
 | SPEC-0001 | Cálculo de posição e P/L no `packages/core`         | draft    |
 | SPEC-0002 | Scaffold do monorepo e design system base           | verified |
 | SPEC-0003 | Infraestrutura Docker (dev + produção)               | verified |
+| SPEC-0004 | Camada de consumo dos design tokens (Tailwind/CSS/Flutter) | verified |
 
 > Mantenha esta tabela ao adicionar specs.

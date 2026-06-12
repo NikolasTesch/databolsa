@@ -7,7 +7,7 @@
   "created": "2026-06-10",
   "updated": "2026-06-10",
   "authors": ["nikolasdtesch@gmail.com"],
-  "summary": "Adicionar configuração Docker ao monorepo: docker-compose.yml para dev local (api + web + postgres), Dockerfiles multi-stage para apps/api e apps/web, e documentação de uso. O mobile (Expo) não roda em container.",
+  "summary": "Adicionar configuração Docker ao monorepo: docker-compose.yml para dev local (api + web + postgres), Dockerfiles multi-stage para apps/api e apps/web, e documentação de uso. O mobile (Flutter) não roda em container.",
   "motivation": "Garantir ambiente reproduzível em qualquer máquina desde o início, independente de versão local de Node/Postgres. Também prepara as imagens de produção (NestJS e Next.js) para deploy em Railway/Render/Fly.io conforme SPEC §10.",
   "related": {
     "prd": [],
@@ -28,7 +28,7 @@
     "out_of_scope": [
       "CI/CD pipeline (GitHub Actions) — futuro.",
       "Kubernetes / Helm charts.",
-      "Containerização do mobile (Expo não é containerizável).",
+      "Containerização do mobile (Flutter não é containerizável em dev — rodar com `flutter run`).",
       "Configuração real de segredos em produção (Vault, AWS SSM)."
     ]
   },

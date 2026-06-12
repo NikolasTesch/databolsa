@@ -3,7 +3,7 @@
   "meta": {
     "name": "databolsa-design-tokens",
     "version": "0.1.0",
-    "description": "Fonte única de tokens de design da marca databolsa, compartilhada por web (Next.js + Tailwind) e mobile (React Native). Derivada das logos em apps/*/public|assets. Ver docs/design-system.md.",
+    "description": "Fonte única de tokens de design da marca databolsa, compartilhada por web (Next.js + Tailwind) e mobile (Flutter + Dart). Derivada das logos em apps/*/public|assets. Ver docs/design-system.md.",
     "spec": "SPEC-0002",
     "updated": "2026-06-10"
   },

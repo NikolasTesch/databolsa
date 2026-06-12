@@ -1,0 +1,176 @@
+{
+  "$schema": "./spec.schema.json",
+  "id": "SPEC-0004",
+  "title": "Camada de consumo dos design tokens (preset Tailwind, CSS vars e tema Flutter/Dart)",
+  "status": "verified",
+  "type": "feature",
+  "created": "2026-06-12",
+  "updated": "2026-06-12",
+  "authors": ["nikolasdtesch@gmail.com"],
+  "summary": "Transformar o design-tokens.json (fonte única, SPEC-0002) em artefatos consumíveis por código: um preset Tailwind e variáveis CSS de tema (claro/escuro) para a web, e um objeto de tema de referência tipado para o Flutter/Dart. Sem componentes de UI — apenas a camada de tokens, para não violar a regra 'packages/core primeiro'.",
+  "motivation": "O design system já está documentado (docs/design-system.md) e os tokens existem em JSON, mas hoje nenhum código consome essa fonte: a seção §5 do design-system.md descreve o mapeamento para Tailwind/Flutter apenas como plano. Para que web e mobile compartilhem de fato a mesma fonte da verdade visual quando forem implementados, é preciso materializar os tokens em um preset Tailwind, em variáveis CSS de tema e em um tema de referência Flutter/Dart, todos derivados do mesmo JSON. Fazer isso agora, como camada não-UI, não bloqueia nem antecede o packages/core (SPEC-0001) no roadmap.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §2", "SPEC §3"],
+    "business_rules": ["RN-10"],
+    "adrs": ["ADR-0002"],
+    "depends_on": ["SPEC-0002"]
+  },
+  "scope": {
+    "in_scope": [
+      "packages/ui/src/tokens.ts: import tipado do design-tokens.json como fonte única em TypeScript.",
+      "packages/ui/src/tailwind-preset.ts: preset Tailwind (theme.extend) mapeando cores, tipografia, espaçamento, raio, sombra, breakpoints, z-index e movimento a partir dos tokens.",
+      "packages/ui/src/theme.css: variáveis CSS de tema para :root (claro) e .dark (escuro), cobrindo tokens semânticos e de finanças (lucro/prejuízo/stale).",
+      "packages/ui/scripts/generate-theme-css.mjs: gerador (node puro, sem dependências) que regenera theme.css a partir do JSON, mantendo fonte única.",
+      "packages/ui/src/theme-ref.ts: objeto de tema de referência tipado (lightTheme/darkTheme) para o Flutter/Dart, com cores resolvidas em hex e escalas numéricas (dp).",
+      "packages/ui/src/index.ts: barrel exportando tokens, preset e temas.",
+      "packages/ui/package.json mínimo (manifest do pacote @meupatrimonio/ui, exports) — sem dependências de runtime nem build step.",
+      "Atualizar docs/design-system.md §5 e packages/ui/README.md para apontar os arquivos reais de consumo."
+    ],
+    "out_of_scope": [
+      "Componentes de UI (Button, Card, Badge, tabelas) — depende do packages/core (SPEC-0001) no roadmap.",
+      "Inicializar o tooling do monorepo (pnpm/Turborepo workspaces, tsconfig compartilhado, Style Dictionary, bundler).",
+      "Configurar Tailwind/Next de fato em apps/web ou o ThemeData Flutter em apps/mobile (apenas a camada compartilhada em packages/ui).",
+      "Adicionar ou alterar valores de tokens — o design-tokens.json (SPEC-0002) permanece a fonte e não muda aqui.",
+      "Storybook ou documentação visual interativa."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Existe um preset Tailwind em packages/ui que expõe a paleta da marca, neutros, tokens de finanças e as escalas (spacing, radius, shadow, fontSize, fontWeight, lineHeight, screens, zIndex, duration, easing) derivados do design-tokens.json.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Existe um arquivo theme.css com variáveis CSS para tema claro (:root) e escuro (.dark) cobrindo os tokens semânticos (background, surface, border, text, primary, etc.) e de finanças.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "As cores de finanças lucro/prejuízo/neutralChange/stale têm variação para claro e escuro e são expostas tanto na web (CSS vars) quanto no mobile (tema Flutter/Dart), suportando o estado 'stale' de cotação (RN-10).",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Existe um tema de referência Flutter/Dart tipado (lightTheme/darkTheme) com cores resolvidas em hex e escalas de espaçamento/tipografia em valores numéricos (dp).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Todos os artefatos derivam do mesmo design-tokens.json (fonte única): o TS importa o JSON e o theme.css é reprodutível por um gerador a partir do JSON.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "A camada não introduz componentes de UI nem dependências de runtime, preservando a ordem do roadmap (packages/core antes da UI).",
+      "priority": "should"
+    }
+  ],
+  "data_model": [
+    { "entity": "n/a", "change": "none", "notes": "Camada de design/tooling; sem mudança de modelo de dados." }
+  ],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "um desenvolvedor configurando o Tailwind em apps/web",
+      "when": "importa o preset de @meupatrimonio/ui em tailwind.config",
+      "then": "as cores da marca, tokens de finanças e as escalas (spacing, radius, fontSize, screens, etc.) ficam disponíveis como classes utilitárias"
+    },
+    {
+      "id": "AC-02",
+      "given": "a folha theme.css aplicada",
+      "when": "a classe .dark é adicionada ao elemento raiz",
+      "then": "as variáveis CSS semânticas e de finanças trocam para os valores do tema escuro"
+    },
+    {
+      "id": "AC-03",
+      "given": "o app mobile importando o tema",
+      "when": "lê darkTheme.colors.profit e lightTheme.colors.profit",
+      "then": "obtém os hex de lucro corretos por tema (#22C55E no escuro, #16A34A no claro) e escalas numéricas para spacing/fontSize"
+    },
+    {
+      "id": "AC-04",
+      "given": "o gerador de CSS",
+      "when": "executo node scripts/generate-theme-css.mjs",
+      "then": "theme.css é regenerado a partir do design-tokens.json sem divergência (fonte única preservada)"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Validar que tailwind-preset expõe theme.extend.colors com brand/navy, neutral, profit/loss/stale e as escalas spacing/radius/fontSize/screens/zIndex a partir dos tokens.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "Validar que theme.css define :root e .dark e que os valores de finanças (profit/loss/stale) e semânticos diferem entre os dois blocos.",
+      "kind": "unit",
+      "covers": ["REQ-02", "REQ-03", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "Validar que theme-ref exporta lightTheme e darkTheme com cores em hex resolvidas por tema e escalas numéricas (spacing/fontSize em dp) — referência para o ThemeData Flutter.",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "Executar o gerador e conferir que theme.css resultante é idêntico ao versionado (reprodutibilidade da fonte única).",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-04"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar tokens.ts (import tipado do JSON) e index.ts (barrel) em packages/ui/src.",
+      "target": "packages/ui",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Criar tailwind-preset.ts mapeando os tokens para theme.extend.",
+      "target": "packages/ui",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Criar generate-theme-css.mjs e gerar theme.css (claro/escuro).",
+      "target": "packages/ui",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Criar theme-ref.ts (lightTheme/darkTheme tipados, hex + escalas numéricas).",
+      "target": "packages/ui",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Adicionar package.json mínimo (@meupatrimonio/ui, exports) sem deps de runtime.",
+      "target": "packages/ui",
+      "done": true
+    },
+    {
+      "id": "T-06",
+      "description": "Atualizar docs/design-system.md §5, packages/ui/README.md e o índice docs/specs/README.md.",
+      "target": "docs",
+      "done": true
+    }
+  ],
+  "risks": [
+    "Divergência entre theme.css e o JSON se editado à mão — mitigado pelo gerador node puro (fonte única reprodutível).",
+    "Acoplamento de tipo a 'tailwindcss' antes do tooling existir — mitigado usando import type (apagado em runtime) e exports sem dependências de runtime.",
+    "rem→dp no mobile assumindo base 16px — documentado no theme-ref."
+  ],
+  "observability": [],
+  "rollback": "Arquivos novos e isolados em packages/ui (mais edições de docs); nenhum runtime depende deles ainda. Reverter o commit é suficiente e sem efeito colateral."
+}

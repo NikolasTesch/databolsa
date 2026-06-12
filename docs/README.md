@@ -28,7 +28,12 @@ Use o template em [`adr/0000-template.md`](./adr/0000-template.md). Numere os
 arquivos sequencialmente (`0001-...`, `0002-...`) e nunca apague um ADR: para
 reverter uma decisão, crie um novo ADR que marque o anterior como `Superseded`.
 
+ADRs registrados:
+
+- [`adr/0001-backend-stack-node-nestjs.md`](./adr/0001-backend-stack-node-nestjs.md)
+  — backend em **Node.js + NestJS** (em vez de Python/FastAPI), ORM Prisma.
+
 Decisões em aberto a registrar quando resolvidas:
 
-- Linguagem do backend (NestJS vs FastAPI) — ver `SPEC.md §2`.
-- Adoção (ou não) de monorepo com Turborepo.
+- Configuração do tooling do monorepo (Turborepo + pnpm workspaces): a estrutura
+  de pastas já existe, mas `turbo.json` / `package.json` ainda não foram criados.

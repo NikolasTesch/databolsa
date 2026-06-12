@@ -5,7 +5,7 @@
   "status": "verified",
   "type": "infra",
   "created": "2026-06-10",
-  "updated": "2026-06-10",
+  "updated": "2026-06-12",
   "authors": ["nikolasdtesch@gmail.com"],
   "summary": "Fixar a decisão de stack do backend (Node.js + NestJS, ver ADR-0001), finalizar a árvore de pastas do monorepo conforme SPEC §3 — incluindo o esqueleto modular do /apps/api — e criar o design system base (tokens de cor, tipografia, espaçamento e paleta de gráficos) derivado da marca databolsa.",
   "motivation": "O projeto é greenfield: as pastas existem apenas parcialmente e a linguagem do backend estava pendente (SPEC §2). Antes de codar o backend e a UI é preciso (1) decidir a stack, (2) ter a estrutura de pastas pronta e (3) ter um design system único para web e mobile, derivado das logos já entregues, para garantir consistência visual e reuso.",
@@ -26,7 +26,7 @@
       "Cores semânticas de finanças: lucro (verde), prejuízo (vermelho), cotação stale (âmbar) — RN-10/RN-04 visual."
     ],
     "out_of_scope": [
-      "Inicializar projetos reais (package.json, nest new, next, expo) e instalar dependências.",
+      "Inicializar projetos reais (package.json, nest new, next, flutter pub get) e instalar dependências.",
       "Implementar qualquer endpoint, componente de UI ou schema Prisma.",
       "Configurar Turborepo/CI de fato (apenas a estrutura de pastas).",
       "Implementar os cálculos do packages/core (SPEC-0001)."
@@ -50,7 +50,7 @@
     },
     {
       "id": "REQ-04",
-      "description": "Os tokens de design são legíveis por máquina (JSON) e estruturados para alimentar Tailwind (web) e tema do React Native (mobile).",
+      "description": "Os tokens de design são legíveis por máquina (JSON) e estruturados para alimentar Tailwind (web) e tema Flutter/Dart (mobile).",
       "priority": "must"
     },
     {
@@ -134,7 +134,7 @@
       "id": "T-05",
       "description": "Atualizar o índice de specs (docs/specs/README.md).",
       "target": "docs",
-      "done": false
+      "done": true
     }
   ],
   "risks": [

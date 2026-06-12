@@ -2,10 +2,10 @@
   "$schema": "./spec.schema.json",
   "id": "SPEC-0001",
   "title": "Cálculo de posição e P/L no packages/core (preço médio, qtd atual, lucro/prejuízo)",
-  "status": "draft",
+  "status": "approved",
   "type": "feature",
   "created": "2026-06-10",
-  "updated": "2026-06-10",
+  "updated": "2026-06-12",
   "authors": ["nikolasdtesch@gmail.com"],
   "summary": "Implementar, em packages/core, as funções puras que computam preço médio, quantidade atual, valor investido, valor atual e lucro/prejuízo de uma posição a partir da lista de transações. É a primeira entrega do projeto e a base de todo o resto.",
   "motivation": "Os cálculos financeiros são o coração do produto e a demonstração central do projeto. Devem existir e estar 100% testados antes de qualquer UI ou API, de forma framework-agnostic e reutilizável por web, mobile e backend.",
@@ -89,43 +89,63 @@
       "given": "uma posição totalmente vendida (qtd_atual = 0)",
       "when": "calculo lucro/prejuízo %",
       "then": "não há divisão por zero e a função retorna um valor definido/0 conforme regra"
+    },
+    {
+      "id": "AC-05",
+      "given": "uma posição de N unidades com preço médio definido",
+      "when": "realizo uma venda de exatamente N unidades",
+      "then": "qtd_atual = 0, valor_investido = 0 e o lucro/prejuízo da operação é calculado corretamente sem erro"
     }
   ],
   "test_plan": [
     {
       "id": "TC-01",
-      "description": "Preço médio com múltiplas compras a preços diferentes e taxas.",
+      "description": "Preço médio com múltiplas compras a preços diferentes e taxas — ex.: 10 un. a R$10 + R$2 taxa e 5 un. a R$14 → resultado decimal esperado.",
       "kind": "unit",
       "covers": ["REQ-01", "AC-01"],
-      "mocks_external": true
+      "mocks_external": false
     },
     {
       "id": "TC-02",
-      "description": "Venda parcial: reduz quantidade, mantém preço médio.",
+      "description": "Venda parcial: reduz quantidade, mantém preço médio inalterado.",
       "kind": "edge_case",
       "covers": ["REQ-03", "AC-03"],
-      "mocks_external": true
+      "mocks_external": false
     },
     {
       "id": "TC-03",
-      "description": "Venda total: posição vai a zero.",
+      "description": "Venda total: posição vai a zero, qtd_atual = 0, valor_investido = 0.",
       "kind": "edge_case",
-      "covers": ["REQ-03"],
-      "mocks_external": true
+      "covers": ["REQ-03", "AC-05"],
+      "mocks_external": false
     },
     {
       "id": "TC-04",
-      "description": "Venda maior que a posição é rejeitada.",
+      "description": "Venda maior que a posição é rejeitada com erro.",
       "kind": "edge_case",
       "covers": ["REQ-02", "AC-02"],
-      "mocks_external": true
+      "mocks_external": false
     },
     {
       "id": "TC-05",
       "description": "Posição zero: lucro/prejuízo % sem divisão por zero.",
       "kind": "edge_case",
       "covers": ["AC-04"],
-      "mocks_external": true
+      "mocks_external": false
+    },
+    {
+      "id": "TC-06",
+      "description": "Verificar que os valores retornados por todas as funções são instâncias de Decimal (não number nativo), garantindo REQ-04.",
+      "kind": "unit",
+      "covers": ["REQ-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-07",
+      "description": "P/L % com valores concretos: compra 10 un. a R$10,00, cotação atual R$12,00 → lucro_R$ = R$20,00, lucro_% = 20,00%. Verifica a fórmula numericamente.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": false
     }
   ],
   "tasks": [

@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-**Greenfield / pre-code.** The repository currently contains only planning documents — `docs/PRD.md` (product requirements) and `docs/SPEC.md` (technical spec). No application code, package manager files, build tooling, or tests exist yet. There are no build/lint/test commands to run until the stack is scaffolded.
+**Scaffolded skeleton — pre-implementation.** The monorepo directory structure exists (`/apps/{web,mobile,api}`, `/packages/{core,types,ui}`), along with Docker infrastructure (`docker-compose.yml`, multi-stage `Dockerfile`s for api/web) and the base design system (`docs/design-system.md` + `packages/ui/src/tokens/design-tokens.json`). The backend stack is decided (Node.js + NestJS — see `docs/adr/0001`). The app directories are still empty placeholders (`.gitkeep`); **no application code, `package.json`/workspace tooling, or tests exist yet**, so there are no build/lint/test commands to run.
 
-When scaffolding the project, follow the architecture and roadmap in `docs/SPEC.md` and keep this file updated with the real commands once they exist.
+Work done so far, by spec: SPEC-0002 (monorepo scaffold + design system, `verified`), SPEC-0003 (Docker infra, `verified`). Next up: SPEC-0001 (`packages/core` position & P/L calculations, currently `draft`). Follow the architecture and roadmap in `docs/SPEC.md` and keep this file updated with the real commands once the tooling exists.
 
 ## Spec-Driven Development (SDD) — mandatory workflow
 
@@ -29,13 +29,13 @@ Full process and lifecycle: `docs/specs/README.md`. Do not skip the spec for "sm
 
 Three asset classes in the MVP: B3 securities (stocks, FIIs, ETFs, BDRs), crypto, and US/foreign stocks.
 
-## Architecture (planned)
+## Architecture
 
 Client-server with a single backend serving both web and mobile and brokering all external quote APIs. **API keys and business logic live exclusively on the backend** — clients never call external data sources directly.
 
-Intended monorepo layout (Turborepo):
+Monorepo layout (directories scaffolded; apps not yet implemented):
 - `/apps/web` — Next.js + TypeScript + Tailwind (Recharts)
-- `/apps/mobile` — React Native + Expo (Victory Native)
+- `/apps/mobile` — Flutter + Dart (fl_chart) — decided in `docs/adr/0002-mobile-flutter.md`; standalone sub-project within the monorepo (managed by `flutter` CLI, not pnpm workspace)
 - `/apps/api` — backend: **Node.js + NestJS** (decided in `docs/adr/0001-backend-stack-node-nestjs.md`; ORM: Prisma)
 - `/packages/core` — **financial calculations and business rules** (RN-01..RN-11), framework-agnostic and reusable
 - `/packages/types` — shared API contracts/types
@@ -44,6 +44,8 @@ Intended monorepo layout (Turborepo):
 Backend → PostgreSQL (ORM: Prisma). Auth: JWT + refresh token. Every route except `/auth/*` requires JWT and filters by `user_id`.
 
 External quote sources (server-side, cached): **brapi.dev** (B3), **CoinGecko** (crypto, can return BRL directly), **Finnhub** (US stocks), **AwesomeAPI** (USD/BRL FX).
+
+**Local dev / deploy runs on Docker** (`docker compose up` brings up `postgres` + `api` + `web` with hot-reload; mobile/Flutter is not containerized — run with `flutter run` locally). Build context is always the monorepo root so `packages/*` are copied. Details in `docs/SPEC.md §10.1` and `docs/specs/0003-docker-infra.json`.
 
 ## Non-negotiable conventions
 

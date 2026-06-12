@@ -9,7 +9,7 @@ Arquitetura cliente-servidor com um backend único servindo dois clientes (web e
 
 ```
 ┌─────────────┐     ┌─────────────┐
-│  Web (Next) │     │ Mobile (RN) │
+│  Web (Next) │     │Mobile (Flut)│
 └──────┬──────┘     └──────┬──────┘
        │   HTTPS / REST    │
        └─────────┬─────────┘
@@ -35,9 +35,9 @@ Arquitetura cliente-servidor com um backend único servindo dois clientes (web e
 | Camada | Tecnologia | Justificativa |
 |--------|-----------|---------------|
 | Web | Next.js + TypeScript | Padrão de mercado, SSR, forte demanda em vagas |
-| Mobile | React Native + Expo | Mesma linguagem/lógica da web, máximo reaproveitamento |
+| Mobile | **Flutter + Dart** (decidido — ADR-0002) | Performance nativa sem bridge JS; cliente puro da API REST; `fl_chart` para gráficos |
 | Estilização (web) | Tailwind CSS | Muito requisitado, produtividade alta |
-| Gráficos | Recharts (web) / Victory Native (mobile) | Visualização de alocação e evolução |
+| Gráficos | Recharts (web) / fl_chart (mobile) | Visualização de alocação e evolução |
 | Backend | **Node.js + NestJS** (decidido — ADR-0001) | Unifica a linguagem (TS de ponta a ponta); reusa `packages/core` e `packages/types` sem reescrita |
 | Banco de dados | PostgreSQL | Relacional, transacional, ideal para dados financeiros |
 | ORM | **Prisma** (decidido — ADR-0001) | Migrations e tipagem do schema |
@@ -45,21 +45,23 @@ Arquitetura cliente-servidor com um backend único servindo dois clientes (web e
 | Monorepo (opcional) | Turborepo | Compartilhar tipos e lógica entre web e mobile |
 
 > **Decisão tomada ([ADR-0001](adr/0001-backend-stack-node-nestjs.md)):** backend em **Node.js + NestJS** com **Prisma**, para unificar a stack em TypeScript e reusar `packages/core`/`packages/types` sem reescrita. A opção Python + FastAPI foi descartada.
+>
+> **Decisão tomada ([ADR-0002](adr/0002-mobile-flutter.md)):** mobile em **Flutter + Dart**, substituindo React Native + Expo. O app mobile é cliente puro da API REST, tornando a perda de reaproveitamento de código TS marginal frente ao ganho de performance nativa.
 
 ## 3. Estrutura de pastas (monorepo sugerido)
 
 ```
 /apps
   /web        → Next.js
-  /mobile     → React Native + Expo
-  /api        → backend (NestJS ou FastAPI)
+  /mobile     → Flutter + Dart (ADR-0002)
+  /api        → backend Node.js + NestJS (ADR-0001)
 /packages
   /core       → regras de negócio e cálculos (compartilhável)
   /types      → tipos/contratos da API
   /ui         → componentes compartilhados (se aplicável)
 ```
 
-Manter os **cálculos financeiros em `/packages/core`** permite testá-los isoladamente e reusá-los, e é um ótimo ponto de demonstração técnica.
+Manter os **cálculos financeiros em `/packages/core`** permite testá-los isoladamente e reusá-los, e é um ótimo ponto de demonstração técnica. `packages/ui` é exclusivo do web (Flutter não compartilha componentes React); tipos de contrato para o mobile são gerados em Dart via OpenAPI (`openapi-generator-cli dart-dio`) e ficam em `apps/mobile/lib/api/`.
 
 ## 4. Modelo de dados
 
@@ -153,7 +155,7 @@ alocação_ativo_%     = valor_atual_BRL_ativo / patrimônio_total × 100
 - Chaves de API externas em variáveis de ambiente, **somente no backend**.
 - Senhas com hash (bcrypt/argon2). Nunca armazenar em texto puro.
 - JWT com expiração curta + refresh token.
-- Validação de entrada em todas as rotas (ex.: Zod no Node, Pydantic no FastAPI).
+- Validação de entrada em todas as rotas (DTOs do NestJS com class-validator, ou Zod).
 - HTTPS em produção; CORS restrito aos domínios dos clientes.
 - LGPD: endpoints de exportação e exclusão de dados do usuário.
 
@@ -166,7 +168,7 @@ alocação_ativo_%     = valor_atual_BRL_ativo / patrimônio_total × 100
 | Integração | Endpoints da API + acesso ao banco | Supertest (Node) / pytest + httpx (Python); banco de teste |
 | Integração | Camada de cotações com APIs externas | Mocks/stubs das respostas externas |
 | E2E | Fluxo crítico: criar conta → cadastrar ativo → registrar operação → ver patrimônio | Playwright ou Cypress (web) |
-| Mobile | Fluxos principais do app | Testes de componente (RNTL); E2E opcional com Detox |
+| Mobile | Fluxos principais do app | Widget tests (`flutter_test`); E2E opcional com `integration_test` |
 
 **Princípios de teste:**
 - Os cálculos financeiros devem ter cobertura próxima de 100% e incluir casos de borda: venda parcial, venda total, ativo sem cotação, múltiplas compras com preços diferentes, ativo em moeda estrangeira, divisão por zero (sem posição).
@@ -178,7 +180,7 @@ alocação_ativo_%     = valor_atual_BRL_ativo / patrimônio_total × 100
 - **CI:** GitHub Actions rodando lint + testes a cada push/PR.
 - **Deploy web:** Vercel (Next.js).
 - **Deploy backend:** Railway, Render ou Fly.io (com Postgres gerenciado).
-- **Mobile:** Expo (EAS Build) para gerar os apps.
+- **Mobile:** `flutter build` (iOS/Android); distribuição via Firebase App Distribution ou loja diretamente.
 - Migrations versionadas (Prisma Migrate) aplicadas no deploy via `entrypoint.sh`.
 
 ## 10.1 Docker (SPEC-0003)
@@ -216,6 +218,6 @@ docker build -f apps/web/Dockerfile -t databolsa-web .
 3. Backend: auth + CRUD de ativos/operações + endpoint de resumo.
 4. Integração de cotações com cache.
 5. Web (Next.js): fluxo completo + dashboard.
-6. Mobile (Expo): consulta + edição.
+6. Mobile (Flutter): consulta + edição.
 7. E2E e CI.
 8. (Fase 2) Integração Open Finance via Pluggy.

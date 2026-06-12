@@ -13,7 +13,7 @@ condiciona ORM, tooling de teste, estrutura de pastas e CI.
 
 Forças em jogo:
 
-- O monorepo já usa TypeScript no web (Next.js) e no mobile (React Native).
+- O monorepo já usa TypeScript no web (Next.js); o mobile usa Flutter/Dart (ADR-0002).
 - `/packages/core` e `/packages/types` são pensados para serem reusados pelos
   três apps — reuso direto exige a mesma linguagem no backend.
 - Validação de entrada, JWT, cache de cotações e isolamento por `user_id`

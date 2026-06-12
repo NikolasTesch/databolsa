@@ -19,14 +19,16 @@ Documentação:
 ```
 /apps
   /web        → Next.js + TypeScript + Tailwind (cliente principal)
-  /mobile     → React Native + Expo (cliente complementar)
-  /api        → backend (NestJS ou FastAPI — decisão pendente, ver SPEC §2)
+  /mobile     → Flutter + Dart (cliente complementar, ADR-0002)
+  /api        → backend Node.js + NestJS (ADR-0001), ORM Prisma
 /packages
   /core       → regras de negócio e cálculos financeiros (RN-01..RN-11)
   /types      → tipos/contratos compartilhados da API
-  /ui         → componentes compartilhados (se aplicável)
+  /ui         → componentes compartilhados + design tokens
 /docs         → PRD, SPEC, specs (SDD), ADRs e diagramas
 ```
 
-> **Status:** pré-código. As pastas existem como esqueleto do setup; nenhum app
-> foi scaffoldado ainda. Ver roadmap técnico em `docs/SPEC.md §11`.
+> **Status:** esqueleto scaffoldado, pré-implementação. As pastas do monorepo,
+> a infra Docker (`docker compose up`) e o design system base já existem; os
+> apps em si ainda não foram implementados (sem código nem tooling `package.json`).
+> Ver roadmap técnico em `docs/SPEC.md §11`.

@@ -1,0 +1,32 @@
+{
+  "name": "@meupatrimonio/ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Design tokens e tema compartilhados da databolsa (web + mobile). Fonte única: src/tokens/design-tokens.json.",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens": "./src/tokens.ts",
+    "./tokens.json": "./src/tokens/design-tokens.json",
+    "./tailwind-preset": "./src/tailwind-preset.ts",
+    "./theme-ref": "./src/theme-ref.ts",
+    "./theme.css": "./src/theme.css"
+  },
+  "scripts": {
+    "tokens:css": "node scripts/generate-theme-css.mjs",
+    "tokens:css:check": "node scripts/generate-theme-css.mjs --check",
+    "tokens:dart": "node scripts/generate-theme-dart.mjs",
+    "tokens:dart:check": "node scripts/generate-theme-dart.mjs --check"
+  },
+  "peerDependencies": {
+    "tailwindcss": ">=3.4.0"
+  },
+  "peerDependenciesMeta": {
+    "tailwindcss": {
+      "optional": true
+    }
+  }
+}

@@ -6,7 +6,7 @@
 Este é o guia visual da **databolsa** — rastreador de patrimônio de
 investimentos (B3, cripto e ações dos EUA). O documento é a referência humana;
 o arquivo `design-tokens.json` é a fonte legível por máquina que alimenta o
-**Tailwind** (web) e o **tema do React Native** (mobile). Sempre que um valor
+**Tailwind** (web) e o **tema Flutter/Dart** (mobile). Sempre que um valor
 mudar, mude no JSON primeiro e reflita aqui.
 
 **Direção de marca:** _Trust & Authority_ — confiável, profissional, "bancário".
@@ -66,7 +66,7 @@ mínimo **4.5:1**; texto "muted" no claro nunca abaixo de `#475569` (slate-600).
 - **Evolução do patrimônio (linha/área temporal):** série `patrimonio`
   (`#2756A4`) sólida; `aporte` (`#87C6E9`); ganho/perda usam `lucro`/`prejuizo`.
   Fill de área a 20% de opacidade (`chart.areaFillOpacity`).
-- Bibliotecas: **Recharts** (web) / **Victory Native** (mobile).
+- Bibliotecas: **Recharts** (web) / **fl_chart** (mobile).
 
 ---
 
@@ -117,13 +117,21 @@ Import (web):
 
 ## 5. Como consumir os tokens
 
-`packages/ui/src/tokens/design-tokens.json` é a fonte da verdade. O plano:
+`packages/ui/src/tokens/design-tokens.json` é a fonte da verdade. A camada de
+consumo já existe em código (SPEC-0004), toda derivada do JSON:
 
-- **Web (Tailwind):** mapear `color`, `spacing`, `radius`, `fontFamily` para o
-  `theme.extend` do `tailwind.config`, e os tokens `semantic.{light,dark}` para
-  variáveis CSS trocadas por classe `.dark`.
-- **Mobile (React Native):** importar o JSON num objeto de tema em
-  `apps/mobile/src/theme` e consumir via contexto/`useTheme`.
+- **Web (Tailwind):** `packages/ui/src/tailwind-preset.ts` mapeia `color`,
+  `spacing`, `radius`, `fontFamily` e demais escalas para o `theme.extend`; os
+  tokens `semantic.{light,dark}` e de finanças viram variáveis CSS em
+  `packages/ui/src/theme.css` (`:root` claro / `.dark` escuro). Use
+  `presets: [preset]` no `tailwind.config` e importe o `theme.css` uma vez.
+- **Mobile (Flutter/Dart):** `packages/ui/src/app_tokens.dart` contém
+  `AppColorScheme`, `AppSpacing`, `AppRadius`, `AppFonts`, `AppFontSize`,
+  `AppFontWeight` e `AppMotion` prontos para uso. Copiar para
+  `apps/mobile/lib/theme/app_tokens.dart` ao inicializar o projeto Flutter.
 
-A geração automática (ex.: Style Dictionary) fica para quando o tooling do
-monorepo for inicializado — fora do escopo de SPEC-0002.
+`theme.css` e `app_tokens.dart` são **gerados** — alterou um token no JSON, rode
+ambos os geradores (`generate-theme-css.mjs` e `generate-theme-dart.mjs`); use
+`--check` no CI. A geração automática completa (ex.: Style Dictionary) e o build
+do pacote ficam para quando o tooling do monorepo for inicializado. Consumo
+detalhado em [`packages/ui/README.md`](../packages/ui/README.md).
