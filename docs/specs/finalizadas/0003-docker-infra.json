@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "./spec.schema.json",
   "id": "SPEC-0003",
   "title": "Infraestrutura Docker: ambiente de desenvolvimento local e imagens de produção",

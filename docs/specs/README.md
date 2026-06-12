@@ -48,9 +48,21 @@ draft → approved → in_progress → implemented → verified
 6. **Verifique e feche.** Confirme os `acceptance_criteria`, mude `status` para
    `implemented` → `verified` e atualize `updated`.
 
+## Organização das pastas
+
+As specs ficam em subpastas de acordo com o estágio atual:
+
+| Pasta | Status cobertos | Quando mover |
+| ----- | --------------- | ------------ |
+| `pendentes/` | `draft`, `approved` | Ao criar ou aprovar uma spec |
+| `em-andamento/` | `in_progress`, `implemented` | Ao iniciar a implementação |
+| `finalizadas/` | `verified`, `superseded` | Ao confirmar os critérios de aceite |
+
+O template e o schema ficam sempre na raiz (`0000-template.json`, `spec.schema.json`).
+
 ## Convenções de nomenclatura
 
-- Arquivo: `NNNN-titulo-curto.json` (kebab-case). Ex.: `0001-core-position-calculation.json`.
+- Arquivo: `NNNN-titulo-curto.json` (kebab-case). Ex.: `pendentes/0005-novo-recurso.json`.
 - `id`: `SPEC-NNNN`, casando com o prefixo do arquivo.
 - IDs internos: requisitos `REQ-NN`, critérios `AC-NN`, testes `TC-NN`, tarefas `T-NN`.
 - Regras de negócio do produto: `RN-NN` (definidas no PRD, não renumere).
@@ -60,7 +72,7 @@ draft → approved → in_progress → implemented → verified
 A spec deve validar contra o schema. Com [`ajv`](https://ajv.js.org/) instalado:
 
 ```bash
-npx ajv validate -s docs/specs/spec.schema.json -d "docs/specs/0001-*.json" --spec=draft2020
+npx ajv validate -s docs/specs/spec.schema.json -d "docs/specs/finalizadas/*.json" --spec=draft2020
 ```
 
 Quando o tooling do monorepo existir, isto vira um script (`pnpm spec:validate`)
@@ -68,11 +80,21 @@ e idealmente um check de CI.
 
 ## Índice de specs
 
+### Finalizadas (`finalizadas/`)
+
 | ID        | Título                                              | Status   |
 | --------- | --------------------------------------------------- | -------- |
-| SPEC-0001 | Cálculo de posição e P/L no `packages/core`         | approved |
+| SPEC-0001 | Cálculo de posição e P/L no `packages/core`         | verified |
 | SPEC-0002 | Scaffold do monorepo e design system base           | verified |
 | SPEC-0003 | Infraestrutura Docker (dev + produção)               | verified |
 | SPEC-0004 | Camada de consumo dos design tokens (Tailwind/CSS/Flutter) | verified |
+
+### Em andamento (`em-andamento/`)
+
+_Nenhuma no momento._
+
+### Pendentes (`pendentes/`)
+
+_Nenhuma no momento._
 
 > Mantenha esta tabela ao adicionar specs.

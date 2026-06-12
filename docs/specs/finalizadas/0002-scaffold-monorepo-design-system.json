@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "./spec.schema.json",
   "id": "SPEC-0002",
   "title": "Scaffold do monorepo (estrutura de pastas) e design system base da marca databolsa",

@@ -16,6 +16,9 @@
     "./theme.css": "./src/theme.css"
   },
   "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "tokens:css": "node scripts/generate-theme-css.mjs",
     "tokens:css:check": "node scripts/generate-theme-css.mjs --check",
     "tokens:dart": "node scripts/generate-theme-dart.mjs",
@@ -28,5 +31,10 @@
     "tailwindcss": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.8",
+    "tsx": "^4.22.4",
+    "vitest": "^4.1.8"
   }
 }

@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "./spec.schema.json",
   "id": "SPEC-0004",
   "title": "Camada de consumo dos design tokens (preset Tailwind, CSS vars e tema Flutter/Dart)",
@@ -163,6 +163,12 @@
       "id": "T-06",
       "description": "Atualizar docs/design-system.md §5, packages/ui/README.md e o índice docs/specs/README.md.",
       "target": "docs",
+      "done": true
+    },
+    {
+      "id": "T-07",
+      "description": "Implementar suíte de testes automatizados (Vitest): instalar devDependencies, criar vitest.config.ts, tsconfig.json e src/__tests__/tokens.test.ts cobrindo TC-01..TC-04. Adicionar script 'test' ao package.json.",
+      "target": "packages/ui",
       "done": true
     }
   ],

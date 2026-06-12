@@ -1,8 +1,8 @@
-{
+﻿{
   "$schema": "./spec.schema.json",
   "id": "SPEC-0001",
   "title": "Cálculo de posição e P/L no packages/core (preço médio, qtd atual, lucro/prejuízo)",
-  "status": "approved",
+  "status": "verified",
   "type": "feature",
   "created": "2026-06-10",
   "updated": "2026-06-12",
@@ -153,19 +153,19 @@
       "id": "T-01",
       "description": "Scaffold do packages/core (tooling de teste + tipo decimal).",
       "target": "packages/core",
-      "done": false
+      "done": true
     },
     {
       "id": "T-02",
       "description": "Implementar funções puras de preço médio, quantidade e P/L.",
       "target": "packages/core",
-      "done": false
+      "done": true
     },
     {
       "id": "T-03",
       "description": "Escrever a suíte de testes cobrindo todos os edge cases.",
       "target": "packages/core",
-      "done": false
+      "done": true
     }
   ],
   "risks": [

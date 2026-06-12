@@ -4,9 +4,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-**Scaffolded skeleton — pre-implementation.** The monorepo directory structure exists (`/apps/{web,mobile,api}`, `/packages/{core,types,ui}`), along with Docker infrastructure (`docker-compose.yml`, multi-stage `Dockerfile`s for api/web) and the base design system (`docs/design-system.md` + `packages/ui/src/tokens/design-tokens.json`). The backend stack is decided (Node.js + NestJS — see `docs/adr/0001`). The app directories are still empty placeholders (`.gitkeep`); **no application code, `package.json`/workspace tooling, or tests exist yet**, so there are no build/lint/test commands to run.
+**packages/core implemented.** The monorepo directory structure exists (`/apps/{web,mobile,api}`, `/packages/{core,types,ui}`), along with Docker infrastructure and base design system. The backend stack is decided (Node.js + NestJS — see `docs/adr/0001`). The app directories (`/apps/*`) are still empty placeholders (`.gitkeep`).
 
-Work done so far, by spec: SPEC-0002 (monorepo scaffold + design system, `verified`), SPEC-0003 (Docker infra, `verified`). Next up: SPEC-0001 (`packages/core` position & P/L calculations, currently `draft`). Follow the architecture and roadmap in `docs/SPEC.md` and keep this file updated with the real commands once the tooling exists.
+`packages/core` is a standalone Node.js project (TypeScript + Jest + decimal.js) with full test coverage. The monorepo workspace tooling (pnpm workspaces) is not yet configured — treat each package as standalone for now.
+
+Work done so far, by spec: SPEC-0001 (`packages/core` position & P/L, `implemented`), SPEC-0002 (monorepo scaffold + design system, `verified`), SPEC-0003 (Docker infra, `verified`). Follow the architecture and roadmap in `docs/SPEC.md`.
+
+### Build/test commands — packages/core
+
+```bash
+# from packages/core/
+npm install          # install dependencies (first time)
+npm test             # run Jest with coverage (thresholds: 95% stmts/funcs/lines, 90% branches)
+npm run build        # compile TypeScript to dist/
+npm run lint         # tsc --noEmit (type-check only, no emit)
+```
+
+## Subagent workflow — mandatory
+
+Every non-trivial task follows a two-agent pipeline. Never skip roles or merge them into a single step.
+
+| Role | Agent | When to invoke | What it does | What it does NOT do |
+|---|---|---|---|---|
+| **Arquiteto** | `arquiteto` | Before any feature, rule change, or non-trivial refactor — always first | Reads docs + existing code, draws the solution, produces an implementation plan + ADR | Writes production code or tests |
+| **Implementador** | `implementador` | After the arquiteto delivers a plan | Writes/edits code and tests, updates the spec JSON, updates docs | Redesigns the architecture |
+
+**Rule:** if the task touches production code, spawn `arquiteto` first. Only after its plan is in hand, spawn `implementador` to execute. Exploratory questions and one-liner fixes are exempt, but any feature or business-rule change is not.
+
+Additional specialised agents (use when the situation calls for them):
+
+| Agent | Purpose |
+|---|---|
+| `testador` | Write, run, and validate tests; cover edge cases for financial calculations |
+| `revisor` | Code-review the diff before merge — bugs, security, convention violations |
+| `Explore` | Fast read-only codebase search (file patterns, symbol lookups) |
 
 ## Spec-Driven Development (SDD) — mandatory workflow
 
