@@ -6,7 +6,7 @@
   "type": "feature",
   "created": "2026-06-12",
   "updated": "2026-06-12",
-  "authors": ["nikolasdtesch@gmail.com"],
+  "authors": ["nikolasdtesch@gmail.com", "claude-sonnet-4-6"],
   "summary": "Transformar o design-tokens.json (fonte única, SPEC-0002) em artefatos consumíveis por código: um preset Tailwind e variáveis CSS de tema (claro/escuro) para a web, e um objeto de tema de referência tipado para o Flutter/Dart. Sem componentes de UI — apenas a camada de tokens, para não violar a regra 'packages/core primeiro'.",
   "motivation": "O design system já está documentado (docs/design-system.md) e os tokens existem em JSON, mas hoje nenhum código consome essa fonte: a seção §5 do design-system.md descreve o mapeamento para Tailwind/Flutter apenas como plano. Para que web e mobile compartilhem de fato a mesma fonte da verdade visual quando forem implementados, é preciso materializar os tokens em um preset Tailwind, em variáveis CSS de tema e em um tema de referência Flutter/Dart, todos derivados do mesmo JSON. Fazer isso agora, como camada não-UI, não bloqueia nem antecede o packages/core (SPEC-0001) no roadmap.",
   "related": {

@@ -93,9 +93,9 @@
     {
       "id": "TC-01",
       "description": "Verificar que a árvore de pastas esperada existe (apps/api modular + packages).",
-      "kind": "integration",
+      "kind": "unit",
       "covers": ["REQ-02", "AC-02"],
-      "mocks_external": true
+      "mocks_external": false
     },
     {
       "id": "TC-02",
