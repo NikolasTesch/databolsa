@@ -28,7 +28,5 @@ Documentação:
 /docs         → PRD, SPEC, specs (SDD), ADRs e diagramas
 ```
 
-> **Status:** esqueleto scaffoldado, pré-implementação. As pastas do monorepo,
-> a infra Docker (`docker compose up`) e o design system base já existem; os
-> apps em si ainda não foram implementados (sem código nem tooling `package.json`).
-> Ver roadmap técnico em `docs/SPEC.md §11`.
+> **Status:** `packages/core` (cálculos financeiros, SPEC-0001) e `packages/ui` (design tokens, SPEC-0004) implementados e verificados. Infra Docker pronta. Próximo passo: schema Prisma + backend NestJS (SPEC-0005/0006).
+> Ver roadmap técnico em `docs/SPEC.md §11` e specs em `docs/specs/pendentes/`.

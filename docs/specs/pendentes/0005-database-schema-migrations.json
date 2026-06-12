@@ -1,0 +1,186 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0005",
+  "title": "Schema do banco de dados e migrations Prisma",
+  "status": "draft",
+  "type": "feature",
+  "created": "2026-06-12",
+  "updated": "2026-06-12",
+  "authors": ["nikolasdtesch@gmail.com"],
+  "summary": "Definir o schema Prisma completo para o MVP (User, Asset, Transaction, QuoteCache) e gerar as migrations iniciais. É o alicerce do backend: sem o schema não é possível iniciar apps/api.",
+  "motivation": "O roadmap técnico (SPEC §11) lista o schema do banco como item 1, antes do backend. O modelo de dados já está especificado em SPEC §4 e PRD §6; este trabalho materializa essas definições em Prisma ORM e PostgreSQL, garantindo tipos corretos (decimal para dinheiro), unicidade, FKs e a constraint de isolamento por usuário (RN-11).",
+  "related": {
+    "prd": ["PRD §6"],
+    "spec_doc": ["SPEC §4", "SPEC §11"],
+    "business_rules": ["RN-02", "RN-11"],
+    "adrs": ["ADR-0001"],
+    "depends_on": ["SPEC-0003"]
+  },
+  "scope": {
+    "in_scope": [
+      "apps/api/prisma/schema.prisma com todas as entidades do MVP: User, Asset, Transaction, QuoteCache.",
+      "Migration inicial gerada via `prisma migrate dev`.",
+      "Tipos monetários e de quantidade como Decimal (nunca Float).",
+      "Enum asset_class (STOCK_BR, FII, ETF, BDR, CRYPTO, STOCK_US), currency (BRL, USD), data_source (BRAPI, COINGECKO, FINNHUB), transaction_type (BUY, SELL).",
+      "Constraints: email único em User; (symbol, source) único em QuoteCache; FKs com cascade delete (Asset→User, Transaction→Asset).",
+      "Seed script mínimo para ambiente de dev (um usuário de teste).",
+      "Configuração do PrismaClient em apps/api/src/prisma.service.ts (NestJS)."
+    ],
+    "out_of_scope": [
+      "Endpoints da API — cobertos em SPEC-0006.",
+      "Lógica de negócio (cálculos, regras de P/L) — já em packages/core (SPEC-0001).",
+      "Integração com fontes de cotação — coberta em SPEC-0007.",
+      "Migrations de alteração de schema (post-MVP).",
+      "Multi-tenancy ou isolamento além de user_id FK."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Entidade User com id (uuid), email (único), password_hash e created_at.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Entidade Asset com id, user_id (FK→User, cascade delete), ticker, name, asset_class (enum), currency (enum), data_source (enum), created_at.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Entidade Transaction com id, asset_id (FK→Asset, cascade delete), type (BUY|SELL), date, unit_price (Decimal), quantity (Decimal), fees (Decimal, default 0), created_at.",
+      "rule_ref": "RN-02",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Entidade QuoteCache com id, symbol, source (data_source enum), price (Decimal), currency, fetched_at; unique constraint em (symbol, source).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Todos os campos monetários e de quantidade usam tipo Decimal do Prisma (mapeado para numeric no PostgreSQL) — nunca Float.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Migration inicial gerada e aplicável ao banco PostgreSQL do Docker (SPEC-0003) sem erros.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "User",
+      "change": "create",
+      "fields": ["id uuid pk", "email string unique", "password_hash string", "created_at datetime"],
+      "notes": "Base do isolamento por usuário (RN-11)."
+    },
+    {
+      "entity": "Asset",
+      "change": "create",
+      "fields": ["id uuid pk", "user_id uuid fk", "ticker string", "name string", "asset_class enum", "currency enum", "data_source enum", "created_at datetime"],
+      "notes": "Cada ativo pertence a exatamente um usuário."
+    },
+    {
+      "entity": "Transaction",
+      "change": "create",
+      "fields": ["id uuid pk", "asset_id uuid fk", "type enum BUY|SELL", "date date", "unit_price Decimal", "quantity Decimal", "fees Decimal default 0", "created_at datetime"],
+      "notes": "Dinheiro e quantidade em Decimal (nunca float). Venda maior que posição é rejeitada na camada de serviço (RN-02)."
+    },
+    {
+      "entity": "QuoteCache",
+      "change": "create",
+      "fields": ["id uuid pk", "symbol string", "source enum", "price Decimal", "currency string", "fetched_at datetime"],
+      "notes": "Unique (symbol, source). TTL validado na camada de serviço (RN-10), não no banco."
+    }
+  ],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "o arquivo schema.prisma existente",
+      "when": "executo `prisma migrate dev --name init`",
+      "then": "migration é gerada e aplicada ao PostgreSQL sem erros"
+    },
+    {
+      "id": "AC-02",
+      "given": "o schema aplicado",
+      "when": "inspeto as colunas monetárias (unit_price, quantity, fees, price)",
+      "then": "todas são do tipo numeric no PostgreSQL, não float"
+    },
+    {
+      "id": "AC-03",
+      "given": "dois usuários distintos com ativos",
+      "when": "consulto Asset por user_id de um usuário",
+      "then": "só retornam ativos do usuário consultado (isolamento RN-11)"
+    },
+    {
+      "id": "AC-04",
+      "given": "um Asset deletado",
+      "when": "verifico as Transactions associadas",
+      "then": "foram removidas em cascata (cascade delete configurado)"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Testar que a migration é aplicada sem erro e as tabelas existem com os tipos corretos (especialmente Decimal para campos monetários).",
+      "kind": "integration",
+      "covers": ["REQ-05", "REQ-06", "AC-01", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "Testar cascade delete: remover um Asset e confirmar que suas Transactions são deletadas.",
+      "kind": "integration",
+      "covers": ["REQ-03", "AC-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "Testar unique constraint em QuoteCache (symbol, source): inserir dois registros com o mesmo par deve lançar erro.",
+      "kind": "integration",
+      "covers": ["REQ-04"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar apps/api/prisma/schema.prisma com datasource PostgreSQL, generator client e todos os models/enums.",
+      "target": "apps/api",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Rodar `prisma migrate dev --name init` e commitar a migration gerada.",
+      "target": "apps/api",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar apps/api/prisma/seed.ts com um usuário de desenvolvimento.",
+      "target": "apps/api",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Criar apps/api/src/prisma.service.ts (PrismaClient como NestJS Injectable).",
+      "target": "apps/api",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Adicionar package.json e tsconfig.json mínimos ao apps/api para suportar o Prisma CLI.",
+      "target": "apps/api",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Tipo Decimal do Prisma requer precisão explícita — definir Decimal(18,8) para preços e Decimal(18,8) para quantidades.",
+    "Seed em produção acidental — garantir que o script de seed só seja executável em NODE_ENV=development."
+  ],
+  "observability": [],
+  "rollback": "Reverter o commit da migration e rodar `prisma migrate reset` no ambiente de dev. Produção: `prisma migrate resolve --rolled-back`."
+}

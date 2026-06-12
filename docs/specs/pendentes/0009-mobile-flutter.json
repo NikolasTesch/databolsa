@@ -1,0 +1,170 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0009",
+  "title": "Mobile Flutter — consulta e edição do portfólio",
+  "status": "draft",
+  "type": "feature",
+  "created": "2026-06-12",
+  "updated": "2026-06-12",
+  "authors": ["nikolasdtesch@gmail.com"],
+  "summary": "Implementar o app mobile em Flutter consumindo a mesma API REST do backend (SPEC-0006/0007). Fluxo de autenticação, visualização do portfólio, lançamento de transações e indicador de cotação stale. Cliente complementar ao web, com design fiel ao @databolsa/ui via app_tokens.dart.",
+  "motivation": "O roadmap (SPEC §11 item 6) posiciona o mobile após o web estar funcional. O app Flutter é cliente puro da API — sem lógica de negócio própria — tornando sua implementação mais rápida e direta. A decisão de usar Flutter está documentada em ADR-0002.",
+  "related": {
+    "prd": ["PRD §3", "PRD §4"],
+    "spec_doc": ["SPEC §1", "SPEC §2"],
+    "business_rules": ["RN-01", "RN-10", "RN-11"],
+    "adrs": ["ADR-0002"],
+    "depends_on": ["SPEC-0006", "SPEC-0007", "SPEC-0004"]
+  },
+  "scope": {
+    "in_scope": [
+      "Inicialização de apps/mobile como projeto Flutter standalone (flutter create).",
+      "Geração do cliente Dart da API via openapi-generator-cli (dart-dio) a partir do OpenAPI spec do backend.",
+      "Telas: Login, Register, Dashboard (portfólio resumido + lista de posições), Detalhes do ativo (histórico de transações), Nova transação (BUY/SELL).",
+      "Autenticação JWT: armazenamento seguro do access token (flutter_secure_storage), refresh automático.",
+      "Design baseado em app_tokens.dart (SPEC-0004): cores, tipografia (IBM Plex Mono para números), espaçamento.",
+      "Gráfico de alocação com fl_chart (doughnut).",
+      "Indicador stale (RN-10): texto âmbar com ícone de aviso quando is_stale=true.",
+      "Suporte a tema claro/escuro via AppColorScheme (app_tokens.dart)."
+    ],
+    "out_of_scope": [
+      "Notificações push.",
+      "Biometria / autenticação alternativa.",
+      "Modo offline / sync.",
+      "Gráfico histórico de patrimônio.",
+      "Publicação nas lojas (App Store / Play Store).",
+      "Testes E2E no dispositivo — cobertos em SPEC-0010."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Fluxo de autenticação: login, registro e logout com JWT armazenado em flutter_secure_storage.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Tela de dashboard exibe patrimônio_total_brl, lista de posições com P/L e alocação (gráfico fl_chart).",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Posições com is_stale=true exibem indicador âmbar (AppColors.stale) com mensagem ao toque.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Formulário de nova transação com validação local (campos obrigatórios, quantidade e preço > 0) e exibição do erro de API para SELL inválido.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Todos os valores monetários exibidos com fonte monospace (AppFonts.mono) e sinal +/− explícito.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "n/a",
+      "change": "none",
+      "fields": [],
+      "notes": "App cliente puro; nenhuma persistência local além do token JWT."
+    }
+  ],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuário faz login com credenciais válidas",
+      "when": "toca em 'Entrar'",
+      "then": "é redirecionado para a tela de dashboard e vê o portfólio"
+    },
+    {
+      "id": "AC-02",
+      "given": "portfólio com 3 ativos",
+      "when": "abre o dashboard",
+      "then": "vê patrimônio total em BRL, gráfico de alocação e lista de posições com P/L"
+    },
+    {
+      "id": "AC-03",
+      "given": "ativo com cotação stale",
+      "when": "visualiza a lista de posições",
+      "then": "linha/card exibe ícone âmbar; ao tocar mostra tooltip 'cotação desatualizada'"
+    },
+    {
+      "id": "AC-04",
+      "given": "app reiniciado",
+      "when": "o access token ainda é válido (armazenado em flutter_secure_storage)",
+      "then": "usuário permanece autenticado sem precisar fazer login novamente"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Widget tests dos componentes principais (PositionCard, AllocationChart, TransactionForm) com API mockada.",
+      "kind": "unit",
+      "covers": ["REQ-02", "REQ-03", "REQ-04", "REQ-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "Teste do AuthRepository: armazenamento e leitura do token via flutter_secure_storage mockado.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-04"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Inicializar apps/mobile com `flutter create` e configurar pubspec.yaml (flutter_secure_storage, dio, fl_chart, google_fonts).",
+      "target": "apps/mobile",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Copiar app_tokens.dart (gerado em SPEC-0004) para apps/mobile/lib/theme/ e configurar ThemeData.",
+      "target": "apps/mobile",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Gerar cliente Dart da API com openapi-generator-cli a partir do swagger.json do backend.",
+      "target": "apps/mobile",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Implementar AuthRepository + telas de Login e Register.",
+      "target": "apps/mobile",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Implementar tela Dashboard com PortfolioSummary e AllocationChart (fl_chart).",
+      "target": "apps/mobile",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Implementar tela de detalhes do ativo e formulário de nova transação.",
+      "target": "apps/mobile",
+      "done": false
+    },
+    {
+      "id": "T-07",
+      "description": "Escrever widget tests (TC-01 e TC-02).",
+      "target": "apps/mobile",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Geração do cliente Dart pode exigir ajuste manual se o OpenAPI spec tiver tipos Decimal como string — verificar que o cliente serializa corretamente.",
+    "flutter_secure_storage requer configuração nativa (Android Keystore, iOS Keychain) — testar em dispositivo real ou emulador.",
+    "Sincronização de app_tokens.dart: se os tokens mudarem (SPEC-0004), o arquivo deve ser regenerado e copiado para apps/mobile."
+  ],
+  "observability": [],
+  "rollback": "Reverter commits de apps/mobile. Backend e web não são afetados."
+}

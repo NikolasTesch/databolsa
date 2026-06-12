@@ -24,7 +24,7 @@
       "packages/ui/scripts/generate-theme-css.mjs: gerador (node puro, sem dependências) que regenera theme.css a partir do JSON, mantendo fonte única.",
       "packages/ui/src/theme-ref.ts: objeto de tema de referência tipado (lightTheme/darkTheme) para o Flutter/Dart, com cores resolvidas em hex e escalas numéricas (dp).",
       "packages/ui/src/index.ts: barrel exportando tokens, preset e temas.",
-      "packages/ui/package.json mínimo (manifest do pacote @meupatrimonio/ui, exports) — sem dependências de runtime nem build step.",
+      "packages/ui/package.json mínimo (manifest do pacote @databolsa/ui, exports) — sem dependências de runtime nem build step.",
       "Atualizar docs/design-system.md §5 e packages/ui/README.md para apontar os arquivos reais de consumo."
     ],
     "out_of_scope": [
@@ -76,7 +76,7 @@
     {
       "id": "AC-01",
       "given": "um desenvolvedor configurando o Tailwind em apps/web",
-      "when": "importa o preset de @meupatrimonio/ui em tailwind.config",
+      "when": "importa o preset de @databolsa/ui em tailwind.config",
       "then": "as cores da marca, tokens de finanças e as escalas (spacing, radius, fontSize, screens, etc.) ficam disponíveis como classes utilitárias"
     },
     {
@@ -155,7 +155,7 @@
     },
     {
       "id": "T-05",
-      "description": "Adicionar package.json mínimo (@meupatrimonio/ui, exports) sem deps de runtime.",
+      "description": "Adicionar package.json mínimo (@databolsa/ui, exports) sem deps de runtime.",
       "target": "packages/ui",
       "done": true
     },

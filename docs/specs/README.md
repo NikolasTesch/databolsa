@@ -95,6 +95,13 @@ _Nenhuma no momento._
 
 ### Pendentes (`pendentes/`)
 
-_Nenhuma no momento._
+| ID        | Título                                                            | Status |
+| --------- | ----------------------------------------------------------------- | ------ |
+| SPEC-0005 | Schema do banco de dados e migrations Prisma                      | draft  |
+| SPEC-0006 | Backend NestJS — autenticação JWT e CRUD de ativos/transações     | draft  |
+| SPEC-0007 | Integração de cotações com cache (brapi, CoinGecko, Finnhub, AwesomeAPI) | draft  |
+| SPEC-0008 | Web Next.js — fluxo completo e dashboard do portfólio             | draft  |
+| SPEC-0009 | Mobile Flutter — consulta e edição do portfólio                   | draft  |
+| SPEC-0010 | Testes E2E e pipeline de CI/CD                                    | draft  |
 
 > Mantenha esta tabela ao adicionar specs.
