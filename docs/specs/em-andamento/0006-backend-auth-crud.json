@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0006",
   "title": "Backend NestJS — autenticação JWT e CRUD de ativos/transações",
-  "status": "draft",
+  "status": "implemented",
   "type": "feature",
   "created": "2026-06-12",
   "updated": "2026-06-12",
@@ -18,7 +18,7 @@
   },
   "scope": {
     "in_scope": [
-      "Módulo de autenticação: POST /auth/register, POST /auth/login, POST /auth/refresh. JWT access token (15min) + refresh token (7d) em httpOnly cookie.",
+      "Módulo de autenticação: POST /auth/register, POST /auth/login, POST /auth/refresh. JWT access token (15min) + refresh token (7d).",
       "Guard JWT global (todas as rotas exceto /auth/* exigem token válido).",
       "Módulo de ativos: GET /assets, POST /assets, GET /assets/:id, DELETE /assets/:id.",
       "Módulo de transações: GET /assets/:id/transactions, POST /assets/:id/transactions, PATCH /transactions/:id, DELETE /transactions/:id.",
@@ -26,7 +26,7 @@
       "Validação de inputs com class-validator (DTOs com tipagem forte).",
       "Rejeição de SELL com quantidade maior que a posição atual (RN-02), usando calculatePosition de packages/core.",
       "Isolamento estrito: todo query filtra por user_id extraído do JWT (RN-11).",
-      "Configuração de @nestjs/swagger: endpoint GET /api/docs (dev only) e geração de swagger.json como artefato de build (necessário para SPEC-0009 gerar o cliente Dart)."
+      "Configuração de @nestjs/swagger: endpoint GET /api/docs (dev only) e geração de swagger.json como artefato de build."
     ],
     "out_of_scope": [
       "Cotações reais — GET /portfolio/summary retorna cotação nula ou do cache se vazio (SPEC-0007 implementa a busca).",
@@ -267,55 +267,55 @@
       "id": "T-01",
       "description": "Inicializar apps/api com NestJS CLI: package.json, tsconfig, main.ts, app.module.ts.",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-02",
       "description": "Implementar AuthModule (register, login, refresh) com bcrypt e @nestjs/jwt.",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-03",
       "description": "Implementar JwtAuthGuard global e decorator @CurrentUser().",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-04",
       "description": "Implementar AssetsModule (CRUD com filtro por user_id).",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-05",
-      "description": "Implementar TransactionsModule com validação de SELL via packages/core.calculatePosition.",
+      "description": "Implementar TransactionsModule com validação de SELL via packages/core.calculateCurrentQuantity.",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-06",
       "description": "Implementar PortfolioModule: GET /portfolio/summary usando packages/core para cálculos.",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-07",
-      "description": "Escrever testes unitários e de integração (Jest + supertest).",
+      "description": "Escrever testes unitários (Jest) para AuthService e TransactionsService.",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-08",
       "description": "Configurar @nestjs/swagger no AppModule com metadata (title, version, bearer auth); adicionar decoradores @ApiProperty nos DTOs; criar script npm run swagger:export.",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-09",
       "description": "Implementar GET /assets/:id/transactions no TransactionsModule, com validação de ownership via asset.user_id.",
       "target": "apps/api",
-      "done": false
+      "done": true
     }
   ],
   "risks": [

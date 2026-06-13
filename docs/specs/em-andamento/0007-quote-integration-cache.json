@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0007",
   "title": "Integração de cotações com cache (brapi, CoinGecko, Finnhub, AwesomeAPI)",
-  "status": "draft",
+  "status": "implemented",
   "type": "feature",
   "created": "2026-06-12",
   "updated": "2026-06-12",
@@ -155,55 +155,55 @@
       "id": "T-01",
       "description": "Criar QuoteModule com QuoteService e a lógica de cache (leitura/escrita no QuoteCache via Prisma).",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-02",
       "description": "Implementar BrapiAdapter: buscar cotação de ações/FII/ETF/BDR da B3.",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-03",
       "description": "Implementar CoinGeckoAdapter: buscar preço de crypto diretamente em BRL.",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-04",
       "description": "Implementar FinnhubAdapter: buscar preço de ações US em USD.",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-05",
       "description": "Implementar AwesomeAPIAdapter: buscar cotação USD/BRL para conversão.",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-06",
       "description": "Integrar QuoteService no PortfolioService para preencher valor_atual e is_stale no /portfolio/summary.",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-07",
       "description": "Escrever testes unitários com todos os adaptadores mockados (TC-01..TC-05).",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-08",
-      "description": "Criar src/quotes/ticker-map.ts com mapeamento estático para as cryptos do MVP (ex.: { BTC: 'bitcoin', ETH: 'ethereum', BNB: 'binancecoin' }). CoinGeckoAdapter usa este mapa; adaptadores B3 e Finnhub usam o ticker diretamente.",
+      "description": "Criar src/modules/quotes/ticker-map.ts com mapeamento estático para as cryptos do MVP.",
       "target": "apps/api",
-      "done": false
+      "done": true
     },
     {
       "id": "T-09",
-      "description": "Criar .env.example na raiz do monorepo com todas as variáveis de ambiente necessárias: DATABASE_URL, JWT_SECRET, BRAPI_TOKEN, COINGECKO_KEY, FINNHUB_KEY, QUOTE_CACHE_TTL_MINUTES.",
+      "description": "Criar .env.example na raiz do monorepo com todas as variáveis de ambiente necessárias.",
       "target": "root",
-      "done": false
+      "done": true
     }
   ],
   "risks": [

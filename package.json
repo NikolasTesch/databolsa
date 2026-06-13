@@ -1,0 +1,10 @@
+{
+  "name": "databolsa",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build": "pnpm --filter api run build",
+    "test:api": "pnpm --filter api run test"
+  }
+}
