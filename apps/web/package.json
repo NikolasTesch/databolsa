@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm --filter @databolsa/core build && prisma generate && next build",
+    "build": "pnpm --filter @databolsa/core build && pnpm exec prisma generate && next build",
     "start": "next start",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
@@ -15,7 +15,7 @@
     "@databolsa/core": "workspace:*",
     "@databolsa/ui": "workspace:*",
     "@hookform/resolvers": "^3.9.0",
-    "@prisma/client": "^5.0.0",
+    "@prisma/client": "^5.22.0",
     "@tanstack/react-query": "^5.51.1",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
