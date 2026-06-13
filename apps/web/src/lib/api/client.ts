@@ -54,6 +54,7 @@ export async function apiFetch<T>(
   _retried?: boolean,
 ): Promise<T> {
   const isServer = typeof window === 'undefined';
+  const isBff = isBffPath(path);
 
   const url = isServer
     ? path.startsWith('/api/') ? `${API_URL}${path}` : `${API_URL}/api${path}`
