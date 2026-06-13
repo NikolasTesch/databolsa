@@ -1,0 +1,218 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0007",
+  "title": "Integração de cotações com cache (brapi, CoinGecko, Finnhub, AwesomeAPI)",
+  "status": "verified",
+  "type": "feature",
+  "created": "2026-06-12",
+  "updated": "2026-06-13",
+  "authors": ["nikolasdtesch@gmail.com"],
+  "summary": "Implementar o módulo de busca de cotações no backend: consulta às 4 fontes externas (brapi.dev para B3, CoinGecko para crypto, Finnhub para ações US, AwesomeAPI para câmbio USD/BRL), com cache TTL em QuoteCache e degradação elegante quando a fonte falha (RN-10). Torna o /portfolio/summary funcional com preços reais.",
+  "motivation": "O /portfolio/summary (SPEC-0006) retorna cotações nulas enquanto este módulo não existir. Com ele, o portfólio exibe valor atual, P/L e alocação reais. O cache é obrigatório para proteger os limites de requisição das APIs gratuitas (RN-10).",
+  "related": {
+    "prd": ["PRD §7", "PRD §8"],
+    "spec_doc": ["SPEC §6", "SPEC §7"],
+    "business_rules": ["RN-09", "RN-10"],
+    "adrs": [],
+    "depends_on": ["SPEC-0005", "SPEC-0006"]
+  },
+  "scope": {
+    "in_scope": [
+      "QuoteService: método getQuote(symbol, asset_class) que retorna preço atual em BRL ou USD conforme o ativo.",
+      "Estratégia de cache: antes de consultar a API externa, verificar QuoteCache (symbol, source); só busca se fetched_at > TTL (5–15 min configurável).",
+      "Adaptadores para cada fonte: BrapiAdapter (B3), CoinGeckoAdapter (crypto, retorna BRL direto), FinnhubAdapter (US stocks, retorna USD), AwesomeAPIAdapter (câmbio USD/BRL).",
+      "Conversão automática para BRL: ativos USD têm valor_atual multiplicado pelo câmbio do AwesomeAPI.",
+      "Estado stale (RN-10): se a busca falhar, reusar o último valor do cache e marcar is_stale=true na resposta.",
+      "Variáveis de ambiente: BRAPI_TOKEN, COINGECKO_KEY (opcional free tier), FINNHUB_KEY, nunca hard-coded.",
+      "Integração com GET /portfolio/summary: PortfolioService chama QuoteService para preencher valor_atual de cada posição."
+    ],
+    "out_of_scope": [
+      "WebSocket ou SSE para cotações em tempo real.",
+      "Histórico de cotações (série temporal).",
+      "Suporte a ativos de renda fixa ou tesouro direto (Fase 2).",
+      "Alertas de preço.",
+      "Testes que dependem de rede real — todas as fontes externas são sempre mockadas."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "QuoteService verifica o cache antes de qualquer chamada externa; só faz a requisição HTTP se TTL expirado ou sem cache.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Se a fonte externa retornar erro ou timeout, QuoteService retorna o último valor do cache com is_stale=true. Se não houver cache algum, retorna null (posição sem cotação).",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Ativos com currency=USD têm valor_atual convertido para BRL usando a cotação do AwesomeAPI (USD/BRL), também cacheada.",
+      "rule_ref": "RN-09",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Chaves de API carregadas exclusivamente via variáveis de ambiente; ausência de chave causa erro de inicialização com mensagem clara.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "TTL do cache configurável via variável de ambiente QUOTE_CACHE_TTL_MINUTES (padrão 10).",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Mapeamento estático ticker→coinId para cryptos suportadas no MVP (ex.: BTC→bitcoin, ETH→ethereum). Para ativos B3 (brapi) e US (Finnhub) o ticker é usado diretamente sem tradução.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "QuoteCache",
+      "change": "none",
+      "fields": [],
+      "notes": "Schema já criado em SPEC-0005. Esta spec apenas adiciona a lógica de leitura/escrita via QuoteService."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/portfolio/summary",
+      "auth": true,
+      "request": "—",
+      "response": "{ positions: [{ ticker, qtd_atual, preco_medio, valor_investido, valor_atual_brl, lucro_prejuizo_brl, lucro_prejuizo_pct, alocacao_pct, is_stale }], patrimonio_total_brl }",
+      "errors": ["401"]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "um ativo B3 com cache expirado",
+      "when": "GET /portfolio/summary",
+      "then": "brapi.dev é consultado, o resultado é salvo no QuoteCache e retornado; is_stale=false"
+    },
+    {
+      "id": "AC-02",
+      "given": "um ativo B3 com cache válido (dentro do TTL)",
+      "when": "GET /portfolio/summary",
+      "then": "brapi.dev NÃO é consultado; o valor do cache é usado; is_stale=false"
+    },
+    {
+      "id": "AC-03",
+      "given": "brapi.dev retorna erro 503",
+      "when": "GET /portfolio/summary com cache disponível",
+      "then": "retorna o último valor do cache com is_stale=true; não quebra o total do portfólio"
+    },
+    {
+      "id": "AC-04",
+      "given": "um ativo US (AAPL, currency=USD)",
+      "when": "GET /portfolio/summary",
+      "then": "valor_atual_brl = preco_usd × câmbio_brl (ambos buscados/cacheados separadamente)"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Testar cache hit: QuoteService retorna valor do cache sem chamar o adaptador externo quando TTL ainda válido.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "Testar cache miss: QuoteService chama o adaptador correto, salva no cache e retorna o valor.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "Testar degradação: adaptador lança erro, QuoteService retorna último valor do cache com is_stale=true.",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "Testar conversão USD→BRL: ativo com currency=USD, QuoteService retorna valor_atual_brl correto.",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "Testar cada adaptador individualmente (BrapiAdapter, CoinGeckoAdapter, FinnhubAdapter, AwesomeAPIAdapter) com respostas mockadas.",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar QuoteModule com QuoteService e a lógica de cache (leitura/escrita no QuoteCache via Prisma).",
+      "target": "apps/api",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Implementar BrapiAdapter: buscar cotação de ações/FII/ETF/BDR da B3.",
+      "target": "apps/api",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Implementar CoinGeckoAdapter: buscar preço de crypto diretamente em BRL.",
+      "target": "apps/api",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Implementar FinnhubAdapter: buscar preço de ações US em USD.",
+      "target": "apps/api",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Implementar AwesomeAPIAdapter: buscar cotação USD/BRL para conversão.",
+      "target": "apps/api",
+      "done": true
+    },
+    {
+      "id": "T-06",
+      "description": "Integrar QuoteService no PortfolioService para preencher valor_atual e is_stale no /portfolio/summary.",
+      "target": "apps/api",
+      "done": true
+    },
+    {
+      "id": "T-07",
+      "description": "Escrever testes unitários com todos os adaptadores mockados (TC-01..TC-05).",
+      "target": "apps/api",
+      "done": true
+    },
+    {
+      "id": "T-08",
+      "description": "Criar src/modules/quotes/ticker-map.ts com mapeamento estático para as cryptos do MVP.",
+      "target": "apps/api",
+      "done": true
+    },
+    {
+      "id": "T-09",
+      "description": "Criar .env.example na raiz do monorepo com todas as variáveis de ambiente necessárias.",
+      "target": "root",
+      "done": true
+    }
+  ],
+  "risks": [
+    "Rate limiting das APIs gratuitas (ex.: CoinGecko free tier 10–30 req/min) — mitigado pelo cache obrigatório.",
+    "Cotação USD/BRL ausente pode travar o cálculo de ativos US — tratar como stale e usar último câmbio cacheado; se não houver cache algum, retornar null para ativos US."
+  ],
+  "observability": [
+    "Log de cada chamada externa com fonte, símbolo, duração e resultado (hit/miss/stale).",
+    "Contador de cache hits vs misses para monitorar consumo de API."
+  ],
+  "rollback": "Reverter os commits do QuoteModule. O /portfolio/summary volta a retornar cotações nulas (comportamento de SPEC-0006 sem cotações). Sem impacto no schema."
+}

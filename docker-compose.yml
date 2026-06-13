@@ -7,11 +7,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-databolsa}
       POSTGRES_DB: ${POSTGRES_DB:-databolsa_dev}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-databolsa}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-databolsa} -d ${POSTGRES_DB:-databolsa_dev}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -41,7 +41,10 @@ services:
     env_file: .env
     environment:
       NODE_ENV: development
+      # NEXT_PUBLIC_API_URL é resolvido pelo browser (fora do container) → localhost
       NEXT_PUBLIC_API_URL: http://localhost:3001
+      # API_URL é usado pelos route handlers BFF (server-side, dentro do container)
+      API_URL: http://api:3001
     ports:
       - "3000:3000"
     depends_on:

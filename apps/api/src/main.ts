@@ -27,6 +27,13 @@ async function bootstrap() {
     SwaggerModule.setup('api/docs', app, document);
   }
 
+  // Health endpoint — público, usado pelo Playwright webServer e probes de infra
+  const httpAdapter = app.getHttpAdapter();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  httpAdapter.get('/health', (_req: any, res: any) => {
+    res.json({ status: 'ok' });
+  });
+
   await app.listen(3001);
 }
 bootstrap();

@@ -96,13 +96,14 @@ e idealmente um check de CI.
 | SPEC-0005 | Schema do banco de dados e migrations Prisma                      | implemented |
 | SPEC-0006 | Backend NestJS — autenticação JWT e CRUD de ativos/transações     | implemented |
 | SPEC-0007 | Integração de cotações com cache (brapi, CoinGecko, Finnhub, AwesomeAPI) | implemented |
+| SPEC-0008 | Web Next.js — fluxo completo e dashboard do portfólio             | implemented |
+| SPEC-0009 | Mobile Flutter — consulta e edição do portfólio                   | implemented |
+| SPEC-0010 | Testes E2E e pipeline de CI/CD                                    | in_progress |
 
 ### Pendentes (`pendentes/`)
 
-| ID        | Título                                                            | Status |
-| --------- | ----------------------------------------------------------------- | ------ |
-| SPEC-0008 | Web Next.js — fluxo completo e dashboard do portfólio             | draft  |
-| SPEC-0009 | Mobile Flutter — consulta e edição do portfólio                   | draft  |
-| SPEC-0010 | Testes E2E e pipeline de CI/CD                                    | draft  |
+| ID | Título | Status |
+| -- | ------ | ------ |
+| — | — | — |
 
 > Mantenha esta tabela ao adicionar specs.

@@ -1,0 +1,33 @@
+@import '@databolsa/ui/theme.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .font-mono,
+  .tabular-nums {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .value-positive {
+    @apply text-profit font-mono font-medium;
+  }
+
+  .value-negative {
+    @apply text-loss font-mono font-medium;
+  }
+
+  .value-neutral {
+    @apply text-neutralChange font-mono;
+  }
+}

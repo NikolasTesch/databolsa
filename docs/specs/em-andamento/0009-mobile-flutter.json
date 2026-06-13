@@ -1,0 +1,94 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0009",
+  "title": "Mobile Flutter — consulta e edição do portfólio",
+  "status": "implemented",
+  "type": "feature",
+  "created": "2026-06-12",
+  "updated": "2026-06-13",
+  "authors": ["nikolasdtesch@gmail.com"],
+  "summary": "App mobile Flutter cliente puro da API REST: auth JWT com refresh automático, dashboard do portfólio com gráfico de alocação (fl_chart), detalhe de ativo com transações e formulário de nova transação. Cliente gerado com openapi-generator dart-dio com campos monetários convertidos para Decimal.",
+  "motivation": "Complementa o web (SPEC-0008) com acesso mobile ao portfólio. Cliente puro — sem cálculo financeiro local.",
+  "related": {
+    "prd": ["PRD §3", "PRD §4", "PRD §5", "PRD §6"],
+    "spec_doc": ["SPEC §1", "SPEC §2", "SPEC §5"],
+    "business_rules": ["RN-01", "RN-02", "RN-10", "RN-11"],
+    "adrs": ["ADR-0002"],
+    "depends_on": ["SPEC-0004", "SPEC-0006", "SPEC-0007", "SPEC-0008"]
+  },
+  "scope": {
+    "in_scope": [
+      "Remover resquícios React Native de apps/mobile/src/ e inicializar como projeto Flutter standalone (flutter create .).",
+      "Arquitetura feature-first com camada core (theme, api, money, router).",
+      "Cliente gerado com openapi-generator dart-dio a partir do swagger.json do backend; campos monetários convertidos para Decimal em domain models.",
+      "Telas: Login, Register, Dashboard, Detalhe do ativo (transações), Nova transação.",
+      "Auth JWT: access/refresh tokens em flutter_secure_storage, Dio interceptor com refresh automático e guarda via go_router.",
+      "State management com Riverpod; navegação com go_router.",
+      "Design via app_tokens.dart copiado de packages/ui/src: ThemeData light/dark, IBM Plex Mono para valores.",
+      "Gráfico de alocação doughnut com fl_chart usando alocacao_pct.",
+      "Indicador stale âmbar (RN-10) e '—' para campos nulos.",
+      "Tratamento e exibição do erro de API para SELL inválido (RN-02).",
+      "Widget tests e unit tests com API e secure storage mockados (TC-01..TC-07)."
+    ],
+    "out_of_scope": [
+      "Criação de novo ativo (POST /assets) — P1.",
+      "Notificações push, biometria, modo offline.",
+      "Gráfico histórico de patrimônio.",
+      "Publicação nas lojas.",
+      "Testes E2E em dispositivo — SPEC-0010."
+    ]
+  },
+  "requirements": [
+    { "id": "REQ-01", "description": "Auth JWT completo: login, registro, logout, refresh automático em 401.", "rule_ref": "RN-11", "priority": "must" },
+    { "id": "REQ-02", "description": "Dashboard: patrimonio_total_brl, posições com P/L, gráfico de alocação doughnut.", "rule_ref": "RN-01", "priority": "must" },
+    { "id": "REQ-03", "description": "is_stale=true → badge âmbar; campos nulos → '—'.", "rule_ref": "RN-10", "priority": "must" },
+    { "id": "REQ-04", "description": "TransactionForm com validação local e exibição do erro 422 da API.", "rule_ref": "RN-02", "priority": "must" },
+    { "id": "REQ-05", "description": "IBM Plex Mono para valores; P/L com sinal +/- e cor profit/loss.", "priority": "must" },
+    { "id": "REQ-06", "description": "Valores monetários da API (String) convertidos a Decimal antes de qualquer uso; double apenas na borda de exibição via NumberFormat pt_BR.", "rule_ref": "RN-01", "priority": "must" },
+    { "id": "REQ-07", "description": "Tema light/dark via AppColorScheme (app_tokens.dart); respeita reduceMotion.", "priority": "should" }
+  ],
+  "data_model": [{"entity": "n/a", "change": "none", "fields": [], "notes": "Cliente puro. Tokens JWT em flutter_secure_storage. Domain models usam Decimal para monetários."}],
+  "api": [],
+  "acceptance_criteria": [
+    { "id": "AC-01", "given": "credenciais válidas", "when": "login", "then": "tokens salvos em flutter_secure_storage, navega ao dashboard" },
+    { "id": "AC-02", "given": "portfólio com posições", "when": "abre dashboard", "then": "vê patrimônio, gráfico e posições com P/L" },
+    { "id": "AC-03", "given": "posição com is_stale=true", "when": "visualiza card", "then": "badge âmbar; ao tocar mostra 'cotação desatualizada'" },
+    { "id": "AC-04", "given": "tokens válidos no storage", "when": "app reiniciado", "then": "vai direto ao dashboard" },
+    { "id": "AC-05", "given": "campo nulo (sem cotação)", "when": "card renderizado", "then": "'—' nos campos nulos sem quebrar" },
+    { "id": "AC-06", "given": "SELL maior que posição", "when": "envia formulário", "then": "erro da API exibido inline" },
+    { "id": "AC-07", "given": "access token expirado (401)", "when": "requisição protegida", "then": "refresh automático e reenvio; se falhar → logout" }
+  ],
+  "test_plan": [
+    { "id": "TC-01", "description": "Unit: core/money — Decimal.parse, NumberFormat pt_BR, nulo → '—', sinal P/L.", "kind": "unit", "covers": ["REQ-05","REQ-06","AC-05"], "mocks_external": true },
+    { "id": "TC-02", "description": "Unit: AuthRepository — persistência/leitura/limpeza de tokens.", "kind": "unit", "covers": ["REQ-01","AC-01","AC-04"], "mocks_external": true },
+    { "id": "TC-03", "description": "Unit: AuthInterceptor — refresh único no 401; falha → logout.", "kind": "unit", "covers": ["REQ-01","AC-07"], "mocks_external": true },
+    { "id": "TC-04", "description": "Widget: PositionCard + StaleBadge — P/L cor/sinal, badge âmbar, '—' para nulos.", "kind": "unit", "covers": ["REQ-02","REQ-03","REQ-05","AC-03","AC-05"], "mocks_external": true },
+    { "id": "TC-05", "description": "Widget: AllocationChart — fatias de alocacao_pct; patrimônio zero sem crash.", "kind": "unit", "covers": ["REQ-02"], "mocks_external": true },
+    { "id": "TC-06", "description": "Widget: TransactionForm — validação local e exibição do erro 422.", "kind": "unit", "covers": ["REQ-04","AC-06"], "mocks_external": true },
+    { "id": "TC-07", "description": "Widget: Dashboard com PortfolioRepository mockado — loading/error/data.", "kind": "unit", "covers": ["REQ-02","AC-02"], "mocks_external": true }
+  ],
+  "tasks": [
+    { "id": "T-01", "description": "Remover apps/mobile/src/ (resquício RN); flutter create . (--org com.databolsa, --project-name databolsa_mobile); limpar demo; declarar assets/fonts.", "target": "apps/mobile", "done": true },
+    { "id": "T-02", "description": "Adicionar dependências ao pubspec.yaml (dio, flutter_riverpod, flutter_secure_storage, go_router, fl_chart, decimal, intl, google_fonts, flutter_svg, openapi-generator-cli como dev, freezed/json) e rodar pub get.", "target": "apps/mobile", "done": true },
+    { "id": "T-03", "description": "Copiar app_tokens.dart de packages/ui/src para lib/core/theme/; criar app_theme.dart e extension context.scheme.", "target": "apps/mobile/lib/core/theme", "done": true },
+    { "id": "T-04", "description": "Gerar cliente Dio via openapi-generator dart-dio a partir do swagger.json do backend. Auditar models gerados: sobrescrever campos monetários double→Decimal em domain models wrapper. NOTA: models criados manualmente (backend não estava rodando para exportar swagger) — todos os campos monetários são String no DTO e Decimal no domain model.", "target": "apps/mobile/lib/core/api/generated", "done": true },
+    { "id": "T-05", "description": "Implementar core/money (Decimal + NumberFormat pt_BR + helpers '—') e widgets MoneyText/SignedMoneyText/PercentText (TC-01).", "target": "apps/mobile/lib/core/money", "done": true },
+    { "id": "T-06", "description": "Implementar dio_client.dart com AuthInterceptor (refresh automático, lock/Completer, base URL por plataforma via --dart-define).", "target": "apps/mobile/lib/core/api", "done": true },
+    { "id": "T-07", "description": "Implementar AuthRepository (flutter_secure_storage) + auth_controller (Riverpod) + telas Login/Register (TC-02, TC-03).", "target": "apps/mobile/lib/features/auth", "done": true },
+    { "id": "T-08", "description": "Implementar app_router.dart (go_router) com guarda de auth e bootstrap de token (AC-04).", "target": "apps/mobile/lib/core/router", "done": true },
+    { "id": "T-09", "description": "Domain models PortfolioSummary/PositionSummary (String→Decimal) + PortfolioRepository + dashboard_controller.", "target": "apps/mobile/lib/features/portfolio", "done": true },
+    { "id": "T-10", "description": "Dashboard: PatrimonioHeader, AllocationChart (fl_chart), PositionCard, StaleBadge, pull-to-refresh (TC-04, TC-05, TC-07).", "target": "apps/mobile/lib/features/portfolio", "done": true },
+    { "id": "T-11", "description": "Domain models Asset/Transaction + AssetsRepository + tela de detalhe com lista de transações.", "target": "apps/mobile/lib/features/assets", "done": true },
+    { "id": "T-12", "description": "NewTransactionScreen + TransactionForm com validação e erro 422 (TC-06).", "target": "apps/mobile/lib/features/transactions", "done": true },
+    { "id": "T-13", "description": "Rodar flutter test (55 testes passando); documentar no README o passo de cópia do app_tokens.dart e config de base URL; mover spec para em-andamento; atualizar docs/specs/README.md.", "target": "apps/mobile", "done": true }
+  ],
+  "risks": [
+    "openapi-generator dart-dio pode mapear campos monetários como double — MITIGADO: models criados manualmente com todos os campos monetários como String.",
+    "flutter_secure_storage exige config nativa (Keystore/Keychain) — validar em emulador.",
+    "Base URL no emulador Android: usar 10.0.2.2, não localhost — configurável via --dart-define.",
+    "Refresh concorrente: Completer/lock obrigatório no AuthInterceptor — IMPLEMENTADO.",
+    "app_tokens.dart é cópia manual de packages/ui/src — documentado no README."
+  ],
+  "observability": [],
+  "rollback": "Reverter commits de apps/mobile. Backend e web não são afetados."
+}

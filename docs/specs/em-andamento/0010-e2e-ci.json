@@ -1,0 +1,161 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0010",
+  "title": "Testes E2E e pipeline de CI/CD",
+  "status": "in_progress",
+  "type": "feature",
+  "created": "2026-06-12",
+  "updated": "2026-06-13",
+  "authors": ["nikolasdtesch@gmail.com"],
+  "summary": "Implementar testes end-to-end do fluxo principal (web) com Playwright e configurar o pipeline de CI com GitHub Actions: lint, testes unitários, testes de integração, build e validação de specs. Garante que o projeto não regride em novos commits.",
+  "motivation": "Com web e mobile funcionais (SPEC-0008/0009), o roadmap (SPEC §11 item 7) fecha o ciclo do MVP com E2E e CI. Sem CI automatizado, regressões podem passar despercebidas entre features. Os E2E cobrem o fluxo crítico do usuário — o que nenhum teste unitário ou de integração cobre em isolamento.",
+  "related": {
+    "prd": ["PRD §9"],
+    "spec_doc": ["SPEC §9"],
+    "business_rules": [],
+    "adrs": [],
+    "depends_on": ["SPEC-0006", "SPEC-0007", "SPEC-0008"]
+  },
+  "scope": {
+    "in_scope": [
+      "Testes E2E com Playwright cobrindo o golden path: registro → login → criar ativo → lançar BUY → lançar SELL → verificar P/L no dashboard.",
+      "Cenário negativo E2E: SELL acima da posição exibe erro no formulário.",
+      "GitHub Actions workflow (.github/workflows/ci.yml): lint (tsc --noEmit), testes unitários (packages/core + packages/ui), testes de integração da API, build da API e do web, validação de specs JSON contra o schema.",
+      "Ambiente de CI com PostgreSQL service container para testes de integração.",
+      "Variáveis de ambiente de CI via GitHub Secrets (chaves de API mockadas, DATABASE_URL do container)."
+    ],
+    "out_of_scope": [
+      "Deploy automático (CD) para produção — post-MVP.",
+      "Testes E2E do app mobile (Flutter integration tests).",
+      "Testes de performance/carga.",
+      "Coverage gates no CI além dos já configurados em packages/core.",
+      "Notificações de falha de CI (Slack/email)."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Pipeline CI executa em todo PR e push para main; falha bloqueia merge.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Testes E2E cobrem o golden path completo: registro→login→ativo→transação BUY→transação SELL→dashboard com P/L.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Validação do schema de specs JSON (ajv) roda no CI; spec inválida quebra o pipeline.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Testes de integração da API rodam contra PostgreSQL real (service container) no CI, não contra mock.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "E2E usa banco de dados isolado (schema ou banco separado) e reseta estado entre specs.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "n/a",
+      "change": "none",
+      "fields": [],
+      "notes": "Apenas infraestrutura de CI e testes; sem mudança de schema."
+    }
+  ],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "um PR aberto com mudança em packages/core",
+      "when": "CI executa",
+      "then": "lint, testes unitários com coverage e build rodam; PR não pode ser mergeado se algum falhar"
+    },
+    {
+      "id": "AC-02",
+      "given": "o golden path E2E",
+      "when": "Playwright executa",
+      "then": "usuário consegue completar registro→dashboard com P/L correto exibido"
+    },
+    {
+      "id": "AC-03",
+      "given": "uma spec JSON inválida (faltando campo obrigatório)",
+      "when": "CI valida os specs",
+      "then": "pipeline falha com mensagem indicando o campo faltante"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "E2E golden path: registro → login → criar ativo PETR4 → BUY 100 un @ R$30 → BUY 50 un @ R$33 → SELL 50 un → dashboard exibe preco_medio e P/L corretos.",
+      "kind": "e2e",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "E2E negativo: SELL de 200 unidades com posição de 100 exibe mensagem de erro inline.",
+      "kind": "e2e",
+      "covers": ["REQ-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "CI check: todas as specs em docs/specs/**/*.json validam contra spec.schema.json sem erros.",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-03"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar .github/workflows/ci.yml com jobs: lint, test-core, test-ui, test-api, build-api, build-web, validate-specs.",
+      "target": ".github",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Configurar PostgreSQL service container no job test-api e E2E do CI.",
+      "target": ".github",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Instalar Playwright em apps/web e implementar o golden path E2E (TC-01).",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Implementar E2E negativo: SELL inválido (TC-02).",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Adicionar script validate-specs ao package.json raiz usando ajv-cli.",
+      "target": "root",
+      "done": true
+    },
+    {
+      "id": "T-06",
+      "description": "Stub QuoteService (USE_QUOTE_STUB), health endpoint /health, documentação de secrets (.github/SECRETS.md).",
+      "target": ".github, apps/api",
+      "done": true
+    }
+  ],
+  "risks": [
+    "Flakiness em E2E (timing, animações) — usar locators robustos do Playwright e aguardar estados de rede, não timeouts fixos.",
+    "E2E em CI pode ser lento (~2–5 min) — rodar em paralelo com `--workers=2` e cachear node_modules.",
+    "Cotações externas em E2E podem variar — mockar o QuoteService com preços fixos no ambiente de teste."
+  ],
+  "observability": [
+    "Artefatos do Playwright (screenshots + trace) publicados como artifacts do GitHub Actions em caso de falha."
+  ],
+  "rollback": "CI pode ser desativado via branch protection rules. Os testes E2E são arquivos independentes que não afetam o código de produção."
+}

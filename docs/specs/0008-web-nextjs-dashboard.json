@@ -1,0 +1,246 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0008",
+  "title": "Web Next.js — fluxo completo e dashboard do portfólio",
+  "status": "verified",
+  "type": "feature",
+  "created": "2026-06-12",
+  "updated": "2026-06-13",
+  "authors": ["nikolasdtesch@gmail.com"],
+  "summary": "Cliente web em Next.js (App Router) consumindo a API NestJS: autenticação JWT com refresh automático via BFF de cookies httpOnly, dashboard consolidado (patrimônio, alocação, P/L por posição), CRUD de ativos e lançamento de transações. Animações fluidas com Framer Motion. Principal superfície de demonstração do projeto.",
+  "motivation": "Com backend (SPEC-0006) e cotações (SPEC-0007) prontos, o web é o item 5 do roadmap (SPEC §11) e entrega a proposta de valor: ver o patrimônio consolidado, lançar operações e acompanhar P/L. Trabalho puramente de frontend.",
+  "related": {
+    "prd": ["PRD §3", "PRD §5", "PRD §6", "PRD §7"],
+    "spec_doc": ["SPEC §1", "SPEC §2", "SPEC §5", "SPEC §7"],
+    "business_rules": ["RN-01", "RN-02", "RN-06", "RN-09", "RN-10", "RN-11"],
+    "adrs": ["ADR-0001", "ADR-0003"],
+    "depends_on": ["SPEC-0004", "SPEC-0006", "SPEC-0007"]
+  },
+  "scope": {
+    "in_scope": [
+      "Configurar pnpm-workspace.yaml na raiz e scaffold apps/web (Next 14+ App Router, TS, output standalone).",
+      "Tailwind integrado ao preset @databolsa/ui + theme.css + fontes IBM Plex.",
+      "Páginas: /login, /register, /dashboard, /assets, /assets/new, /assets/[id], /assets/[id]/transactions/new.",
+      "Auth BFF: route handlers Next gravam access+refresh em cookies httpOnly; middleware protege rotas; refresh automático no 401.",
+      "Dashboard: SummaryCards (patrimonio_total_brl, P/L consolidado), AllocationChart (Recharts pie via alocacao_pct, dynamic ssr:false), PositionTable com P/L colorido+sinal e StaleBadge.",
+      "Animações fluidas com Framer Motion: transições de página (AnimatePresence), entrada staggered de cards/linhas da tabela, contagem animada de métricas (spring), shake em erro de formulário, fade entre skeleton e conteúdo, slide da sidebar em mobile.",
+      "Indicador stale (RN-10) com is_stale=true.",
+      "TransactionForm com validação client-side e tratamento do 422 de SELL>posição (RN-02).",
+      "Data fetching com TanStack Query e invalidação após mutações.",
+      "Formatação monetária com Intl.NumberFormat sobre strings decimais (sem aritmética float).",
+      "Responsividade mobile-first (≥375px) com breakpoints do @databolsa/ui."
+    ],
+    "out_of_scope": [
+      "Gráfico de histórico/série temporal (não há endpoint).",
+      "Edição de ativo cadastrado (PATCH /assets não existe no backend).",
+      "Export CSV/PDF, notificações push.",
+      "Dark mode toggle por preferência do usuário.",
+      "Testes E2E automatizados (SPEC-0010).",
+      "Geração automática de tipos via swagger (tipos definidos localmente no MVP).",
+      "Ajustes de CORS no backend e qualquer mudança em apps/api."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Fluxo de autenticação: registro, login, logout e refresh automático do access token via BFF com cookies httpOnly.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Dashboard exibe patrimonio_total_brl e, por posição: ticker, current_quantity, average_price, invested_value, valor_atual_brl, lucro_prejuizo_brl, lucro_prejuizo_pct, alocacao_pct — nomes conforme PositionSummaryDto real do backend.",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Posições com is_stale=true exibem indicador âmbar com tooltip, sem quebrar a tela; campos null (sem cotação) exibem '—' e não entram no total nem no gráfico.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "TransactionForm valida client-side (quantity>0, unit_price>0, campos obrigatórios) e exibe inline o erro 422 quando SELL excede a posição.",
+      "rule_ref": "RN-02",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Valores monetários/percentuais usam font-mono e sinal +/− além da cor (acessibilidade); formatados via Intl.NumberFormat, nunca aritmética float sobre as strings decimais.",
+      "rule_ref": "RN-06",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Aplicação responsiva e utilizável em viewport ≥375px.",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-07",
+      "description": "AllocationChart usa Recharts via dynamic import ssr:false e cores de chartColors do @databolsa/ui.",
+      "rule_ref": "RN-09",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-08",
+      "description": "Animações com Framer Motion: transições de página via AnimatePresence, stagger de entrada nos SummaryCards e linhas da PositionTable, contagem animada (spring) no patrimônio total, shake em formulários com erro, fade entre skeleton e conteúdo carregado.",
+      "priority": "should"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "n/a",
+      "change": "none",
+      "fields": [],
+      "notes": "Frontend puro; sem mudança de schema. Valores monetários trafegam como strings decimais."
+    }
+  ],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuário não autenticado",
+      "when": "acessa /dashboard",
+      "then": "é redirecionado para /login pelo middleware"
+    },
+    {
+      "id": "AC-02",
+      "given": "usuário com 3 ativos com cotação",
+      "when": "acessa /dashboard",
+      "then": "vê patrimonio_total_brl animado, gráfico de alocação com 3 fatias e tabela com P/L correto e sinal"
+    },
+    {
+      "id": "AC-03",
+      "given": "posição com is_stale=true",
+      "when": "vê a PositionTable",
+      "then": "a linha exibe indicador âmbar com tooltip 'cotação desatualizada' e o total continua calculado"
+    },
+    {
+      "id": "AC-04",
+      "given": "formulário de venda com quantity maior que a posição",
+      "when": "submete",
+      "then": "API retorna 422, formulário executa animação de shake e exibe a mensagem de erro inline"
+    },
+    {
+      "id": "AC-05",
+      "given": "ativo sem cotação (valor_atual_brl=null)",
+      "when": "vê a PositionTable",
+      "then": "campos de valor/P/L exibem '—' e o ativo não entra no total nem na pizza"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Unit (Vitest+RTL+MSW) de PositionTable e AllocationChart: P/L colorido+sinal, alocação, estado vazio (patrimônio 0), campo null exibe '—'.",
+      "kind": "unit",
+      "covers": ["REQ-02", "REQ-05", "REQ-07", "AC-02", "AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "Unit do middleware: acesso a rota protegida sem cookie de access redireciona para /login.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "Unit de StaleBadge/PositionTable com is_stale=true: renderiza indicador âmbar (AC-03).",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "Unit de TransactionForm: validação client-side e exibição inline do erro 422 mockado; verificar que animação de shake é disparada (AC-04).",
+      "kind": "unit",
+      "covers": ["REQ-04", "REQ-08", "AC-04"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar pnpm-workspace.yaml na raiz e scaffold apps/web (Next App Router, TS, next.config.ts com output:standalone e transpilePackages, .env.example com NEXT_PUBLIC_API_URL).",
+      "target": "apps/web + raiz",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Integrar Tailwind + @databolsa/ui (preset, theme.css, fontes IBM Plex), globals.css, providers.tsx (QueryClientProvider + AnimatePresence do Framer Motion).",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Criar types/api.ts espelhando DTOs reais do backend + lib/api/client.ts (fetch wrapper com injeção de token) + lib/format.ts (formatBRL, formatPct, formatQty via Intl).",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Auth BFF: route handlers app/api/session/(login|register|refresh|logout)/route.ts com cookies httpOnly + lib/auth/context.tsx (AuthProvider/useAuth) + refresh automático no 401.",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "middleware.ts protegendo (app)/* e redirecionando (auth)/* quando já logado.",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-06",
+      "description": "Páginas /login e /register com tratamento de 401/409 e animação de shake (Framer Motion) em erro.",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-07",
+      "description": "(app)/layout.tsx: AppShell autenticado (sidebar com slide Framer Motion em mobile, topbar, LogoutButton).",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-08",
+      "description": "/dashboard: SummaryCards (stagger Framer Motion na entrada, contagem animada spring no patrimônio), AllocationChart (dynamic ssr:false), PositionTable + StaleBadge + fade skeleton→conteúdo + estado vazio.",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-09",
+      "description": "/assets e /assets/new (AssetForm com enums AssetClass/Currency/DataSource) + excluir ativo.",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-10",
+      "description": "/assets/[id] (detalhe + TransactionTable) e /assets/[id]/transactions/new (TransactionForm com shake Framer Motion em erro + tratamento 422).",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-11",
+      "description": "Escrever docs/adr/0003-web-auth-session-bff.md documentando a decisão BFF vs token no cliente.",
+      "target": "docs/adr",
+      "done": true
+    },
+    {
+      "id": "T-12",
+      "description": "Testes unitários (Vitest+RTL+MSW): TC-01..TC-04.",
+      "target": "apps/web",
+      "done": true
+    }
+  ],
+  "risks": [
+    "pnpm workspace ainda não existe (CLAUDE.md); criar na raiz pode afetar packages/core e apps/api standalone — validar pnpm install sem quebrar subprojetos.",
+    "main.ts do backend não configura CORS; chamadas client-side diretas a localhost:3001 falhariam — o BFF (ADR-0003) evita isso para chamadas server-side; ajustes de CORS ficam fora do escopo.",
+    "Recharts não é SSR-safe — usar dynamic import ssr:false.",
+    "Precisão decimal: valores chegam como strings do backend; formatar com Intl.NumberFormat, nunca Number()/aritmética float antes de exibir.",
+    "Nomes de campos do PositionSummaryDto real: current_quantity, average_price, invested_value, valor_atual_brl, lucro_prejuizo_brl, lucro_prejuizo_pct, alocacao_pct, is_stale — o draft anterior tinha nomes divergentes.",
+    "Framer Motion + SSR: usar motion components apenas em Client Components; AnimatePresence no providers.tsx do lado do cliente."
+  ],
+  "observability": [],
+  "rollback": "Reverter commits de apps/web e do pnpm-workspace.yaml. Backend e banco não são afetados."
+}

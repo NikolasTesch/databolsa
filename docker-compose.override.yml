@@ -2,6 +2,10 @@
 # Aplicado automaticamente junto com docker-compose.yml em `docker compose up`.
 # Em produção, NÃO usar este arquivo.
 services:
+  postgres:
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+
   api:
     build:
       target: dev

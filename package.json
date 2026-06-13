@@ -5,6 +5,11 @@
   "packageManager": "pnpm@9.0.0",
   "scripts": {
     "build": "pnpm --filter api run build",
-    "test:api": "pnpm --filter api run test"
+    "test:api": "pnpm --filter api run test",
+    "validate-specs": "ajv validate -s docs/specs/spec.schema.json -d 'docs/specs/em-andamento/*.json' -d 'docs/specs/finalizadas/*.json' -d 'docs/specs/pendentes/*.json' --spec=draft2020 -c ajv-formats"
+  },
+  "devDependencies": {
+    "ajv-cli": "^5.0.0",
+    "ajv-formats": "^3.0.1"
   }
 }
