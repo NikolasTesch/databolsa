@@ -21,11 +21,12 @@
       "Módulo de autenticação: POST /auth/register, POST /auth/login, POST /auth/refresh. JWT access token (15min) + refresh token (7d) em httpOnly cookie.",
       "Guard JWT global (todas as rotas exceto /auth/* exigem token válido).",
       "Módulo de ativos: GET /assets, POST /assets, GET /assets/:id, DELETE /assets/:id.",
-      "Módulo de transações: POST /assets/:id/transactions, PATCH /transactions/:id, DELETE /transactions/:id.",
+      "Módulo de transações: GET /assets/:id/transactions, POST /assets/:id/transactions, PATCH /transactions/:id, DELETE /transactions/:id.",
       "Endpoint de resumo do portfólio: GET /portfolio/summary — calcula posição de cada ativo via packages/core e retorna a visão consolidada.",
       "Validação de inputs com class-validator (DTOs com tipagem forte).",
       "Rejeição de SELL com quantidade maior que a posição atual (RN-02), usando calculatePosition de packages/core.",
-      "Isolamento estrito: todo query filtra por user_id extraído do JWT (RN-11)."
+      "Isolamento estrito: todo query filtra por user_id extraído do JWT (RN-11).",
+      "Configuração de @nestjs/swagger: endpoint GET /api/docs (dev only) e geração de swagger.json como artefato de build (necessário para SPEC-0009 gerar o cliente Dart)."
     ],
     "out_of_scope": [
       "Cotações reais — GET /portfolio/summary retorna cotação nula ou do cache se vazio (SPEC-0007 implementa a busca).",
@@ -78,6 +79,17 @@
     {
       "id": "REQ-08",
       "description": "Campos monetários (unit_price, quantity, fees) persistidos e retornados como strings decimais, nunca number JS nativo.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-09",
+      "description": "GET /assets/:id/transactions retorna a lista de Transaction[] do ativo, filtrada por user_id via asset.user_id.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-10",
+      "description": "Configurar @nestjs/swagger no AppModule; expor /api/docs em dev; script npm run swagger:export gera swagger.json em dist/ para uso pelo openapi-generator do mobile.",
       "priority": "must"
     }
   ],
@@ -169,6 +181,14 @@
       "request": "—",
       "response": "204",
       "errors": ["401", "404"]
+    },
+    {
+      "method": "GET",
+      "path": "/assets/:id/transactions",
+      "auth": true,
+      "request": "—",
+      "response": "Transaction[]",
+      "errors": ["401", "404 ativo não encontrado ou de outro usuário"]
     },
     {
       "method": "GET",
@@ -282,6 +302,18 @@
     {
       "id": "T-07",
       "description": "Escrever testes unitários e de integração (Jest + supertest).",
+      "target": "apps/api",
+      "done": false
+    },
+    {
+      "id": "T-08",
+      "description": "Configurar @nestjs/swagger no AppModule com metadata (title, version, bearer auth); adicionar decoradores @ApiProperty nos DTOs; criar script npm run swagger:export.",
+      "target": "apps/api",
+      "done": false
+    },
+    {
+      "id": "T-09",
+      "description": "Implementar GET /assets/:id/transactions no TransactionsModule, com validação de ownership via asset.user_id.",
       "target": "apps/api",
       "done": false
     }

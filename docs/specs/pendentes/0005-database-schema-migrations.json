@@ -37,7 +37,7 @@
   "requirements": [
     {
       "id": "REQ-01",
-      "description": "Entidade User com id (uuid), email (único), password_hash e created_at.",
+      "description": "Entidade User com id (uuid), email (único), password_hash, refresh_token_hash (nullable, para armazenar o hash do refresh token corrente) e created_at.",
       "rule_ref": "RN-11",
       "priority": "must"
     },
@@ -60,7 +60,7 @@
     },
     {
       "id": "REQ-05",
-      "description": "Todos os campos monetários e de quantidade usam tipo Decimal do Prisma (mapeado para numeric no PostgreSQL) — nunca Float.",
+      "description": "Todos os campos monetários e de quantidade usam tipo Decimal do Prisma com precisão explícita @db.Decimal(18,8) (mapeado para numeric(18,8) no PostgreSQL) — nunca Float. Afeta: unit_price, quantity, fees em Transaction; price em QuoteCache.",
       "priority": "must"
     },
     {
@@ -73,7 +73,7 @@
     {
       "entity": "User",
       "change": "create",
-      "fields": ["id uuid pk", "email string unique", "password_hash string", "created_at datetime"],
+      "fields": ["id uuid pk", "email string unique", "password_hash string", "refresh_token_hash string optional", "created_at datetime"],
       "notes": "Base do isolamento por usuário (RN-11)."
     },
     {
@@ -172,14 +172,19 @@
     },
     {
       "id": "T-05",
-      "description": "Adicionar package.json e tsconfig.json mínimos ao apps/api para suportar o Prisma CLI.",
+      "description": "Criar pnpm-workspace.yaml na raiz listando apps/* e packages/*; criar package.json raiz (name: databolsa, private: true); criar apps/api/package.json com name @databolsa/api, dependências NestJS, Prisma e @databolsa/core: workspace:*; criar apps/api/tsconfig.json.",
+      "target": "root + apps/api",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Adicionar guard no seed script (apps/api/prisma/seed.ts): abortar com erro se NODE_ENV !== 'development', prevenindo execução acidental em produção.",
       "target": "apps/api",
       "done": false
     }
   ],
   "risks": [
-    "Tipo Decimal do Prisma requer precisão explícita — definir Decimal(18,8) para preços e Decimal(18,8) para quantidades.",
-    "Seed em produção acidental — garantir que o script de seed só seja executável em NODE_ENV=development."
+    "Prisma workspace: pnpm workspaces resolve @databolsa/core em dev, mas o Dockerfile de produção deve copiar packages/core antes do npm install em apps/api."
   ],
   "observability": [],
   "rollback": "Reverter o commit da migration e rodar `prisma migrate reset` no ambiente de dev. Produção: `prisma migrate resolve --rolled-back`."

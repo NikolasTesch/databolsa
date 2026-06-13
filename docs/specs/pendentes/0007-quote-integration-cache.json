@@ -62,6 +62,11 @@
       "id": "REQ-05",
       "description": "TTL do cache configurável via variável de ambiente QUOTE_CACHE_TTL_MINUTES (padrão 10).",
       "priority": "should"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Mapeamento estático ticker→coinId para cryptos suportadas no MVP (ex.: BTC→bitcoin, ETH→ethereum). Para ativos B3 (brapi) e US (Finnhub) o ticker é usado diretamente sem tradução.",
+      "priority": "must"
     }
   ],
   "data_model": [
@@ -187,12 +192,23 @@
       "description": "Escrever testes unitários com todos os adaptadores mockados (TC-01..TC-05).",
       "target": "apps/api",
       "done": false
+    },
+    {
+      "id": "T-08",
+      "description": "Criar src/quotes/ticker-map.ts com mapeamento estático para as cryptos do MVP (ex.: { BTC: 'bitcoin', ETH: 'ethereum', BNB: 'binancecoin' }). CoinGeckoAdapter usa este mapa; adaptadores B3 e Finnhub usam o ticker diretamente.",
+      "target": "apps/api",
+      "done": false
+    },
+    {
+      "id": "T-09",
+      "description": "Criar .env.example na raiz do monorepo com todas as variáveis de ambiente necessárias: DATABASE_URL, JWT_SECRET, BRAPI_TOKEN, COINGECKO_KEY, FINNHUB_KEY, QUOTE_CACHE_TTL_MINUTES.",
+      "target": "root",
+      "done": false
     }
   ],
   "risks": [
     "Rate limiting das APIs gratuitas (ex.: CoinGecko free tier 10–30 req/min) — mitigado pelo cache obrigatório.",
-    "Variação do símbolo por fonte (ex.: BTC no CoinGecko é 'bitcoin') — necessário mapeamento ticker→id por fonte.",
-    "Cotação USD/BRL ausente pode travar o cálculo de ativos US — tratar como stale e usar último câmbio cacheado."
+    "Cotação USD/BRL ausente pode travar o cálculo de ativos US — tratar como stale e usar último câmbio cacheado; se não houver cache algum, retornar null para ativos US."
   ],
   "observability": [
     "Log de cada chamada externa com fonte, símbolo, duração e resultado (hit/miss/stale).",
