@@ -7,8 +7,8 @@
   "created": "2026-06-13",
   "updated": "2026-06-13",
   "authors": ["Nikolas"],
-  "summary": "Criar a página pública /ativos/[ticker] com cotação atual, indicadores fundamentalistas (P/L, DY, P/VP, ROE), histórico de preços (Recharts) e histórico de dividendos. Acessível sem login, inspirada no Investidor10 e StatusInvest. Introduz AssetFundamentalsCache no schema e o FundamentalsService desacoplado dos adapters de cotação.",
-  "motivation": "Com a busca da SPEC-0012, o usuário chega em /ativos/PETR4 mas não há nada para ver. Esta spec entrega o conteúdo central: análise fundamentalista e técnica de qualquer ativo, mesmo sem conta cadastrada.",
+  "summary": "Criar a página pública /ativos/[ticker] no estilo Investidor10/StatusInvest: AssetHeader com cotação + variação, IndicatorGrid com P/L, DY, P/VP, ROE (ou equivalentes por classe), PriceHistoryChart com seletor de período e DividendsTable. Acessível sem login. Introduz AssetFundamentalsCache e FundamentalsService desacoplado dos adapters de cotação.",
+  "motivation": "Com a busca da SPEC-0012, o usuário chega em /ativos/PETR4 mas não há nada para ver. Esta spec entrega o conteúdo central: análise fundamentalista e técnica de qualquer ativo, mesmo sem conta cadastrada. A estrutura da página espelha os sites de referência: header com price hero, grid de indicadores em cards, gráfico de histórico e tabela de proventos.",
   "related": {
     "prd": ["PRD §4", "PRD §5", "PRD §7"],
     "spec_doc": ["SPEC §5", "SPEC §6", "SPEC §7"],
@@ -42,6 +42,127 @@
       "Dados intraday (candles de 1min/5min)"
     ]
   },
+  "layout": {
+    "note": "Estrutura visual da página /ativos/[ticker]. Inspirada em Investidor10 (page de ação) e StatusInvest (ficha de ativo).",
+
+    "AssetHeader": {
+      "description": "Hero da página com identidade do ativo, cotação e variação. Equivale ao topo das páginas de ativo do Investidor10/StatusInvest.",
+      "background": "bg-surface border-b border-border",
+      "padding": "py-6 px-4 md:px-8",
+      "structure": [
+        "Linha 1: AssetClassBadge (tamanho md) + ticker (text-2xl font-mono font-bold text-content) + nome da empresa (text-base text-content-muted)",
+        "Linha 2: Preço atual (text-4xl font-mono font-bold text-content) + moeda original (text-sm text-content-muted) + conversão BRL se USD (text-lg font-mono text-content-muted)",
+        "Linha 3: TrendBadge com variação % do dia (text-xl) + variação em R$ (text-sm font-mono text-content-muted) + 'hoje' label",
+        "Linha 4 direita: Botão 'Adicionar à carteira' (SPEC-0014) + StaleBadge se stale"
+      ],
+      "tokens": "ticker font-mono — identificadores são sempre mono conforme design-tokens.json. Preço font-mono font-bold. Variação: TrendBadge (reutiliza da SPEC-0012)."
+    },
+
+    "IndicatorGrid": {
+      "description": "Grade de cards de indicadores fundamentalistas. Adapta os indicadores exibidos por classe de ativo. Equivale ao grid de indicadores do Investidor10.",
+      "layout": "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
+      "padding": "py-8 px-4 md:px-8",
+      "background": "bg-background",
+      "IndicatorCard": {
+        "description": "Card de um indicador. Exibe label, value e tooltip opcional com explicação.",
+        "background": "bg-surface border border-border rounded-lg p-4",
+        "shadow": "shadow-sm",
+        "structure": [
+          "Label: text-xs text-content-muted uppercase tracking-wide font-sans (ex: 'P/L', 'DY', 'P/VP')",
+          "Value: text-xl font-mono font-semibold text-content (ex: '8,2', '6,54%', '—')",
+          "Tooltip (ícone ?) com explicação do indicador: 'Preço/Lucro — quantos anos de lucro para pagar o preço atual'"
+        ],
+        "nullState": "Value exibe '—' em text-content-subtle quando indicador não disponível ou não aplicável à classe"
+      },
+      "indicatorsByClass": {
+        "STOCK_BR": ["P/L", "P/VP", "DY (%)", "ROE (%)", "Margem Líquida (%)", "EV/EBITDA", "Dívida/PL", "Market Cap"],
+        "FII": ["P/VP", "DY (%)", "Vacância (%)", "Último Rendimento", "Patrimônio (R$)", "Número de Cotas", "Liquidez Diária"],
+        "ETF": ["P/VP", "Taxa de Adm. (%)", "Patrimônio (R$)", "Liquidez Diária"],
+        "BDR": ["P/L", "DY (%)", "Market Cap (USD)", "Variação 52 semanas"],
+        "STOCK_US": ["P/L", "P/VP", "DY (%)", "ROE (%)", "EPS (USD)", "Market Cap (USD)", "Revenue (USD)"],
+        "CRYPTO": ["Market Cap (BRL)", "Volume 24h (BRL)", "Supply Circulante", "Supply Máximo", "Variação 7d (%)", "Variação 30d (%)"]
+      }
+    },
+
+    "PriceHistorySection": {
+      "description": "Seção com gráfico de área do histórico de preços e seletor de período. Equivale ao gráfico de cotação histórica do Investidor10/StatusInvest.",
+      "background": "bg-surface border border-border rounded-lg",
+      "padding": "p-6",
+      "margin": "mx-4 md:mx-8 mb-8",
+      "RangePicker": {
+        "description": "Grupo de botões de período acima do gráfico.",
+        "options": ["1M", "6M", "1A", "5A"],
+        "tokens": "btn inativo: bg-surface-muted text-content-muted text-xs px-3 py-1 rounded; btn ativo: bg-primary text-white text-xs px-3 py-1 rounded; gap-2, alinhado à direita acima do chart"
+      },
+      "PriceHistoryChart": {
+        "description": "Recharts AreaChart com gradiente. Eixo X: datas, Eixo Y: preço em R$ (mono). Tooltip com data e preço formatado.",
+        "import": "next/dynamic para não bloquear SSR (mesmo padrão do AllocationChartDynamic existente)",
+        "tokens": "stroke: brand.navy.500 (#2756A4), fill: gradiente de brand.navy.500 com opacity 0.15→0. Eixos: text-xs font-mono text-content-muted. Tooltip: bg-surface border border-border rounded shadow-md p-2."
+      }
+    },
+
+    "DividendsSection": {
+      "description": "Seção de histórico de proventos. Exibida apenas para STOCK_BR, FII, STOCK_US, BDR. Crypto e ETF sem dividendos mostram seção oculta.",
+      "background": "bg-surface border border-border rounded-lg",
+      "padding": "p-6",
+      "margin": "mx-4 md:mx-8 mb-8",
+      "DividendsTable": {
+        "description": "Tabela de proventos com scroll. Mesma estrutura visual da TransactionTable existente.",
+        "columns": ["Data de Pagamento", "Tipo (JCP/Dividendo/Rendimento)", "Valor por Cota (R$)", "DY Implícito (%)"],
+        "tokens": "thead text-xs font-sans text-content-muted uppercase; tbody text-sm font-mono text-content; linhas alternadas bg-surface / bg-surface-muted; hover bg-primary/5",
+        "emptyState": "Texto 'Nenhum provento encontrado.' com ícone de calendário, centralizado, text-content-muted"
+      }
+    }
+  },
+
+  "components": {
+    "note": "Todos os novos componentes em apps/web/src/components/market/. Reutilizar TrendBadge, AssetClassBadge, StaleBadge da SPEC-0012.",
+    "new": [
+      {
+        "name": "AssetHeader",
+        "path": "apps/web/src/components/market/AssetHeader.tsx",
+        "props": "ticker: string, name: string, assetClass: AssetClass, price: string, priceInBrl?: string, currency: string, changePercent: string | null, changeValue: string | null, stale?: boolean",
+        "notes": "Server Component. TrendBadge (SPEC-0012) para variação. Botão 'Adicionar à carteira' será adicionado na SPEC-0014 (slot reservado)."
+      },
+      {
+        "name": "IndicatorCard",
+        "path": "apps/web/src/components/market/IndicatorCard.tsx",
+        "props": "label: string, value: string | null, tooltip?: string",
+        "notes": "Exibe '—' quando value é null. Tooltip opcional via title HTML ou Tooltip UI existente."
+      },
+      {
+        "name": "IndicatorGrid",
+        "path": "apps/web/src/components/market/IndicatorGrid.tsx",
+        "props": "indicators: Array<{label, value, tooltip}>, assetClass: AssetClass",
+        "notes": "Filtra/ordena indicadores por classe via constante INDICATORS_BY_CLASS. Nunca renderiza NaN."
+      },
+      {
+        "name": "PriceHistoryChart",
+        "path": "apps/web/src/components/market/PriceHistoryChart.tsx",
+        "props": "series: Array<{date: string, close: string}>, ticker: string",
+        "notes": "Client Component importado via next/dynamic com ssr:false. Recharts AreaChart com gradiente navy. Valores via string → parseFloat local (apenas para Recharts, não para lógica financeira)."
+      },
+      {
+        "name": "PriceHistorySection",
+        "path": "apps/web/src/components/market/PriceHistorySection.tsx",
+        "props": "ticker: string, initialRange?: '1m'|'6m'|'1y'|'5y'",
+        "notes": "Client Component. Contém RangePicker (botões 1M/6M/1A/5A) e PriceHistoryChart. Fetcha /api/market/[ticker]/history?range=X ao mudar período via react-query."
+      },
+      {
+        "name": "DividendsTable",
+        "path": "apps/web/src/components/market/DividendsTable.tsx",
+        "props": "dividends: Array<{paymentDate, value, type}>, assetClass: AssetClass",
+        "notes": "Renderiza null/vazio para CRYPTO e ETF. valores monetários em font-mono."
+      }
+    ],
+    "reused": [
+      "TrendBadge (SPEC-0012) — sem modificação",
+      "AssetClassBadge — sem modificação",
+      "StaleBadge — sem modificação",
+      "Tooltip (apps/web/src/components/ui/Tooltip.tsx) — para explicações dos indicadores"
+    ]
+  },
+
   "requirements": [
     {
       "id": "REQ-01",

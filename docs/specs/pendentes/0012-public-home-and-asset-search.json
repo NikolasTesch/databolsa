@@ -7,8 +7,8 @@
   "created": "2026-06-13",
   "updated": "2026-06-13",
   "authors": ["Nikolas"],
-  "summary": "Criar uma home pública acessível sem login no estilo Investidor10/StatusInvest: campo de busca de ativos por ticker, cards de destaques do mercado (maiores altas/baixas). Cria o route group (public) separando a vitrine pública da área logada (app).",
-  "motivation": "O DataBolsa hoje é exclusivamente um rastreador de carteira privado. Para atrair e converter usuários, precisa de uma vitrine pública com análise de mercado — mesma proposta de valor do Investidor10 e StatusInvest. Esta spec cobre a camada de entrada (home + busca); a página de detalhe do ativo fica na SPEC-0013.",
+  "summary": "Criar a home pública do DataBolsa no estilo Investidor10/StatusInvest: header sticky com nav por classe de ativo, hero com busca + chips de 'Mais buscados', barra de índices (IBOV, IFIX, USD/BRL, BTC), e seção de mercado com tabs por classe (Ações, FIIs, ETFs, BDRs, Crypto, Stocks US) mostrando 6 maiores altas e 6 maiores baixas em grid de cards. Cria o route group (public) separando a vitrine pública da área logada (app).",
+  "motivation": "O DataBolsa hoje é exclusivamente um rastreador de carteira privado. Para atrair e converter usuários, precisa de uma vitrine pública com análise de mercado — mesma proposta de valor do Investidor10 e StatusInvest, adaptada ao design system da marca (IBM Plex, paleta navy/finance, tokens de surface/border).",
   "related": {
     "prd": ["PRD §4", "PRD §5", "PRD §11"],
     "spec_doc": ["SPEC §1", "SPEC §6"],
@@ -18,205 +18,476 @@
   },
   "scope": {
     "in_scope": [
-      "Route group (public) com layout próprio (header com logo, SearchBar, CTA de login/dashboard)",
-      "Home page (/) com SearchBar e seção de destaques de mercado",
-      "Componente SearchBar com autocomplete e debounce (200ms)",
-      "API route GET /api/market/search?q= (busca de tickers, pública)",
-      "API route GET /api/market/highlights (maiores altas/baixas, pública, cache 5min)",
-      "Atualização do middleware para deixar / e /ativos/* públicos",
-      "Layout responsivo desktop e mobile para a área pública",
-      "Degradação graciosa RN-10: highlights servem dado stale em falha de fonte"
+      "Route group (public) com layout próprio separado do (app) logado",
+      "PublicHeader sticky: logo + nav tabs por classe + SearchBar inline + CTA auth",
+      "HeroSection: headline, SearchBar centralizado, chips de 'Mais buscados'",
+      "IndexBar: barra horizontal de índices (IBOV, IFIX, USD/BRL, BTC, CDI)",
+      "MarketSection: tabs (Ações | FIIs | ETFs | BDRs | Crypto | Stocks US) com Maiores Altas/Baixas em grid de 6 AssetMiniCards",
+      "Componente TrendBadge (variação % com ícone ↑↓, cor profit/loss do design system)",
+      "Componente AssetMiniCard (ticker, nome, preço mono, TrendBadge, link para /ativos/[ticker])",
+      "Componente IndexCard (nome do índice, valor, variação %)",
+      "API route GET /api/market/indices (IBOV, IFIX, USD/BRL, BTC — cache 5min)",
+      "API route GET /api/market/highlights?type=STOCK_BR (6 gainers + 6 losers — cache 5min)",
+      "API route GET /api/market/search?q= (autocomplete com até 10 resultados)",
+      "Atualização do middleware: / e /ativos/* públicos",
+      "Degradação graciosa RN-10 em todos os endpoints de mercado",
+      "Layout responsivo: grid 3 colunas (lg) → 2 (md) → 1 (sm) nos cards"
     ],
     "out_of_scope": [
-      "Página de detalhe do ativo /ativos/[ticker] (SPEC-0013)",
+      "Página de detalhe /ativos/[ticker] (SPEC-0013)",
       "Indicadores fundamentalistas P/L, DY, P/VP, ROE (SPEC-0013)",
       "Histórico de preços e dividendos (SPEC-0013)",
-      "Adicionar ativo à carteira a partir da busca (SPEC-0014)",
-      "SEO/SSG avançado, sitemap, meta tags dinâmicas",
-      "Provedor pago de dados fundamentalistas",
-      "Open Finance, relatórios de IR, recomendações de investimento",
+      "Adicionar ativo à carteira (SPEC-0014)",
+      "SSR/SSG com ISR por ticker, sitemap, meta tags dinâmicas",
+      "Provedor pago de dados",
+      "Ranking por DY, P/VP, Receita (fase posterior)",
+      "Open Finance, IR, recomendações de investimento",
       "Internacionalização (i18n)",
-      "Realtime de cotações (WebSocket/SSE)"
+      "Realtime via WebSocket/SSE"
     ]
   },
+
+  "layout": {
+    "note": "Descreve a estrutura visual de cada seção e seus componentes. Use como contrato entre design e implementação.",
+
+    "PublicHeader": {
+      "position": "sticky top-0, z-index: sticky (z-20 do design system)",
+      "background": "bg-surface com border-b border-border",
+      "height": "64px desktop, 56px mobile",
+      "structure": [
+        "Esquerda: Logo SVG DataBolsa (link para /)",
+        "Centro: NavTabs — links Ações | FIIs | ETFs | BDRs | Crypto | Stocks US (cada um leva para / com tab ativa via query ?type=X)",
+        "Direita: SearchBar compacta (input com lupa) + Divisor + Botões 'Entrar' (variant ghost) e 'Criar conta' (variant primary) para deslogados OU 'Dashboard' (variant ghost) para logados"
+      ],
+      "mobile": "Logo + ícone de hamburguer que abre drawer com nav + auth. SearchBar ocupa linha própria abaixo do header.",
+      "tokens": "font-sans text-sm font-medium, links text-content-muted hover:text-content, link ativo text-primary border-b-2 border-primary"
+    },
+
+    "HeroSection": {
+      "background": "bg-background (mais escuro que surface)",
+      "padding": "py-16 md:py-24",
+      "structure": [
+        "Headline: 'Análise de ativos e acompanhamento de carteira' — text-3xl md:text-4xl font-bold text-content, max-w-2xl centrado",
+        "Subheadline: 'B3, criptos, stocks americanos e muito mais.' — text-lg text-content-muted",
+        "SearchBar hero: input largo (max-w-xl), placeholder 'Pesquise por ticker ou nome... ex: PETR4, Bitcoin', ícone de lupa, borda primary em focus",
+        "Chips de 'Mais buscados': row de QuickChip (PETR4, VALE3, ITUB4, BBDC4, BTC, AAPL) — cada chip é link para /ativos/[ticker], estilo badge rounded-full bg-surface-muted text-content-muted text-xs px-3 py-1 hover:bg-primary hover:text-white"
+      ],
+      "tokens": "Fundo bg-background (#F8FAFC light / #0B1220 dark), headline text-content, chips reutilizam badge-muted"
+    },
+
+    "IndexBar": {
+      "description": "Barra horizontal de indicadores de mercado em tempo de cache. Equivale aos cards de topo do Investidor10 e aos indicadores rápidos do StatusInvest.",
+      "position": "Abaixo do HeroSection, sticky: false",
+      "background": "bg-surface border-y border-border",
+      "padding": "py-3 px-4",
+      "layout": "flex horizontal scroll (overflow-x-auto no mobile), gap-6 md:gap-8, justify-center no desktop",
+      "IndexCard": {
+        "description": "Card inline de um índice. Não é um card elevado — é um item inline na barra.",
+        "fields": [
+          "label: string (ex: 'IBOV', 'IFIX', 'USD/BRL', 'BTC', 'CDI a.a.')",
+          "value: string mono (ex: '128.450', 'R$ 5,27', 'US$ 98.200')",
+          "changePercent: string (ex: '+1,23%' | '-0,45%')",
+          "stale?: boolean"
+        ],
+        "tokens": "label text-xs text-content-muted font-sans uppercase tracking-wide; value text-sm font-mono font-semibold text-content; changePercent text-xs font-mono font-medium — profit.dark se positivo, loss.dark se negativo; separador border-r border-border entre itens",
+        "stale": "Ícone de relógio âmbar (color: stale.dark) ao lado do value quando stale=true"
+      },
+      "indices": ["IBOV", "IFIX", "USD/BRL", "BTC/BRL", "CDI a.a."],
+      "sources": "IBOV e IFIX via brapi; USD/BRL via AwesomeAPI (já existente); BTC via CoinGecko; CDI via hardcoded ou ANBIMA (Fase 2)"
+    },
+
+    "MarketSection": {
+      "description": "Seção principal de destaques do mercado, com tabs por classe de ativo. Inspirada no layout de tabs do Investidor10 e nas seções separadas por tipo do StatusInvest.",
+      "background": "bg-background",
+      "padding": "py-10 px-4 md:px-8",
+      "MarketTabs": {
+        "description": "Tabs de seleção de classe. Persistem o tipo ativo na URL como ?type=STOCK_BR (permite compartilhamento e back-nav).",
+        "tabs": [
+          { "label": "Ações", "type": "STOCK_BR" },
+          { "label": "FIIs", "type": "FII" },
+          { "label": "ETFs", "type": "ETF" },
+          { "label": "BDRs", "type": "BDR" },
+          { "label": "Crypto", "type": "CRYPTO" },
+          { "label": "Stocks US", "type": "STOCK_US" }
+        ],
+        "tokens": "tab inativo: text-content-muted border-b-2 border-transparent; tab ativo: text-primary border-b-2 border-primary font-semibold; hover: text-content; font-sans text-sm"
+      },
+      "GainersLosers": {
+        "description": "Duas subseções dentro da tab ativa: Maiores Altas e Maiores Baixas, cada uma com 6 AssetMiniCards.",
+        "layout": "Duas subseções em coluna (gap-8). Cada subseção: SectionHeader + grid de AssetMiniCards",
+        "SectionHeader": {
+          "description": "Cabeçalho da subseção com título e link 'Ver todos'.",
+          "structure": "flex justify-between items-center mb-4; título text-base font-semibold text-content; link 'Ver todos' text-sm text-primary hover:underline (aponta para /ativos?type=X&sort=change)"
+        },
+        "grid": "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3",
+        "count": "6 cards por subseção (3 colunas × 2 linhas no desktop)"
+      },
+      "AssetMiniCard": {
+        "description": "Card clicável de ativo para os grids de Maiores Altas/Baixas. Link para /ativos/[ticker].",
+        "background": "bg-surface hover:bg-surface-muted transition-colors",
+        "border": "border border-border rounded-lg",
+        "padding": "p-4",
+        "shadow": "shadow-sm hover:shadow-md",
+        "structure": [
+          "Linha 1: AssetClassBadge (xs, reutiliza componente existente) + ticker (text-sm font-mono font-semibold text-content) + TrendBadge à direita",
+          "Linha 2: nome da empresa (text-xs text-content-muted truncate, max 1 linha)",
+          "Linha 3: preço (text-base font-mono font-semibold text-content) + 'R$' prefixo text-xs text-content-muted"
+        ],
+        "TrendBadge": {
+          "description": "Badge inline de variação percentual. Reutilizável em IndexBar, AssetMiniCard e AssetHeader (SPEC-0013).",
+          "variants": {
+            "positive": "text-profit (finance.profit.dark) + ícone ↑ (TrendingUp do lucide-react)",
+            "negative": "text-loss (finance.loss.dark) + ícone ↓ (TrendingDown)",
+            "neutral": "text-content-muted + ícone — (Minus)"
+          },
+          "tokens": "text-xs font-mono font-medium, inline-flex items-center gap-0.5"
+        },
+        "stale": "StaleBadge existente exibido no canto superior direito quando stale=true"
+      }
+    },
+
+    "PublicFooter": {
+      "background": "bg-surface border-t border-border",
+      "padding": "py-8 px-4",
+      "structure": [
+        "Coluna 1: Logo + tagline 'Análise e carteira de investimentos'",
+        "Coluna 2: Links — Ações, FIIs, ETFs, BDRs, Crypto, Stocks US",
+        "Coluna 3: Links — Entrar, Criar conta, Dashboard (se logado)",
+        "Bottom: Copyright DataBolsa + ano"
+      ],
+      "layout": "grid grid-cols-1 md:grid-cols-3 gap-8",
+      "tokens": "text-sm text-content-muted, links hover:text-content"
+    }
+  },
+
+  "components": {
+    "note": "Lista de todos os novos componentes React a criar em apps/web/src/components/market/ e apps/web/src/components/ui/.",
+    "new": [
+      {
+        "name": "TrendBadge",
+        "path": "apps/web/src/components/ui/TrendBadge.tsx",
+        "props": "value: string | null, showIcon?: boolean",
+        "notes": "Reutilizável globalmente. Detecta sinal do valor para aplicar cor profit/loss/neutral. Exibe '—' se value é null."
+      },
+      {
+        "name": "QuickChip",
+        "path": "apps/web/src/components/market/QuickChip.tsx",
+        "props": "label: string, href: string",
+        "notes": "Chip/tag clicável para 'Mais buscados'. Estilo: badge rounded-full, hover muda para primary."
+      },
+      {
+        "name": "SearchBar",
+        "path": "apps/web/src/components/market/SearchBar.tsx",
+        "props": "variant: 'hero' | 'compact', placeholder?: string",
+        "notes": "variant=hero é o grande do HeroSection; variant=compact é o do PublicHeader. Ambos compartilham a lógica de autocomplete e debounce 200ms. Dropdown com até 10 resultados, cada item: ticker (mono) + nome + AssetClassBadge. Keyboard nav: ↑↓ para navegar, Enter para selecionar, Escape para fechar."
+      },
+      {
+        "name": "IndexCard",
+        "path": "apps/web/src/components/market/IndexCard.tsx",
+        "props": "label: string, value: string, changePercent: string | null, stale?: boolean",
+        "notes": "Item inline da IndexBar. Não é card elevado. TrendBadge para changePercent."
+      },
+      {
+        "name": "IndexBar",
+        "path": "apps/web/src/components/market/IndexBar.tsx",
+        "props": "indices: IndexCardData[], stale?: boolean",
+        "notes": "Barra horizontal com scroll em mobile. Server Component (fetcha /api/market/indices e passa props)."
+      },
+      {
+        "name": "AssetMiniCard",
+        "path": "apps/web/src/components/market/AssetMiniCard.tsx",
+        "props": "ticker: string, name: string, price: string, changePercent: string | null, assetClass: AssetClass, stale?: boolean",
+        "notes": "Card clicável linkado para /ativos/[ticker]. Todos os valores numéricos em font-mono. Usa TrendBadge, AssetClassBadge (já existe), StaleBadge (já existe)."
+      },
+      {
+        "name": "MarketTabs",
+        "path": "apps/web/src/components/market/MarketTabs.tsx",
+        "props": "activeType: AssetClass, onChange: (type: AssetClass) => void",
+        "notes": "Client Component. Sincroniza tab ativa com query param ?type= na URL via useRouter e useSearchParams."
+      },
+      {
+        "name": "MarketSection",
+        "path": "apps/web/src/components/market/MarketSection.tsx",
+        "props": "gainers: AssetMiniCardData[], losers: AssetMiniCardData[], activeType: AssetClass, stale?: boolean",
+        "notes": "Compõe MarketTabs + dois grids de AssetMiniCard (Maiores Altas e Maiores Baixas). Ao mudar tab, fetcha /api/market/highlights?type=X via react-query."
+      },
+      {
+        "name": "PublicHeader",
+        "path": "apps/web/src/components/layout/PublicHeader.tsx",
+        "props": "isAuthenticated: boolean",
+        "notes": "Server Component externo (lê cookie no servidor para isAuthenticated). Contém SearchBar variant=compact. Nav links com tab ativa por pathname."
+      },
+      {
+        "name": "PublicFooter",
+        "path": "apps/web/src/components/layout/PublicFooter.tsx",
+        "props": "none",
+        "notes": "Server Component estático."
+      }
+    ],
+    "reused": [
+      "AssetClassBadge (apps/web/src/components/assets/AssetClassBadge.tsx) — sem modificação",
+      "StaleBadge (apps/web/src/components/portfolio/StaleBadge.tsx) — sem modificação",
+      "Button, Input, Card, Badge, Spinner (apps/web/src/components/ui/) — sem modificação"
+    ]
+  },
+
   "requirements": [
     {
       "id": "REQ-01",
-      "description": "A rota / deve ser acessível sem cookie de autenticação e renderizar a home pública.",
+      "description": "A rota / deve ser acessível sem cookie e renderizar a home pública com todas as seções.",
       "rule_ref": "RN-11",
       "priority": "must"
     },
     {
       "id": "REQ-02",
-      "description": "O middleware deve liberar / e /ativos/* do redirect para /login, mantendo /dashboard e /assets/* protegidos.",
+      "description": "Middleware deve liberar /, /ativos/*, mantendo /dashboard e /assets/* protegidos.",
       "rule_ref": "RN-11",
       "priority": "must"
     },
     {
       "id": "REQ-03",
-      "description": "A SearchBar deve fazer debounce de 200ms, exibir autocomplete com até 8 sugestões (ticker + nome), e navegar para /ativos/[ticker] ao selecionar.",
+      "description": "SearchBar deve debounce 200ms, mostrar até 10 sugestões com ticker+nome+AssetClassBadge, navegar para /ativos/[ticker] ao selecionar. Keyboard nav completa (↑↓ Enter Escape).",
       "priority": "must"
     },
     {
       "id": "REQ-04",
-      "description": "GET /api/market/search?q= deve retornar array de { ticker, name, assetClass } com no máximo 10 resultados. Fonte: brapi /available para B3, lista curada para crypto.",
+      "description": "GET /api/market/search?q= retorna Array<{ticker, name, assetClass}> (máx 10). Fontes: brapi /available para B3, lista curada crypto/US.",
       "priority": "must"
     },
     {
       "id": "REQ-05",
-      "description": "GET /api/market/highlights deve retornar até 5 maiores altas e 5 maiores baixas do dia (B3). Resultado cacheado em QuoteCache por 5 minutos.",
+      "description": "GET /api/market/indices retorna IBOV, IFIX, USD/BRL, BTC/BRL com value e changePercent. Cache 5min em QuoteCache. Degradação stale RN-10.",
       "rule_ref": "RN-10",
       "priority": "must"
     },
     {
       "id": "REQ-06",
-      "description": "Em falha da fonte externa, /api/market/highlights deve servir o último dado em cache marcado como stale (RN-10), nunca retornar 500.",
+      "description": "GET /api/market/highlights?type= retorna 6 gainers e 6 losers da classe de ativo. Param type: STOCK_BR|FII|ETF|BDR|CRYPTO|STOCK_US (default STOCK_BR). Cache 5min. Degradação stale RN-10.",
       "rule_ref": "RN-10",
       "priority": "must"
     },
     {
       "id": "REQ-07",
-      "description": "Nenhuma rota /api/market/* deve ler Asset, Transaction ou dados de usuário (RN-11).",
-      "rule_ref": "RN-11",
+      "description": "Em falha de fonte, /api/market/highlights e /api/market/indices servem último cache com stale:true. Nunca retornam 500 se houver cache.",
+      "rule_ref": "RN-10",
       "priority": "must"
     },
     {
       "id": "REQ-08",
-      "description": "O header público deve exibir botão 'Entrar' e 'Criar conta' para usuários não autenticados, e 'Dashboard' para autenticados (verificado via cookie no server component).",
-      "priority": "should"
+      "description": "Nenhuma rota /api/market/* consulta User, Asset ou Transaction.",
+      "rule_ref": "RN-11",
+      "priority": "must"
     },
     {
       "id": "REQ-09",
-      "description": "A home e a SearchBar devem ser responsivas (mobile-first, breakpoints sm/md/lg do Tailwind).",
+      "description": "PublicHeader exibe 'Entrar' e 'Criar conta' para deslogados, 'Dashboard' para logados (verificado via cookie no server component).",
       "priority": "should"
     },
     {
       "id": "REQ-10",
-      "description": "Tokens de API externos (brapi) nunca devem ser expostos ao cliente — toda chamada passa pelo servidor.",
+      "description": "Todos os valores numéricos (preço, variação %, índice) devem usar font-mono (IBM Plex Mono) conforme design-tokens.json.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-11",
+      "description": "Layout responsivo: grid de cards 3 colunas (lg) → 2 (md) → 1 (sm). IndexBar com overflow-x-auto no mobile.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-12",
+      "description": "Tab ativa do MarketSection sincronizada com query param ?type= na URL para permitir compartilhamento e back-nav.",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-13",
+      "description": "Tokens de API externos nunca expostos ao cliente — toda chamada a brapi/CoinGecko/AwesomeAPI passa pelo servidor.",
       "priority": "must"
     }
   ],
+
   "data_model": [
     {
       "entity": "QuoteCache",
       "change": "reuse",
       "fields": [],
-      "notes": "Reutilizado para cache dos highlights. Sem alteração no schema."
+      "notes": "Reutilizado para cache de highlights e indices. Sem alteração no schema."
     }
   ],
+
   "api": [
     {
       "method": "GET",
       "path": "/api/market/search",
       "auth": false,
-      "request": "query: q (string, mínimo 1 char)",
-      "response": "{ results: Array<{ ticker: string, name: string, assetClass: 'STOCK_BR'|'FII'|'ETF'|'BDR'|'CRYPTO'|'STOCK_US' }> }",
+      "request": "query: q (string, min 1 char)",
+      "response": "{ results: Array<{ ticker: string, name: string, assetClass: AssetClass }> }",
       "errors": [
         "400 se q ausente ou vazio",
-        "503 com { message, stale: true } em falha total de fonte"
+        "200 com results:[] se nenhum resultado"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/market/indices",
+      "auth": false,
+      "request": "sem parâmetros",
+      "response": "{ indices: Array<{ id: string, label: string, value: string, changePercent: string|null, stale?: boolean }>, asOf: string }",
+      "errors": [
+        "200 com stale:true por índice em falha com cache disponível",
+        "503 apenas se nenhum cache disponível e fonte offline"
       ]
     },
     {
       "method": "GET",
       "path": "/api/market/highlights",
       "auth": false,
-      "request": "sem parâmetros",
-      "response": "{ gainers: Array<{ ticker, name, price, changePercent, stale? }>, losers: Array<{ ticker, name, price, changePercent, stale? }>, asOf: string (ISO) }",
+      "request": "query: type (AssetClass, default STOCK_BR), limit (number, default 6, max 6)",
+      "response": "{ gainers: Array<{ ticker, name, assetClass, price: string, changePercent: string, stale? }>, losers: Array<{...}>, type: AssetClass, asOf: string }",
       "errors": [
-        "200 com stale:true se dado de cache desatualizado (RN-10)",
-        "503 apenas se nunca houve cache e fonte está offline"
+        "400 se type inválido",
+        "200 com stale:true em falha com cache disponível",
+        "503 apenas se nenhum cache e fonte offline"
       ]
     }
   ],
+
   "acceptance_criteria": [
     {
       "id": "AC-01",
       "given": "usuário não autenticado acessa /",
       "when": "a página carrega",
-      "then": "vê a home pública com SearchBar, destaques de mercado e botões 'Entrar'/'Criar conta' sem ser redirecionado para /login"
+      "then": "vê PublicHeader (com 'Entrar'/'Criar conta'), HeroSection com SearchBar, IndexBar com IBOV/IFIX/USD/BTC, MarketSection com tab 'Ações' ativa e 6 cards de altas e 6 de baixas"
     },
     {
       "id": "AC-02",
       "given": "usuário digita 'PETR' na SearchBar",
-      "when": "após 200ms de debounce",
-      "then": "aparecem sugestões contendo 'PETR4', 'PETR3' com nome 'Petrobras'"
+      "when": "após 200ms",
+      "then": "dropdown mostra até 10 sugestões com PETR4/PETR3, cada uma com ticker em mono, nome da empresa e badge de classe"
     },
     {
       "id": "AC-03",
-      "given": "usuário clica em 'PETR4' nas sugestões",
+      "given": "usuário clica em 'PETR4' nas sugestões ou pressiona Enter com PETR4 selecionado",
       "when": "a navegação ocorre",
-      "then": "é redirecionado para /ativos/PETR4"
+      "then": "vai para /ativos/PETR4"
     },
     {
       "id": "AC-04",
-      "given": "usuário autenticado acessa /",
-      "when": "a página carrega",
-      "then": "vê botão 'Dashboard' no header (não 'Entrar'/'Criar conta')"
+      "given": "usuário clica no chip 'BTC' em 'Mais buscados'",
+      "when": "a navegação ocorre",
+      "then": "vai para /ativos/BTC"
     },
     {
       "id": "AC-05",
-      "given": "a fonte brapi retorna erro ao buscar highlights",
-      "when": "existe dado em cache",
-      "then": "a home exibe os destaques com badge 'Desatualizado' e não mostra erro 500"
+      "given": "usuário clica na tab 'FIIs' no MarketSection",
+      "when": "a tab muda",
+      "then": "URL inclui ?type=FII, os 6 cards de altas e baixas mostram FIIs, sem reload de página"
     },
     {
       "id": "AC-06",
-      "given": "qualquer chamada a /api/market/*",
-      "when": "inspecionado o banco de dados",
-      "then": "nenhuma tabela de User, Asset ou Transaction foi consultada"
+      "given": "brapi retorna erro ao buscar highlights",
+      "when": "existe cache anterior",
+      "then": "cards exibem dados com StaleBadge; nenhum 500 é retornado"
+    },
+    {
+      "id": "AC-07",
+      "given": "usuário autenticado acessa /",
+      "when": "a página carrega",
+      "then": "PublicHeader mostra 'Dashboard' no lugar de 'Entrar'/'Criar conta'"
+    },
+    {
+      "id": "AC-08",
+      "given": "qualquer requisição a /api/market/*",
+      "when": "executada",
+      "then": "nenhuma tabela de User, Asset ou Transaction é consultada"
+    },
+    {
+      "id": "AC-09",
+      "given": "página carregada no mobile (375px)",
+      "when": "visualizada",
+      "then": "IndexBar faz scroll horizontal, grid de cards é 1 coluna, SearchBar ocupa largura total"
     }
   ],
+
   "test_plan": [
     {
       "id": "TC-01",
-      "description": "Middleware: rota / e /ativos/PETR4 são acessíveis sem cookie; /dashboard redireciona para /login sem cookie.",
+      "description": "Middleware: / e /ativos/PETR4 acessíveis sem cookie; /dashboard redireciona para /login.",
       "kind": "unit",
       "covers": ["REQ-01", "REQ-02"],
       "mocks_external": false
     },
     {
       "id": "TC-02",
-      "description": "GET /api/market/search?q=PETR retorna sugestões da B3 (MSW mockando brapi /available).",
+      "description": "GET /api/market/search?q=PETR: retorna resultados B3 (MSW mockando brapi /available).",
       "kind": "unit",
       "covers": ["REQ-04", "AC-02"],
       "mocks_external": true
     },
     {
       "id": "TC-03",
-      "description": "GET /api/market/search sem q retorna 400.",
+      "description": "GET /api/market/search sem q: retorna 400.",
       "kind": "unit",
       "covers": ["REQ-04"],
       "mocks_external": false
     },
     {
       "id": "TC-04",
-      "description": "GET /api/market/highlights retorna gainers/losers com dado do cache quando brapi offline (stale=true, status 200).",
+      "description": "GET /api/market/indices: retorna IBOV/IFIX/USD/BTC com valores e changePercent (MSW). Em falha de fonte com cache, retorna stale:true.",
       "kind": "unit",
-      "covers": ["REQ-05", "REQ-06", "AC-05"],
+      "covers": ["REQ-05", "REQ-07"],
       "mocks_external": true
     },
     {
       "id": "TC-05",
-      "description": "SearchBar: renderiza, aceita input, dispara busca após debounce e exibe sugestões. Keyboard nav (setas, Enter, Escape).",
+      "description": "GET /api/market/highlights?type=STOCK_BR: retorna 6 gainers e 6 losers (MSW). Em falha de fonte com cache, stale:true.",
+      "kind": "unit",
+      "covers": ["REQ-06", "REQ-07", "AC-06"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-06",
+      "description": "GET /api/market/highlights?type=INVALIDO: retorna 400.",
+      "kind": "unit",
+      "covers": ["REQ-06"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-07",
+      "description": "SearchBar: input dispara busca após 200ms debounce, exibe dropdown, navega com Enter, fecha com Escape, suporta ↑↓.",
       "kind": "unit",
       "covers": ["REQ-03", "AC-02", "AC-03"],
       "mocks_external": true
     },
     {
-      "id": "TC-06",
-      "description": "Home page: renderiza SearchBar e seção de highlights sem usuário autenticado.",
+      "id": "TC-08",
+      "description": "TrendBadge: renderiza verde com ↑ para positivo, vermelho com ↓ para negativo, '—' para null.",
       "kind": "unit",
-      "covers": ["AC-01"],
+      "covers": ["REQ-10"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-09",
+      "description": "AssetMiniCard: renderiza ticker em mono, TrendBadge, AssetClassBadge, StaleBadge quando stale=true; link aponta para /ativos/[ticker].",
+      "kind": "unit",
+      "covers": ["REQ-10", "AC-06"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-10",
+      "description": "MarketSection: ao clicar tab 'FIIs', URL atualiza com ?type=FII e novo fetch de highlights é disparado.",
+      "kind": "unit",
+      "covers": ["REQ-12", "AC-05"],
       "mocks_external": true
     },
     {
-      "id": "TC-07",
-      "description": "MarketHighlights: exibe StaleBadge quando stale=true no payload.",
+      "id": "TC-11",
+      "description": "Home page: renderiza todas as seções sem usuário autenticado (Server Component + Client hydration).",
       "kind": "unit",
-      "covers": ["REQ-06", "AC-05"],
-      "mocks_external": false
+      "covers": ["AC-01"],
+      "mocks_external": true
     }
   ],
+
   "tasks": [
     {
       "id": "T-01",
@@ -226,60 +497,91 @@
     },
     {
       "id": "T-02",
-      "description": "Criar route group (public) com layout próprio: apps/web/src/app/(public)/layout.tsx com PublicHeader (logo, SearchBar, CTA auth).",
-      "target": "apps/web/src/app/(public)/",
+      "description": "Criar route group (public) e seu layout: apps/web/src/app/(public)/layout.tsx com PublicHeader + PublicFooter.",
+      "target": "apps/web/src/app/(public)/layout.tsx",
       "done": false
     },
     {
       "id": "T-03",
-      "description": "Mover/recriar apps/web/src/app/page.tsx para (public)/page.tsx com SearchBar hero e seção MarketHighlights.",
-      "target": "apps/web/src/app/(public)/page.tsx",
+      "description": "Criar componentes de layout público: PublicHeader.tsx (sticky, logo+nav+SearchBar compact+auth) e PublicFooter.tsx.",
+      "target": "apps/web/src/components/layout/",
       "done": false
     },
     {
       "id": "T-04",
-      "description": "Criar componente SearchBar com autocomplete, debounce 200ms e navegação por teclado.",
-      "target": "apps/web/src/components/market/SearchBar.tsx",
+      "description": "Criar componente TrendBadge.tsx (variação % com ícone ↑↓ e cores profit/loss/neutral do design system).",
+      "target": "apps/web/src/components/ui/TrendBadge.tsx",
       "done": false
     },
     {
       "id": "T-05",
-      "description": "Criar componente MarketHighlights (gainers/losers cards) reusando StaleBadge.",
-      "target": "apps/web/src/components/market/MarketHighlights.tsx",
+      "description": "Criar componente SearchBar.tsx (variant hero + compact, autocomplete, debounce 200ms, keyboard nav).",
+      "target": "apps/web/src/components/market/SearchBar.tsx",
       "done": false
     },
     {
       "id": "T-06",
-      "description": "Criar API route GET /api/market/search: busca em lista brapi /available (B3) + lista curada de crypto, retorna { results }.",
-      "target": "apps/web/src/app/api/market/search/route.ts",
+      "description": "Criar componentes IndexCard.tsx e IndexBar.tsx (barra horizontal IBOV, IFIX, USD/BRL, BTC).",
+      "target": "apps/web/src/components/market/",
       "done": false
     },
     {
       "id": "T-07",
-      "description": "Criar API route GET /api/market/highlights: busca ganhos/perdas do dia via brapi, persiste em QuoteCache com TTL 5min, degrada para stale.",
-      "target": "apps/web/src/app/api/market/highlights/route.ts",
+      "description": "Criar componentes AssetMiniCard.tsx, QuickChip.tsx, MarketTabs.tsx e MarketSection.tsx (grid de cards com tabs).",
+      "target": "apps/web/src/components/market/",
       "done": false
     },
     {
       "id": "T-08",
-      "description": "Escrever testes TC-01..TC-07 com Vitest + MSW.",
-      "target": "apps/web/src/test/",
+      "description": "Criar API route GET /api/market/search: busca em brapi /available + lista curada crypto/US.",
+      "target": "apps/web/src/app/api/market/search/route.ts",
       "done": false
     },
     {
       "id": "T-09",
+      "description": "Criar API route GET /api/market/indices: busca IBOV/IFIX via brapi, USD/BRL via AwesomeAPI, BTC via CoinGecko. Cache 5min em QuoteCache, stale RN-10.",
+      "target": "apps/web/src/app/api/market/indices/route.ts",
+      "done": false
+    },
+    {
+      "id": "T-10",
+      "description": "Criar API route GET /api/market/highlights?type=: 6 gainers + 6 losers por classe. Cache 5min em QuoteCache, stale RN-10.",
+      "target": "apps/web/src/app/api/market/highlights/route.ts",
+      "done": false
+    },
+    {
+      "id": "T-11",
+      "description": "Criar/recriar apps/web/src/app/(public)/page.tsx compondo HeroSection + IndexBar + MarketSection.",
+      "target": "apps/web/src/app/(public)/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-12",
+      "description": "Escrever testes TC-01..TC-11 com Vitest + MSW.",
+      "target": "apps/web/src/test/",
+      "done": false
+    },
+    {
+      "id": "T-13",
       "description": "Atualizar docs/specs/README.md com entrada da SPEC-0012.",
       "target": "docs/specs/README.md",
       "done": false
     }
   ],
+
   "risks": [
-    "Lista de tickers brapi /available pode ser grande (>400 itens) — paginar ou filtrar no servidor, nunca enviar tudo ao cliente.",
-    "brapi free tier pode limitar chamadas a /quote para highlights — mitigar com cache agressivo de 5min e reuso de QuoteCache já existente."
+    "Lista brapi /available pode ter 400+ tickers — filtrar server-side com índice em memória (cache local do processo), nunca enviar tudo ao cliente.",
+    "brapi free tier limita /quote para múltiplos tickers simultâneos — highlights pode precisar de batch requests com delay; cache de 5min mitiga.",
+    "IndexBar com CDI: ANBIMA não tem API pública gratuita simples — CDI inicial pode ser hardcoded (ex: '10,65% a.a.') e atualizado manualmente; Fase 2 para fonte automatizada.",
+    "MarketSection com ?type=CRYPTO: CoinGecko free tier tem rate limit baixo (10-30 req/min) — cache 5min é obrigatório.",
+    "SSR do PublicHeader lendo cookie para isAuthenticated: garantir que não quebre build estático."
   ],
+
   "observability": [
-    "Logar cache hit/miss de highlights no console do servidor (dev) com prefixo [market/highlights].",
-    "Resposta stale deve incluir campo asOf com timestamp do dado em cache para rastreabilidade."
+    "Logar cache hit/miss de highlights e indices com prefixo [market] ticker/index=X hit=true/false.",
+    "Logar timeout (>3s) de fonte externa como warn com [market] timeout source=X.",
+    "Campo asOf em todas as respostas para rastreabilidade do freshness no frontend."
   ],
-  "rollback": "Reverter o commit que move page.tsx para (public) e a atualização do middleware. As rotas /dashboard e /assets não são afetadas."
+
+  "rollback": "Reverter commit do middleware e do route group (public). A área logada (dashboard/assets) não é afetada. Remover rotas /api/market/*."
 }
