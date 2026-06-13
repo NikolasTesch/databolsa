@@ -1,6 +1,6 @@
 # ADR-0004 — Migração da API NestJS para Next.js Route Handlers
 
-- **Status:** Proposto
+- **Status:** Accepted
 - **Data:** 2026-06-13
 - **Autores:** nikolasdtesch@gmail.com
 

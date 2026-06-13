@@ -1,6 +1,6 @@
 # ADR 0001 — Stack do backend: Node.js + NestJS
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-0004](0004-migrate-api-to-nextjs.md)
 - **Data:** 2026-06-10
 - **Decisores:** nikolasdtesch@gmail.com
 

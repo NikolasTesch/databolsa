@@ -4,20 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-**packages/core implemented.** The monorepo directory structure exists (`/apps/{web,mobile,api}`, `/packages/{core,types,ui}`), along with Docker infrastructure and base design system. The backend stack is decided (Node.js + NestJS — see `docs/adr/0001`). The app directories (`/apps/*`) are still empty placeholders (`.gitkeep`).
+**MVP web implementado.** O monorepo está scaffoldado (`/apps/{web,mobile}`, `/packages/{core,types,ui}`), a infraestrutura Docker funciona e o design system base existe. A API NestJS foi **migrada para Next.js Route Handlers** dentro de `apps/web` (ADR-0004, SPEC-0011) — `apps/api` foi removido.
 
-`packages/core` is a standalone Node.js project (TypeScript + Jest + decimal.js) with full test coverage. The monorepo workspace tooling (pnpm workspaces) is not yet configured — treat each package as standalone for now.
+`packages/core` é um projeto Node.js standalone (TypeScript + Jest + decimal.js) com cobertura completa de testes. pnpm workspaces está configurado na raiz (`pnpm-workspace.yaml`).
 
-Work done so far, by spec: SPEC-0001 (`packages/core` position & P/L, `implemented`), SPEC-0002 (monorepo scaffold + design system, `verified`), SPEC-0003 (Docker infra, `verified`). Follow the architecture and roadmap in `docs/SPEC.md`.
+Specs concluídas (todas `verified`): SPEC-0001 (cálculos `packages/core`), SPEC-0002 (scaffold + design system), SPEC-0003 (Docker), SPEC-0004 (design tokens), SPEC-0005 (schema Prisma + migrations), SPEC-0006 (backend auth + CRUD), SPEC-0007 (cotações + cache), SPEC-0008 (web Next.js + dashboard), SPEC-0009 (mobile Flutter), SPEC-0010 (E2E + CI), SPEC-0011 (migração API → Next.js Route Handlers). Consulte `docs/SPEC.md` para arquitetura e `docs/specs/README.md` para o índice completo.
 
-### Build/test commands — packages/core
+### Build/test commands
 
 ```bash
-# from packages/core/
+# packages/core (standalone)
+cd packages/core
 npm install          # install dependencies (first time)
 npm test             # run Jest with coverage (thresholds: 95% stmts/funcs/lines, 90% branches)
 npm run build        # compile TypeScript to dist/
 npm run lint         # tsc --noEmit (type-check only, no emit)
+
+# apps/web (Next.js + Route Handlers API)
+cd apps/web
+pnpm install         # install dependencies
+pnpm dev             # dev server with hot-reload (http://localhost:3000)
+pnpm build           # production build
+pnpm test            # run Vitest unit tests
+
+# Docker (dev completo)
+docker compose up    # sobe postgres + web (hot-reload via override)
 ```
 
 ## Subagent workflow — mandatory
@@ -62,21 +73,20 @@ Three asset classes in the MVP: B3 securities (stocks, FIIs, ETFs, BDRs), crypto
 
 ## Architecture
 
-Client-server with a single backend serving both web and mobile and brokering all external quote APIs. **API keys and business logic live exclusively on the backend** — clients never call external data sources directly.
+Client-server with a **single Next.js app** (`apps/web`) serving both the web frontend and the REST API (via Route Handlers), brokering all external quote APIs. **API keys and business logic live exclusively on the server side** — browser and mobile clients never call external data sources directly (ADR-0004).
 
-Monorepo layout (directories scaffolded; apps not yet implemented):
-- `/apps/web` — Next.js + TypeScript + Tailwind (Recharts)
-- `/apps/mobile` — Flutter + Dart (fl_chart) — decided in `docs/adr/0002-mobile-flutter.md`; standalone sub-project within the monorepo (managed by `flutter` CLI, not pnpm workspace)
-- `/apps/api` — backend: **Node.js + NestJS** (decided in `docs/adr/0001-backend-stack-node-nestjs.md`; ORM: Prisma)
+Monorepo layout:
+- `/apps/web` — Next.js + TypeScript + Tailwind (Recharts). **Também é o backend**: Route Handlers em `src/app/api/` implementam auth, assets, transactions, portfolio e quotes. Prisma em `apps/web/prisma/`.
+- `/apps/mobile` — Flutter + Dart (fl_chart) — decided in `docs/adr/0002-mobile-flutter.md`; standalone sub-project within the monorepo (managed by `flutter` CLI, not pnpm workspace). Consome a mesma API REST do `apps/web`.
 - `/packages/core` — **financial calculations and business rules** (RN-01..RN-11), framework-agnostic and reusable
 - `/packages/types` — shared API contracts/types
-- `/packages/ui` — shared components (if applicable)
+- `/packages/ui` — shared components
 
-Backend → PostgreSQL (ORM: Prisma). Auth: JWT + refresh token. Every route except `/auth/*` requires JWT and filters by `user_id`.
+Database: PostgreSQL (ORM: Prisma). Auth: JWT + refresh token com autenticação híbrida — cookies HttpOnly para o web (BFF, ADR-0003) e Bearer Token no `Authorization` header para o mobile. Every route except `/api/auth/*` requires JWT and filters by `user_id`.
 
 External quote sources (server-side, cached): **brapi.dev** (B3), **CoinGecko** (crypto, can return BRL directly), **Finnhub** (US stocks), **AwesomeAPI** (USD/BRL FX).
 
-**Local dev / deploy runs on Docker** (`docker compose up` brings up `postgres` + `api` + `web` with hot-reload; mobile/Flutter is not containerized — run with `flutter run` locally). Build context is always the monorepo root so `packages/*` are copied. Details in `docs/SPEC.md §10.1` and `docs/specs/0003-docker-infra.json`.
+**Local dev / deploy runs on Docker** (`docker compose up` brings up `postgres` + `web` with hot-reload; mobile/Flutter is not containerized — run with `flutter run` locally). Build context is always the monorepo root so `packages/*` are copied. Details in `docs/SPEC.md §10.1` and `docs/specs/finalizadas/0003-docker-infra.json`.
 
 ## Non-negotiable conventions
 
@@ -109,13 +119,21 @@ Key subtleties:
 - **A SELL larger than the position on that date must be rejected** (RN-02).
 - Required edge-case tests: partial sale, full sale, asset with no quote available, multiple buys at different prices, foreign-currency asset, and zero-position (division by zero).
 
-## Data model (planned)
+## Data model
 
-`User` (id, email unique, password_hash) → `Asset` (user_id FK, ticker, asset_class enum `STOCK_BR|FII|ETF|BDR|CRYPTO|STOCK_US`, currency `BRL|USD`, data_source `BRAPI|COINGECKO|FINNHUB`) → `Transaction` (asset_id FK, type `BUY|SELL`, date, unit_price, quantity, fees). `QuoteCache` (symbol, price, currency, fetched_at; unique per symbol+source).
+Implementado em `apps/web/prisma/schema.prisma`. `User` (id, email unique, password_hash) → `Asset` (user_id FK, ticker, asset_class enum `STOCK_BR|FII|ETF|BDR|CRYPTO|STOCK_US`, currency `BRL|USD`, data_source `BRAPI|COINGECKO|FINNHUB`) → `Transaction` (asset_id FK, type `BUY|SELL`, date, unit_price, quantity, fees). `QuoteCache` (symbol, price, currency, fetched_at; unique per symbol+source).
 
-## Key API endpoints (planned)
+## Key API endpoints
 
-`POST /auth/{register,login,refresh}`, `GET|POST /assets`, `GET /assets/:id`, `POST /assets/:id/transactions`, `PATCH|DELETE /transactions/:id`, `GET /portfolio/summary`, `GET /portfolio/history`. Full table in `docs/SPEC.md §5`.
+Implementados como Next.js Route Handlers em `apps/web/src/app/api/`:
+
+- Auth (sem JWT): `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh`
+- Auth BFF (cookies HttpOnly, web only): `POST /api/session/login`, `POST /api/session/register`, `POST /api/session/refresh`, `POST /api/session/logout`
+- Assets: `GET|POST /api/assets`, `GET|DELETE /api/assets/:id`, `GET|POST /api/assets/:id/transactions`
+- Transactions: `PATCH|DELETE /api/transactions/:id`
+- Portfolio: `GET /api/portfolio/summary`
+
+Full table in `docs/SPEC.md §5` and `docs/specs/finalizadas/0011-migrate-api-to-nextjs.json`.
 
 ## Scope discipline
 

@@ -5,29 +5,33 @@
 
 ## 1. Arquitetura geral
 
-Arquitetura cliente-servidor com um backend único servindo dois clientes (web e mobile) e intermediando as APIs externas de cotação. As chaves de API externas e a lógica de negócio ficam **exclusivamente no backend** — os clientes nunca falam direto com as fontes de dados.
+Arquitetura cliente-servidor com um único app Next.js (`apps/web`) servindo dois clientes (web e mobile) e intermediando as APIs externas de cotação. As chaves de API externas e a lógica de negócio ficam **exclusivamente no lado servidor** — os clientes nunca falam direto com as fontes de dados. A API NestJS original foi migrada para Next.js Route Handlers (ADR-0004, SPEC-0011).
 
 ```
-┌─────────────┐     ┌─────────────┐
-│  Web (Next) │     │Mobile (Flut)│
-└──────┬──────┘     └──────┬──────┘
-       │   HTTPS / REST    │
-       └─────────┬─────────┘
-                 ▼
-        ┌──────────────────┐        ┌──────────────────┐
-        │   Backend API    │──────► │  PostgreSQL      │
-        │  (auth, regras,  │        └──────────────────┘
-        │   cache, cálculo)│
-        └────────┬─────────┘
-                 │ (server-side, com cache)
-                 ▼
-   ┌──────────────────────────────────────────┐
-   │ APIs externas de cotação                  │
-   │  • brapi.dev      → B3 (ações/FII/ETF/BDR)│
-   │  • CoinGecko      → criptoativos          │
-   │  • Finnhub        → ações EUA             │
-   │  • AwesomeAPI     → câmbio USD/BRL        │
-   └──────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│             apps/web (Next.js)              │
+│                                             │
+│  ┌──────────────────┐  ┌───────────────┐   │
+│  │  Frontend (React)│  │  API Routes   │   │
+│  │  /dashboard      │  │  /api/auth    │   │
+│  │  /assets         │  │  /api/assets  │   │
+│  │  /login          │  │  /api/portfolio│  │
+│  └──────────────────┘  └──────┬────────┘   │
+└─────────────────────────────────────────────┘
+         ▲ cookies/BFF (web)    │
+         │ Bearer Token (mobile)│    ┌──────────────────┐
+┌────────┴──────┐               ├──► │  PostgreSQL      │
+│Mobile (Flutter│               │    └──────────────────┘
+└───────────────┘               │
+                                │ (server-side, com cache)
+                                ▼
+           ┌──────────────────────────────────────────┐
+           │ APIs externas de cotação                  │
+           │  • brapi.dev      → B3 (ações/FII/ETF/BDR)│
+           │  • CoinGecko      → criptoativos          │
+           │  • Finnhub        → ações EUA             │
+           │  • AwesomeAPI     → câmbio USD/BRL        │
+           └──────────────────────────────────────────┘
 ```
 
 ## 2. Stack de tecnologias
@@ -38,13 +42,13 @@ Arquitetura cliente-servidor com um backend único servindo dois clientes (web e
 | Mobile | **Flutter + Dart** (decidido — ADR-0002) | Performance nativa sem bridge JS; cliente puro da API REST; `fl_chart` para gráficos |
 | Estilização (web) | Tailwind CSS | Muito requisitado, produtividade alta |
 | Gráficos | Recharts (web) / fl_chart (mobile) | Visualização de alocação e evolução |
-| Backend | **Node.js + NestJS** (decidido — ADR-0001) | Unifica a linguagem (TS de ponta a ponta); reusa `packages/core` e `packages/types` sem reescrita |
+| Backend | **Next.js Route Handlers** (decidido — ADR-0004) | API integrada ao app web; deploy gratuito na Vercel; reusa `packages/core` e `packages/types` sem reescrita |
 | Banco de dados | PostgreSQL | Relacional, transacional, ideal para dados financeiros |
-| ORM | **Prisma** (decidido — ADR-0001) | Migrations e tipagem do schema |
-| Autenticação | JWT + refresh token | Padrão para clientes web + mobile |
-| Monorepo (opcional) | Turborepo | Compartilhar tipos e lógica entre web e mobile |
+| ORM | **Prisma** (decidido — ADR-0001) | Migrations e tipagem do schema; schema em `apps/web/prisma/` |
+| Autenticação | JWT + refresh token | Híbrido: cookies HttpOnly para web (BFF, ADR-0003); Bearer Token para mobile |
+| Monorepo | pnpm workspaces | Compartilhar tipos e lógica entre web e mobile |
 
-> **Decisão tomada ([ADR-0001](adr/0001-backend-stack-node-nestjs.md)):** backend em **Node.js + NestJS** com **Prisma**, para unificar a stack em TypeScript e reusar `packages/core`/`packages/types` sem reescrita. A opção Python + FastAPI foi descartada.
+> **Decisão original ([ADR-0001](adr/0001-backend-stack-node-nestjs.md)):** backend em **Node.js + NestJS**. **Supersedida por ([ADR-0004](adr/0004-migrate-api-to-nextjs.md)):** API migrada para **Next.js Route Handlers** para simplificar deploy e eliminar CORS. NestJS foi removido.
 >
 > **Decisão tomada ([ADR-0002](adr/0002-mobile-flutter.md)):** mobile em **Flutter + Dart**, substituindo React Native + Expo. O app mobile é cliente puro da API REST, tornando a perda de reaproveitamento de código TS marginal frente ao ganho de performance nativa.
 
@@ -52,16 +56,15 @@ Arquitetura cliente-servidor com um backend único servindo dois clientes (web e
 
 ```
 /apps
-  /web        → Next.js
-  /mobile     → Flutter + Dart (ADR-0002)
-  /api        → backend Node.js + NestJS (ADR-0001)
+  /web        → Next.js (frontend + API Route Handlers + Prisma)
+  /mobile     → Flutter + Dart (ADR-0002); cliente puro da API REST
 /packages
   /core       → regras de negócio e cálculos (compartilhável)
   /types      → tipos/contratos da API
-  /ui         → componentes compartilhados (se aplicável)
+  /ui         → componentes compartilhados (web)
 ```
 
-Manter os **cálculos financeiros em `/packages/core`** permite testá-los isoladamente e reusá-los, e é um ótimo ponto de demonstração técnica. `packages/ui` é exclusivo do web (Flutter não compartilha componentes React); tipos de contrato para o mobile são gerados em Dart via OpenAPI (`openapi-generator-cli dart-dio`) e ficam em `apps/mobile/lib/api/`.
+Manter os **cálculos financeiros em `/packages/core`** permite testá-los isoladamente e reusá-los, e é um ótimo ponto de demonstração técnica. `packages/ui` é exclusivo do web (Flutter não compartilha componentes React); tipos de contrato para o mobile são gerados em Dart via OpenAPI (`openapi-generator-cli dart-dio`) e ficam em `apps/mobile/lib/api/`. O app `apps/api` (NestJS) foi removido — veja ADR-0004.
 
 ## 4. Modelo de dados
 
@@ -105,21 +108,28 @@ Entidades principais (nomes ilustrativos):
 
 ## 5. API interna (endpoints principais)
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| POST | `/auth/register` | Cria conta |
-| POST | `/auth/login` | Autentica, retorna tokens |
-| POST | `/auth/refresh` | Renova token |
-| GET | `/assets` | Lista ativos do usuário com métricas calculadas |
-| POST | `/assets` | Adiciona ativo à carteira |
-| GET | `/assets/:id` | Detalhe de um ativo + operações |
-| POST | `/assets/:id/transactions` | Registra operação |
-| PATCH | `/transactions/:id` | Edita operação |
-| DELETE | `/transactions/:id` | Exclui operação |
-| GET | `/portfolio/summary` | Patrimônio total, alocação, métricas consolidadas |
-| GET | `/portfolio/history` | Série temporal para o gráfico de evolução |
+Implementados como Next.js Route Handlers em `apps/web/src/app/api/`. Autenticação híbrida: cookies HttpOnly para web (via rotas `/api/session/*`) e Bearer Token para mobile (via rotas `/api/auth/*`).
 
-Todas as rotas (exceto `/auth/*`) exigem JWT e filtram por `user_id`.
+| Método | Rota | Auth | Descrição |
+|--------|------|------|-----------|
+| POST | `/api/auth/register` | — | Cria conta (retorna tokens no body) |
+| POST | `/api/auth/login` | — | Autentica (retorna tokens no body) |
+| POST | `/api/auth/refresh` | — | Renova token (body) |
+| POST | `/api/session/register` | — | Cria conta + seta cookies HttpOnly (web BFF) |
+| POST | `/api/session/login` | — | Autentica + seta cookies HttpOnly (web BFF) |
+| POST | `/api/session/refresh` | — | Renova token via cookie (web BFF) |
+| POST | `/api/session/logout` | — | Limpa cookies (web BFF) |
+| GET | `/api/assets` | JWT | Lista ativos do usuário |
+| POST | `/api/assets` | JWT | Adiciona ativo à carteira |
+| GET | `/api/assets/:id` | JWT | Detalhe de um ativo |
+| DELETE | `/api/assets/:id` | JWT | Remove ativo |
+| GET | `/api/assets/:id/transactions` | JWT | Lista transações do ativo |
+| POST | `/api/assets/:id/transactions` | JWT | Registra operação (BUY/SELL) |
+| PATCH | `/api/transactions/:id` | JWT | Edita operação |
+| DELETE | `/api/transactions/:id` | JWT | Exclui operação |
+| GET | `/api/portfolio/summary` | JWT | Patrimônio total, alocação, métricas consolidadas |
+
+Todas as rotas protegidas exigem JWT (cookie ou Bearer) e filtram por `user_id`. `/portfolio/history` está fora do escopo do MVP.
 
 ## 6. Integração com APIs externas
 
@@ -183,28 +193,24 @@ alocação_ativo_%     = valor_atual_BRL_ativo / patrimônio_total × 100
 - **Mobile:** `flutter build` (iOS/Android); distribuição via Firebase App Distribution ou loja diretamente.
 - Migrations versionadas (Prisma Migrate) aplicadas no deploy via `entrypoint.sh`.
 
-## 10.1 Docker (SPEC-0003)
+## 10.1 Docker (SPEC-0003, atualizado em SPEC-0011)
 
 | Arquivo | Propósito |
 |---------|-----------|
-| `docker-compose.yml` | Dev e produção: serviços `postgres`, `api`, `web` |
+| `docker-compose.yml` | Dev e produção: serviços `postgres` e `web` (NestJS/apps/api removido) |
 | `docker-compose.override.yml` | Hot-reload em dev (monta `src/` como volume) |
-| `apps/api/Dockerfile` | Multi-stage: `deps → dev → build → runner` (NestJS) |
 | `apps/web/Dockerfile` | Multi-stage: `deps → dev → build → runner` (Next.js standalone) |
-| `apps/api/entrypoint.sh` | Executa `prisma migrate deploy` antes de subir a API |
+| `apps/web/.dockerignore` | Exclui `node_modules`, `.env`, docs e artefatos de build |
 | `.dockerignore` (raiz) | Exclui `node_modules`, `.env`, docs e artefatos de build |
 
-**Contexto de build:** sempre a raiz do monorepo (`docker build -f apps/api/Dockerfile .`), para que `packages/core` e `packages/types` sejam copiados corretamente.
+**Contexto de build:** sempre a raiz do monorepo (`docker build -f apps/web/Dockerfile .`), para que `packages/core` e `packages/types` sejam copiados corretamente.
 
 **Uso rápido:**
 ```bash
-# Subir ambiente de dev completo (postgres + api hot-reload + web hot-reload)
+# Subir ambiente de dev completo (postgres + web hot-reload)
 docker compose up
 
-# Build de produção da API
-docker build -f apps/api/Dockerfile -t databolsa-api .
-
-# Build de produção do Web
+# Build de produção do Web (inclui API)
 docker build -f apps/web/Dockerfile -t databolsa-web .
 ```
 
@@ -213,11 +219,22 @@ docker build -f apps/web/Dockerfile -t databolsa-web .
 
 ## 11. Roadmap técnico
 
-1. Schema do banco + migrations.
-2. `/packages/core` com cálculos e testes unitários (antes da UI).
-3. Backend: auth + CRUD de ativos/operações + endpoint de resumo.
-4. Integração de cotações com cache.
-5. Web (Next.js): fluxo completo + dashboard.
-6. Mobile (Flutter): consulta + edição.
-7. E2E e CI.
-8. (Fase 2) Integração Open Finance via Pluggy.
+### MVP — concluído
+
+1. ✅ `/packages/core` com cálculos e testes unitários (SPEC-0001).
+2. ✅ Scaffold do monorepo + design system base (SPEC-0002).
+3. ✅ Infraestrutura Docker (SPEC-0003).
+4. ✅ Design tokens + codegen (SPEC-0004).
+5. ✅ Schema do banco + migrations Prisma (SPEC-0005).
+6. ✅ Backend NestJS — auth + CRUD (SPEC-0006).
+7. ✅ Integração de cotações com cache (SPEC-0007).
+8. ✅ Web Next.js — fluxo completo + dashboard (SPEC-0008).
+9. ✅ Mobile Flutter — consulta + edição (SPEC-0009).
+10. ✅ E2E e CI (SPEC-0010).
+11. ✅ Migração API NestJS → Next.js Route Handlers (SPEC-0011).
+
+### Fase 2 (planejado)
+
+- Integração Open Finance via Pluggy.
+- Gráfico de histórico/série temporal do patrimônio.
+- Relatórios de imposto de renda.
