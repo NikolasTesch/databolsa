@@ -4,9 +4,9 @@
   "private": true,
   "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "build": "pnpm --filter api run build",
-    "test:api": "pnpm --filter api run test",
-    "validate-specs": "ajv validate -s docs/specs/spec.schema.json -d 'docs/specs/em-andamento/*.json' -d 'docs/specs/finalizadas/*.json' -d 'docs/specs/pendentes/*.json' --spec=draft2020 -c ajv-formats"
+    "build": "pnpm --filter @databolsa/core run build && pnpm --filter web run build",
+    "test:web": "pnpm --filter web run test",
+    "validate-specs": "ajv validate -s docs/specs/spec.schema.json -d 'docs/specs/finalizadas/*.json' --spec=draft2020 -c ajv-formats"
   },
   "devDependencies": {
     "ajv-cli": "^5.0.0",

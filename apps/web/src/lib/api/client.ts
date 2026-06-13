@@ -7,7 +7,7 @@
 
 const API_URL =
   typeof window === 'undefined'
-    ? (process.env.API_URL ?? 'http://localhost:3001')
+    ? (process.env.API_URL ?? 'http://localhost:3000')
     : '';
 
 /** Endpoints que são tratados como BFF no browser */
@@ -54,9 +54,10 @@ export async function apiFetch<T>(
   _retried?: boolean,
 ): Promise<T> {
   const isServer = typeof window === 'undefined';
-  const isBff = isBffPath(path);
 
-  const url = isBff || isServer ? `${API_URL}${path}` : `/api/proxy${path}`;
+  const url = isServer
+    ? path.startsWith('/api/') ? `${API_URL}${path}` : `${API_URL}/api${path}`
+    : path.startsWith('/api/') ? path : `/api${path}`;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

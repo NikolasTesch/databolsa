@@ -1,0 +1,287 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0011",
+  "title": "Migração da API para Next.js Route Handlers",
+  "status": "verified",
+  "type": "refactor",
+  "created": "2026-06-13",
+  "updated": "2026-06-13",
+  "authors": ["nikolasdtesch@gmail.com"],
+  "summary": "Migrar a API backend de NestJS para Next.js API Routes (Route Handlers) no apps/web, integrando Prisma/Neon e mantendo compatibilidade com o app mobile (Flutter).",
+  "motivation": "Facilitar o deploy (rodando tudo na Vercel de graça com Neon), remover complexidade de CORS e simplificar o monorepo sem perder suporte ao cliente mobile.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §1", "SPEC §2", "SPEC §5", "SPEC §10"],
+    "business_rules": ["RN-10", "RN-11"],
+    "adrs": ["ADR-0001", "ADR-0003", "ADR-0004"],
+    "depends_on": ["SPEC-0006", "SPEC-0007"]
+  },
+  "scope": {
+    "in_scope": [
+      "Remoção de apps/api e descontinuação do NestJS.",
+      "Migração do Prisma ORM (schema.prisma, migrations, seed) para apps/web/prisma.",
+      "Criação de Route Handlers em apps/web/src/app/api/... para auth, assets, transactions, portfolio e quotes.",
+      "Implementação de Autenticação Híbrida: Cookies HttpOnly para Web e Bearer Token no cabeçalho Authorization para Mobile.",
+      "Ajuste do docker-compose.yml e docker-compose.override.yml para refletir a nova infraestrutura (apenas postgres e web)."
+    ],
+    "out_of_scope": [
+      "Qualquer alteração no pacote de regras financeiras packages/core.",
+      "Integração com Open Finance (Fase 2 via Pluggy)."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Todos os endpoints da API original devem ser replicados como Next.js Route Handlers e responder nas mesmas rotas com prefixo /api.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "As rotas protegidas devem suportar validação de sessão tanto via Cookie HttpOnly (Web) quanto via Bearer JWT Token no cabeçalho Authorization (Mobile).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "A lógica de cotações deve continuar usando QuoteCache no banco de dados e se integrar com as APIs externas respeitando o TTL configurado.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "O docker-compose.yml deve rodar somente os serviços postgres e web, configurando hot-reload do Next.js.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "User",
+      "change": "none",
+      "notes": "Estrutura mantida; migrations migradas para apps/web/prisma/migrations."
+    }
+  ],
+  "api": [
+    {
+      "method": "POST",
+      "path": "/api/auth/register",
+      "auth": false,
+      "request": "{ email, password }",
+      "response": "{ access_token, refresh_token }",
+      "errors": ["400 Email já cadastrado"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "auth": false,
+      "request": "{ email, password }",
+      "response": "{ access_token, refresh_token } (com Set-Cookie para Web)",
+      "errors": ["401 Credenciais inválidas"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/refresh",
+      "auth": false,
+      "request": "{ refresh_token }",
+      "response": "{ access_token, refresh_token } (atualiza Set-Cookie para Web)",
+      "errors": ["401 Token inválido ou expirado"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/assets",
+      "auth": true,
+      "response": "Asset[]",
+      "errors": ["401 Não autorizado"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/assets",
+      "auth": true,
+      "request": "{ ticker, name, asset_class, currency, data_source }",
+      "response": "Asset",
+      "errors": ["400 validação", "401"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/assets/:id",
+      "auth": true,
+      "response": "Asset",
+      "errors": ["401", "404 não encontrado ou de outro usuário"]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/assets/:id",
+      "auth": true,
+      "response": "204 No Content",
+      "errors": ["401", "404"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/assets/:assetId/transactions",
+      "auth": true,
+      "response": "Transaction[]",
+      "errors": ["401", "404"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/assets/:assetId/transactions",
+      "auth": true,
+      "request": "{ type, date, unit_price, quantity, fees? }",
+      "response": "Transaction",
+      "errors": ["400 validação", "401", "404 ativo não encontrado", "422 SELL excede posição"]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/transactions/:id",
+      "auth": true,
+      "request": "{ date?, unit_price?, quantity?, fees? }",
+      "response": "Transaction",
+      "errors": ["400", "401", "404"]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/transactions/:id",
+      "auth": true,
+      "response": "204 No Content",
+      "errors": ["401", "404"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/portfolio/summary",
+      "auth": true,
+      "response": "{ positions: PositionSummary[], patrimonio_total_brl: string }",
+      "errors": ["401"]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "API NestJS foi deletada do projeto",
+      "when": "rodo docker compose up",
+      "then": "os serviços de banco (postgres) e Next.js (web) sobem com sucesso"
+    },
+    {
+      "id": "AC-02",
+      "given": "faço uma requisição POST para /api/auth/login com credenciais válidas",
+      "when": "a requisição é processada",
+      "then": "recebo um cookie HttpOnly com o token de acesso e o token JWT no corpo da resposta"
+    },
+    {
+      "id": "AC-03",
+      "given": "faço uma requisição GET protegida com o token JWT no cabeçalho Authorization",
+      "when": "a requisição chega à API do Next.js",
+      "then": "a API valida o token JWT e retorna os dados com sucesso"
+    },
+    {
+      "id": "AC-04",
+      "given": "faço uma requisição GET protegida enviando o cookie HttpOnly contendo o token de acesso válido",
+      "when": "a requisição chega à API do Next.js",
+      "then": "a API valida a sessão pelo cookie e retorna os dados com sucesso"
+    },
+    {
+      "id": "AC-05",
+      "given": "um ativo com posição de 10 unidades cadastrado pelo usuário A",
+      "when": "usuário B tenta enviar POST /api/assets/:id/transactions ou GET /api/assets/:id",
+      "then": "a API rejeita com erro 404 (isolamento por usuário RN-11)"
+    },
+    {
+      "id": "AC-06",
+      "given": "um ativo com cotação expirada ou nula no cache",
+      "when": "GET /api/portfolio/summary",
+      "then": "o Next.js busca da API externa, atualiza o cache, e se a API externa falhar, degrada graciosamente usando o cache anterior com is_stale=true (RN-10)"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Verificar se as rotas de API em Next.js respondem com código 401 se nenhum cookie ou token Bearer for enviado.",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-03"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "Testar o fluxo de registro e login via API REST e validar se a senha é criptografada com hash correto.",
+      "kind": "integration",
+      "covers": ["REQ-01", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "Testar a lógica de cache de cotações e degradação elegante (is_stale=true) em caso de erro na API externa.",
+      "kind": "integration",
+      "covers": ["REQ-03", "AC-06"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "Testar isolamento de usuário: validar que o usuário A não acessa ativos/transações do usuário B.",
+      "kind": "integration",
+      "covers": ["REQ-02", "AC-05"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-05",
+      "description": "Validar que requisições autenticadas por cookie HttpOnly acessam rotas protegidas no BFF.",
+      "kind": "integration",
+      "covers": ["REQ-02", "AC-04"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar o arquivo de especificação SPEC-0011 e o ADR-0004.",
+      "target": "docs/specs",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Mover a pasta do Prisma e dependências do banco para apps/web/prisma.",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Migrar a configuração de build e docker-compose para remover o serviço api.",
+      "target": ".",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Implementar os Route Handlers de autenticação (register, login, refresh) em apps/web/src/app/api.",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Implementar os Route Handlers de CRUD de ativos e transações.",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-06",
+      "description": "Deletar a pasta apps/api.",
+      "target": ".",
+      "done": true
+    },
+    {
+      "id": "T-07",
+      "description": "Migrar QuoteService e seus adaptadores externos para o apps/web.",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-08",
+      "description": "Configurar geração de documentação OpenAPI (Swagger) nos Route Handlers do Next.js para manter compatibilidade com o gerador do app mobile.",
+      "target": "apps/web",
+      "done": true
+    }
+  ],
+  "risks": [
+    "Cold starts nas Serverless Functions da Vercel — mitigável com instâncias configuradas ou cache otimizado.",
+    "Divergência de ambiente local vs. produção com Prisma — mitigado pelo uso de Neon serverless driver ou pooling."
+  ],
+  "observability": [
+    "Adicionar logs estruturados em requisições de API para rastreabilidade de erros."
+  ],
+  "rollback": "Recuperar a pasta apps/api do Git e reverter o docker-compose.yml para a versão anterior."
+}

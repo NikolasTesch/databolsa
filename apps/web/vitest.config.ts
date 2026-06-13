@@ -8,11 +8,12 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/test/**', 'src/app/api/**', '**/*.d.ts'],
+    exclude: ['src/test/**', 'src/app/api/**', 'e2e/**', '**/*.d.ts'],
     },
   },
   resolve: {

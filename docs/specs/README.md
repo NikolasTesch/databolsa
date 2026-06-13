@@ -88,22 +88,22 @@ e idealmente um check de CI.
 | SPEC-0002 | Scaffold do monorepo e design system base           | verified |
 | SPEC-0003 | Infraestrutura Docker (dev + produção)               | verified |
 | SPEC-0004 | Camada de consumo dos design tokens (Tailwind/CSS/Flutter) | verified |
+| SPEC-0005 | Schema do banco de dados e migrations Prisma                      | verified |
+| SPEC-0006 | Backend NestJS — autenticação JWT e CRUD de ativos/transações     | verified |
+| SPEC-0007 | Integração de cotações com cache (brapi, CoinGecko, Finnhub, AwesomeAPI) | verified |
+| SPEC-0008 | Web Next.js — fluxo completo e dashboard do portfólio             | verified |
+| SPEC-0009 | Mobile Flutter — consulta e edição do portfólio                   | verified |
+| SPEC-0010 | Testes E2E e pipeline de CI/CD                                    | verified |
+| SPEC-0011 | Migração da API para Next.js Route Handlers                       | verified |
 
 ### Em andamento (`em-andamento/`)
 
 | ID        | Título                                                            | Status      |
 | --------- | ----------------------------------------------------------------- | ----------- |
-| SPEC-0005 | Schema do banco de dados e migrations Prisma                      | implemented |
-| SPEC-0006 | Backend NestJS — autenticação JWT e CRUD de ativos/transações     | implemented |
-| SPEC-0007 | Integração de cotações com cache (brapi, CoinGecko, Finnhub, AwesomeAPI) | implemented |
-| SPEC-0008 | Web Next.js — fluxo completo e dashboard do portfólio             | implemented |
-| SPEC-0009 | Mobile Flutter — consulta e edição do portfólio                   | implemented |
-| SPEC-0010 | Testes E2E e pipeline de CI/CD                                    | in_progress |
 
 ### Pendentes (`pendentes/`)
 
-| ID | Título | Status |
-| -- | ------ | ------ |
-| — | — | — |
+| ID        | Título                                                            | Status      |
+| --------- | ----------------------------------------------------------------- | ----------- |
 
 > Mantenha esta tabela ao adicionar specs.

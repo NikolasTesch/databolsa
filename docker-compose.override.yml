@@ -6,15 +6,6 @@ services:
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
 
-  api:
-    build:
-      target: dev
-    volumes:
-      - ./apps/api/src:/app/apps/api/src:ro
-      - ./packages/core/src:/app/packages/core/src:ro
-      - ./packages/types/src:/app/packages/types/src:ro
-    command: pnpm --filter api run start:dev
-
   web:
     build:
       target: dev

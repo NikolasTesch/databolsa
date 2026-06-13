@@ -1,0 +1,87 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum AssetClass {
+  STOCK_BR
+  FII
+  ETF
+  BDR
+  CRYPTO
+  STOCK_US
+}
+
+enum Currency {
+  BRL
+  USD
+}
+
+enum DataSource {
+  BRAPI
+  COINGECKO
+  FINNHUB
+}
+
+enum TransactionType {
+  BUY
+  SELL
+}
+
+model User {
+  id                 String   @id @default(uuid())
+  email              String   @unique
+  password_hash      String
+  refresh_token_hash String?
+  created_at         DateTime @default(now()) @map("created_at")
+  assets             Asset[]
+
+  @@map("users")
+}
+
+model Asset {
+  id           String        @id @default(uuid())
+  user_id      String
+  ticker       String
+  name         String
+  asset_class  AssetClass
+  currency     Currency      @default(BRL)
+  data_source  DataSource
+  created_at   DateTime      @default(now()) @map("created_at")
+  user         User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("assets")
+}
+
+model Transaction {
+  id         String          @id @default(uuid())
+  asset_id   String
+  type       TransactionType
+  date       DateTime        @db.Date
+  unit_price Decimal         @db.Decimal(18, 8)
+  quantity   Decimal         @db.Decimal(18, 8)
+  fees       Decimal         @default(0) @db.Decimal(18, 8)
+  created_at DateTime        @default(now()) @map("created_at")
+  asset      Asset           @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+model QuoteCache {
+  id         String     @id @default(uuid())
+  symbol     String
+  source     DataSource
+  price      Decimal    @db.Decimal(18, 8)
+  currency   String
+  fetched_at DateTime   @default(now()) @map("fetched_at")
+
+  @@unique([symbol, source])
+  @@map("quote_cache")
+}
