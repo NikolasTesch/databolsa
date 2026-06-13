@@ -24,7 +24,7 @@ function prismaToCoreTx(tx: {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { assetId: string } }
+  { params }: { params: { id: string } }
 ) {
   const user = await getAuthUser(request);
   if (!user) {
@@ -32,7 +32,7 @@ export async function GET(
   }
 
   const asset = await prisma.asset.findFirst({
-    where: { id: params.assetId, user_id: user.id },
+    where: { id: params.id, user_id: user.id },
   });
 
   if (!asset) {
@@ -40,7 +40,7 @@ export async function GET(
   }
 
   const transactions = await prisma.transaction.findMany({
-    where: { asset_id: params.assetId },
+    where: { asset_id: params.id },
     orderBy: { date: 'asc' },
   });
 
@@ -49,7 +49,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { assetId: string } }
+  { params }: { params: { id: string } }
 ) {
   const user = await getAuthUser(request);
   if (!user) {
@@ -85,7 +85,7 @@ export async function POST(
 
   return prisma.$transaction(async (tx) => {
     const asset = await tx.asset.findFirst({
-      where: { id: params.assetId, user_id: user.id },
+      where: { id: params.id, user_id: user.id },
     });
     if (!asset) {
       return NextResponse.json({ message: 'Ativo não encontrado' }, { status: 404 });
@@ -93,7 +93,7 @@ export async function POST(
 
     if (type === TransactionType.SELL) {
       const existingTxs = await tx.transaction.findMany({
-        where: { asset_id: params.assetId },
+        where: { asset_id: params.id },
         orderBy: { date: 'asc' },
       });
       const coreTxs = existingTxs.map(prismaToCoreTx);
@@ -110,7 +110,7 @@ export async function POST(
 
     const transaction = await tx.transaction.create({
       data: {
-        asset_id: params.assetId,
+        asset_id: params.id,
         type,
         date: new Date(date),
         unit_price: new Decimal(unit_price).toString(),
