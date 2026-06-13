@@ -1,0 +1,358 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0013",
+  "title": "Página de análise individual de ativo (/ativos/[ticker])",
+  "status": "approved",
+  "type": "feature",
+  "created": "2026-06-13",
+  "updated": "2026-06-13",
+  "authors": ["Nikolas"],
+  "summary": "Criar a página pública /ativos/[ticker] com cotação atual, indicadores fundamentalistas (P/L, DY, P/VP, ROE), histórico de preços (Recharts) e histórico de dividendos. Acessível sem login, inspirada no Investidor10 e StatusInvest. Introduz AssetFundamentalsCache no schema e o FundamentalsService desacoplado dos adapters de cotação.",
+  "motivation": "Com a busca da SPEC-0012, o usuário chega em /ativos/PETR4 mas não há nada para ver. Esta spec entrega o conteúdo central: análise fundamentalista e técnica de qualquer ativo, mesmo sem conta cadastrada.",
+  "related": {
+    "prd": ["PRD §4", "PRD §5", "PRD §7"],
+    "spec_doc": ["SPEC §5", "SPEC §6", "SPEC §7"],
+    "business_rules": ["RN-10", "RN-11"],
+    "adrs": ["ADR-0003", "ADR-0005"],
+    "depends_on": ["SPEC-0012"]
+  },
+  "scope": {
+    "in_scope": [
+      "Rota pública /ativos/[ticker] com layout (public)",
+      "ADR-0005: decisão de fonte e estratégia de cache para fundamentalistas",
+      "Modelo Prisma AssetFundamentalsCache (JSON + TTL 6h) e migration",
+      "Interface FundamentalsAdapter e implementações: BrapiAdapter (B3), FinnhubAdapter (US), CoinGeckoAdapter (crypto)",
+      "FundamentalsService: resolve adapter por classe de ativo, aplica cache, degrada para stale",
+      "API routes públicas: GET /api/market/[ticker]/quote, /fundamentals, /history, /dividends",
+      "Componentes: AssetHeader, IndicatorGrid, IndicatorCard, PriceHistoryChart (dynamic), DividendsTable",
+      "Valores monetários em USD exibidos em BRL via câmbio (AwesomeAPI, já existente)",
+      "Campos ausentes no free tier exibidos como '—' sem quebrar a UI",
+      "Divisão por zero em indicadores derivados tratada como '—'",
+      "Degradação graciosa RN-10 em todos os endpoints"
+    ],
+    "out_of_scope": [
+      "Botão 'Adicionar à carteira' (SPEC-0014)",
+      "Provedor pago de dados fundamentalistas",
+      "SSG/ISR da página (geração estática por ticker)",
+      "Comparação entre ativos",
+      "Screener/filtro de ativos",
+      "Alertas de preço",
+      "Carteira fictícia / watchlist",
+      "Indicadores técnicos avançados (IFR, MACD, Bollinger)",
+      "Dados intraday (candles de 1min/5min)"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "A rota /ativos/[ticker] deve ser pública (sem autenticação) e retornar 404 amigável para ticker inexistente.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "A classe do ativo (STOCK_BR, FII, ETF, BDR, CRYPTO, STOCK_US) deve ser detectada heuristicamente pelo ticker antes de chamar a fonte correta.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "GET /api/market/[ticker]/fundamentals deve retornar indicadores disponíveis e marcar campos ausentes como null (renderizados como '—'). Nunca retornar NaN ou undefined.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "AssetFundamentalsCache persiste o payload JSON como string. Valores monetários dentro do JSON (ex.: dividendPerShare) devem ser serializados como string decimal, nunca number float.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "TTL do AssetFundamentalsCache é de 6 horas. Após expirado, revalidar em background; se a fonte falhar, servir stale com campo stale: true (RN-10).",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "GET /api/market/[ticker]/history aceita parâmetro range: 1m | 6m | 1y | 5y. Retorna array de { date, close } para Recharts.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-07",
+      "description": "Preços de ativos em USD devem ser convertidos para BRL usando a taxa de câmbio do AwesomeApiAdapter, exibindo ambos os valores na UI.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-08",
+      "description": "Nenhuma rota /api/market/* deve consultar tabelas de usuário, ativo ou transação (RN-11).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-09",
+      "description": "Indicadores inapplicáveis a uma classe (ex.: P/L para crypto) não devem aparecer na UI — a grade de indicadores é adaptada por classe de ativo.",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-10",
+      "description": "O PriceHistoryChart deve ser importado dinamicamente (next/dynamic) para não bloquear o SSR.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-11",
+      "description": "Timeout de 5 segundos em toda chamada a fonte externa. Se exceder, usar cache; se não houver cache, retornar campo como null.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "AssetFundamentalsCache",
+      "change": "create",
+      "fields": [
+        "id: String @id @default(uuid())",
+        "symbol: String",
+        "source: DataSource",
+        "data: Json  -- payload normalizado de indicadores",
+        "fetched_at: DateTime @default(now())",
+        "@@unique([symbol, source])",
+        "@@map(\"asset_fundamentals_cache\")"
+      ],
+      "notes": "TTL gerido em código (FUNDAMENTALS_CACHE_TTL_HOURS=6). Valores monetários dentro de data serializado como string para manter precisão decimal. Nunca float."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/[ticker]/quote",
+      "auth": false,
+      "request": "ticker no path",
+      "response": "{ ticker, name, assetClass, price: string, currency: 'BRL'|'USD', priceInBrl: string, changePercent: string, stale?: boolean, asOf: string }",
+      "errors": [
+        "404 se ticker não reconhecido",
+        "200 com stale:true em falha de fonte com cache disponível"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/market/[ticker]/fundamentals",
+      "auth": false,
+      "request": "ticker no path",
+      "response": "{ ticker, assetClass, indicators: { pe: string|null, pb: string|null, dy: string|null, roe: string|null, eps: string|null, marketCap: string|null, ... }, stale?: boolean, asOf: string }",
+      "errors": [
+        "404 se ticker não reconhecido",
+        "200 com campos null para indicadores não disponíveis no free tier",
+        "200 com stale:true em falha de fonte com cache disponível"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/market/[ticker]/history",
+      "auth": false,
+      "request": "ticker no path; query: range (1m|6m|1y|5y, default 1y)",
+      "response": "{ ticker, range, series: Array<{ date: string, close: string }>, stale?: boolean }",
+      "errors": [
+        "400 se range inválido",
+        "404 se ticker não reconhecido",
+        "200 com stale:true em falha de fonte com cache disponível"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/market/[ticker]/dividends",
+      "auth": false,
+      "request": "ticker no path",
+      "response": "{ ticker, dividends: Array<{ paymentDate: string, value: string, type: string }>, stale?: boolean }",
+      "errors": [
+        "200 com dividends:[] para classes sem dividendos (ex.: crypto)",
+        "404 se ticker não reconhecido"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuário não autenticado acessa /ativos/PETR4",
+      "when": "a página carrega",
+      "then": "vê cotação atual, grade de indicadores (P/L, DY, P/VP, ROE ou '—') e gráfico de histórico de preços"
+    },
+    {
+      "id": "AC-02",
+      "given": "acesso a /ativos/TICKERINEXISTENTE",
+      "when": "a página carrega",
+      "then": "exibe página 404 amigável sem stack trace"
+    },
+    {
+      "id": "AC-03",
+      "given": "brapi retorna erro ao buscar fundamentos de PETR4",
+      "when": "existe dado em AssetFundamentalsCache com fetched_at < 6h",
+      "then": "a página exibe os indicadores com badge 'Desatualizado' e não quebra"
+    },
+    {
+      "id": "AC-04",
+      "given": "acesso a /ativos/BTC (crypto)",
+      "when": "a página carrega",
+      "then": "exibe market cap, volume 24h, variação 7d mas NÃO exibe P/L, P/VP, ROE"
+    },
+    {
+      "id": "AC-05",
+      "given": "ativo em USD (ex.: AAPL via STOCK_US)",
+      "when": "a página carrega",
+      "then": "exibe preço em USD e equivalente em BRL; indicadores monetários convertidos"
+    },
+    {
+      "id": "AC-06",
+      "given": "brapi free tier não retorna DY para um ativo",
+      "when": "a página carrega",
+      "then": "o card de DY exibe '—' sem erro JS e sem NaN"
+    },
+    {
+      "id": "AC-07",
+      "given": "ativo com lucro zero (divisão por zero no P/L)",
+      "when": "a página carrega",
+      "then": "P/L exibe '—' sem erro"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "FundamentalsService: retorna dado do cache se TTL válido, sem chamar fonte.",
+      "kind": "unit",
+      "covers": ["REQ-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "FundamentalsService: em falha de fonte com cache expirado, serve stale com stale:true.",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "GET /api/market/PETR4/fundamentals: retorna indicadores B3 com campos null para ausentes (MSW mockando brapi).",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-06"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "GET /api/market/TICKERINEXISTENTE/quote: retorna 404.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-05",
+      "description": "GET /api/market/PETR4/history?range=1y: retorna series com valores como string decimal, nunca float.",
+      "kind": "unit",
+      "covers": ["REQ-06", "REQ-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-06",
+      "description": "IndicatorCard: exibe '—' quando value é null; não renderiza NaN.",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-06", "AC-07"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-07",
+      "description": "IndicatorGrid para crypto (BTC): não inclui cards de P/L, P/VP, ROE.",
+      "kind": "unit",
+      "covers": ["REQ-09", "AC-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-08",
+      "description": "AssetHeader para AAPL (STOCK_US): exibe preço USD e conversão BRL usando mock do câmbio.",
+      "kind": "unit",
+      "covers": ["REQ-07", "AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-09",
+      "description": "AssetFundamentalsCache: serialização round-trip de valores monetários como string decimal sem perda de precisão.",
+      "kind": "unit",
+      "covers": ["REQ-04"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Redigir e commitar ADR-0005 (docs/adr/0005-fundamentals-data-source-and-cache.md): decisão de fonte por classe e estratégia de cache separado.",
+      "target": "docs/adr/",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Adicionar modelo AssetFundamentalsCache ao schema.prisma e gerar migration.",
+      "target": "apps/web/prisma/schema.prisma",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar interface FundamentalsAdapter e tipo NormalizedFundamentals (campos como string|null).",
+      "target": "apps/web/src/lib/fundamentals/fundamentals-adapter.interface.ts",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Implementar BrapiFundamentalsAdapter (B3): chama brapi com ?fundamental=true&modules=..., normaliza para NormalizedFundamentals.",
+      "target": "apps/web/src/lib/fundamentals/brapi-fundamentals.adapter.ts",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Implementar FinnhubFundamentalsAdapter (US) e CoinGeckoFundamentalsAdapter (crypto).",
+      "target": "apps/web/src/lib/fundamentals/",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Criar FundamentalsService: detecta classe do ticker, escolhe adapter, aplica cache TTL 6h, degrada para stale em falha.",
+      "target": "apps/web/src/lib/fundamentals/fundamentals.service.ts",
+      "done": false
+    },
+    {
+      "id": "T-07",
+      "description": "Criar API routes: /api/market/[ticker]/quote, /fundamentals, /history, /dividends — todas públicas, timeout 5s.",
+      "target": "apps/web/src/app/api/market/[ticker]/",
+      "done": false
+    },
+    {
+      "id": "T-08",
+      "description": "Criar componentes: AssetHeader, IndicatorGrid, IndicatorCard, PriceHistoryChart (dynamic), DividendsTable.",
+      "target": "apps/web/src/components/market/",
+      "done": false
+    },
+    {
+      "id": "T-09",
+      "description": "Criar página apps/web/src/app/(public)/ativos/[ticker]/page.tsx compondo os novos componentes.",
+      "target": "apps/web/src/app/(public)/ativos/[ticker]/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-10",
+      "description": "Escrever testes TC-01..TC-09 com Vitest + MSW.",
+      "target": "apps/web/src/test/",
+      "done": false
+    },
+    {
+      "id": "T-11",
+      "description": "Atualizar docs/specs/README.md com entrada da SPEC-0013.",
+      "target": "docs/specs/README.md",
+      "done": false
+    }
+  ],
+  "risks": [
+    "brapi free tier cobre P/L básico mas pode não retornar DY, P/VP, ROE — UI degradará para '—' em produção.",
+    "Finnhub free tier tem limite de 60 req/min; highlights + detalhe simultâneos podem atingir o limite — mitigar com cache.",
+    "Heurística de classe por ticker pode errar para tickers ambíguos — adicionar campo 'assetClass' explícito nos resultados de busca (SPEC-0012) para passar ao detalhe."
+  ],
+  "observability": [
+    "Logar cache hit/miss de fundamentals com [fundamentals.service] ticker=X source=Y hit=true/false.",
+    "Logar timeout de fonte com nível warn: [fundamentals.service] timeout ticker=X após 5000ms.",
+    "Campo stale e asOf em todas as respostas para rastreabilidade do frontend."
+  ],
+  "rollback": "Reverter migration do AssetFundamentalsCache (prisma migrate reset ou migration de drop). Remover rota /ativos/* e API routes /api/market/[ticker]/*. A SPEC-0012 (home/busca) não é afetada."
+}

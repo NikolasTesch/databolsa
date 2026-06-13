@@ -1,0 +1,285 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0012",
+  "title": "Home pública com busca de ativos e destaques de mercado",
+  "status": "approved",
+  "type": "feature",
+  "created": "2026-06-13",
+  "updated": "2026-06-13",
+  "authors": ["Nikolas"],
+  "summary": "Criar uma home pública acessível sem login no estilo Investidor10/StatusInvest: campo de busca de ativos por ticker, cards de destaques do mercado (maiores altas/baixas). Cria o route group (public) separando a vitrine pública da área logada (app).",
+  "motivation": "O DataBolsa hoje é exclusivamente um rastreador de carteira privado. Para atrair e converter usuários, precisa de uma vitrine pública com análise de mercado — mesma proposta de valor do Investidor10 e StatusInvest. Esta spec cobre a camada de entrada (home + busca); a página de detalhe do ativo fica na SPEC-0013.",
+  "related": {
+    "prd": ["PRD §4", "PRD §5", "PRD §11"],
+    "spec_doc": ["SPEC §1", "SPEC §6"],
+    "business_rules": ["RN-10", "RN-11"],
+    "adrs": ["ADR-0001", "ADR-0003"],
+    "depends_on": ["SPEC-0011"]
+  },
+  "scope": {
+    "in_scope": [
+      "Route group (public) com layout próprio (header com logo, SearchBar, CTA de login/dashboard)",
+      "Home page (/) com SearchBar e seção de destaques de mercado",
+      "Componente SearchBar com autocomplete e debounce (200ms)",
+      "API route GET /api/market/search?q= (busca de tickers, pública)",
+      "API route GET /api/market/highlights (maiores altas/baixas, pública, cache 5min)",
+      "Atualização do middleware para deixar / e /ativos/* públicos",
+      "Layout responsivo desktop e mobile para a área pública",
+      "Degradação graciosa RN-10: highlights servem dado stale em falha de fonte"
+    ],
+    "out_of_scope": [
+      "Página de detalhe do ativo /ativos/[ticker] (SPEC-0013)",
+      "Indicadores fundamentalistas P/L, DY, P/VP, ROE (SPEC-0013)",
+      "Histórico de preços e dividendos (SPEC-0013)",
+      "Adicionar ativo à carteira a partir da busca (SPEC-0014)",
+      "SEO/SSG avançado, sitemap, meta tags dinâmicas",
+      "Provedor pago de dados fundamentalistas",
+      "Open Finance, relatórios de IR, recomendações de investimento",
+      "Internacionalização (i18n)",
+      "Realtime de cotações (WebSocket/SSE)"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "A rota / deve ser acessível sem cookie de autenticação e renderizar a home pública.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "O middleware deve liberar / e /ativos/* do redirect para /login, mantendo /dashboard e /assets/* protegidos.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "A SearchBar deve fazer debounce de 200ms, exibir autocomplete com até 8 sugestões (ticker + nome), e navegar para /ativos/[ticker] ao selecionar.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "GET /api/market/search?q= deve retornar array de { ticker, name, assetClass } com no máximo 10 resultados. Fonte: brapi /available para B3, lista curada para crypto.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "GET /api/market/highlights deve retornar até 5 maiores altas e 5 maiores baixas do dia (B3). Resultado cacheado em QuoteCache por 5 minutos.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Em falha da fonte externa, /api/market/highlights deve servir o último dado em cache marcado como stale (RN-10), nunca retornar 500.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-07",
+      "description": "Nenhuma rota /api/market/* deve ler Asset, Transaction ou dados de usuário (RN-11).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-08",
+      "description": "O header público deve exibir botão 'Entrar' e 'Criar conta' para usuários não autenticados, e 'Dashboard' para autenticados (verificado via cookie no server component).",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-09",
+      "description": "A home e a SearchBar devem ser responsivas (mobile-first, breakpoints sm/md/lg do Tailwind).",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-10",
+      "description": "Tokens de API externos (brapi) nunca devem ser expostos ao cliente — toda chamada passa pelo servidor.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "QuoteCache",
+      "change": "reuse",
+      "fields": [],
+      "notes": "Reutilizado para cache dos highlights. Sem alteração no schema."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/search",
+      "auth": false,
+      "request": "query: q (string, mínimo 1 char)",
+      "response": "{ results: Array<{ ticker: string, name: string, assetClass: 'STOCK_BR'|'FII'|'ETF'|'BDR'|'CRYPTO'|'STOCK_US' }> }",
+      "errors": [
+        "400 se q ausente ou vazio",
+        "503 com { message, stale: true } em falha total de fonte"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/market/highlights",
+      "auth": false,
+      "request": "sem parâmetros",
+      "response": "{ gainers: Array<{ ticker, name, price, changePercent, stale? }>, losers: Array<{ ticker, name, price, changePercent, stale? }>, asOf: string (ISO) }",
+      "errors": [
+        "200 com stale:true se dado de cache desatualizado (RN-10)",
+        "503 apenas se nunca houve cache e fonte está offline"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuário não autenticado acessa /",
+      "when": "a página carrega",
+      "then": "vê a home pública com SearchBar, destaques de mercado e botões 'Entrar'/'Criar conta' sem ser redirecionado para /login"
+    },
+    {
+      "id": "AC-02",
+      "given": "usuário digita 'PETR' na SearchBar",
+      "when": "após 200ms de debounce",
+      "then": "aparecem sugestões contendo 'PETR4', 'PETR3' com nome 'Petrobras'"
+    },
+    {
+      "id": "AC-03",
+      "given": "usuário clica em 'PETR4' nas sugestões",
+      "when": "a navegação ocorre",
+      "then": "é redirecionado para /ativos/PETR4"
+    },
+    {
+      "id": "AC-04",
+      "given": "usuário autenticado acessa /",
+      "when": "a página carrega",
+      "then": "vê botão 'Dashboard' no header (não 'Entrar'/'Criar conta')"
+    },
+    {
+      "id": "AC-05",
+      "given": "a fonte brapi retorna erro ao buscar highlights",
+      "when": "existe dado em cache",
+      "then": "a home exibe os destaques com badge 'Desatualizado' e não mostra erro 500"
+    },
+    {
+      "id": "AC-06",
+      "given": "qualquer chamada a /api/market/*",
+      "when": "inspecionado o banco de dados",
+      "then": "nenhuma tabela de User, Asset ou Transaction foi consultada"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Middleware: rota / e /ativos/PETR4 são acessíveis sem cookie; /dashboard redireciona para /login sem cookie.",
+      "kind": "unit",
+      "covers": ["REQ-01", "REQ-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "GET /api/market/search?q=PETR retorna sugestões da B3 (MSW mockando brapi /available).",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "GET /api/market/search sem q retorna 400.",
+      "kind": "unit",
+      "covers": ["REQ-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "GET /api/market/highlights retorna gainers/losers com dado do cache quando brapi offline (stale=true, status 200).",
+      "kind": "unit",
+      "covers": ["REQ-05", "REQ-06", "AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "SearchBar: renderiza, aceita input, dispara busca após debounce e exibe sugestões. Keyboard nav (setas, Enter, Escape).",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-02", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-06",
+      "description": "Home page: renderiza SearchBar e seção de highlights sem usuário autenticado.",
+      "kind": "unit",
+      "covers": ["AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-07",
+      "description": "MarketHighlights: exibe StaleBadge quando stale=true no payload.",
+      "kind": "unit",
+      "covers": ["REQ-06", "AC-05"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Atualizar middleware.ts: adicionar /ativos/* aos prefixos públicos; remover redirect de / para /dashboard.",
+      "target": "apps/web/src/middleware.ts",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar route group (public) com layout próprio: apps/web/src/app/(public)/layout.tsx com PublicHeader (logo, SearchBar, CTA auth).",
+      "target": "apps/web/src/app/(public)/",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Mover/recriar apps/web/src/app/page.tsx para (public)/page.tsx com SearchBar hero e seção MarketHighlights.",
+      "target": "apps/web/src/app/(public)/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Criar componente SearchBar com autocomplete, debounce 200ms e navegação por teclado.",
+      "target": "apps/web/src/components/market/SearchBar.tsx",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Criar componente MarketHighlights (gainers/losers cards) reusando StaleBadge.",
+      "target": "apps/web/src/components/market/MarketHighlights.tsx",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Criar API route GET /api/market/search: busca em lista brapi /available (B3) + lista curada de crypto, retorna { results }.",
+      "target": "apps/web/src/app/api/market/search/route.ts",
+      "done": false
+    },
+    {
+      "id": "T-07",
+      "description": "Criar API route GET /api/market/highlights: busca ganhos/perdas do dia via brapi, persiste em QuoteCache com TTL 5min, degrada para stale.",
+      "target": "apps/web/src/app/api/market/highlights/route.ts",
+      "done": false
+    },
+    {
+      "id": "T-08",
+      "description": "Escrever testes TC-01..TC-07 com Vitest + MSW.",
+      "target": "apps/web/src/test/",
+      "done": false
+    },
+    {
+      "id": "T-09",
+      "description": "Atualizar docs/specs/README.md com entrada da SPEC-0012.",
+      "target": "docs/specs/README.md",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Lista de tickers brapi /available pode ser grande (>400 itens) — paginar ou filtrar no servidor, nunca enviar tudo ao cliente.",
+    "brapi free tier pode limitar chamadas a /quote para highlights — mitigar com cache agressivo de 5min e reuso de QuoteCache já existente."
+  ],
+  "observability": [
+    "Logar cache hit/miss de highlights no console do servidor (dev) com prefixo [market/highlights].",
+    "Resposta stale deve incluir campo asOf com timestamp do dado em cache para rastreabilidade."
+  ],
+  "rollback": "Reverter o commit que move page.tsx para (public) e a atualização do middleware. As rotas /dashboard e /assets não são afetadas."
+}

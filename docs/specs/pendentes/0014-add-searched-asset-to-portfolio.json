@@ -1,0 +1,159 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0014",
+  "title": "Adicionar ativo pesquisado à carteira a partir da análise",
+  "status": "draft",
+  "type": "feature",
+  "created": "2026-06-13",
+  "updated": "2026-06-13",
+  "authors": ["Nikolas"],
+  "summary": "Adicionar botão 'Adicionar à carteira' na página de análise /ativos/[ticker], que pré-preenche o AssetForm para usuários logados ou redireciona para /login?next=... para não autenticados. Fecha a ponte entre a área pública de análise e a área privada de carteira.",
+  "motivation": "Após ver a análise de PETR4, o usuário logado deve poder adicionar o ativo à sua carteira com um clique, sem redigitar ticker e classe. Esta é a conversão natural do fluxo público → privado.",
+  "related": {
+    "prd": ["PRD §5", "PRD §6"],
+    "spec_doc": ["SPEC §5"],
+    "business_rules": ["RN-11"],
+    "adrs": [],
+    "depends_on": ["SPEC-0013"]
+  },
+  "scope": {
+    "in_scope": [
+      "Botão 'Adicionar à carteira' na AssetHeader da página /ativos/[ticker]",
+      "Usuário logado: navega para /assets/new?ticker=PETR4&assetClass=STOCK_BR pré-preenchido",
+      "Usuário não logado: redireciona para /login?next=/assets/new?ticker=PETR4&assetClass=STOCK_BR",
+      "AssetForm aceita query params ticker e assetClass para pré-preencher campos",
+      "Sem criação automática de Asset — usuário ainda preenche nome, data source e salva manualmente"
+    ],
+    "out_of_scope": [
+      "Criação automática de Asset sem interação do usuário",
+      "Watchlist ou portfólio fictício sem transações",
+      "Sincronização de preço médio com cotação atual",
+      "Importação de posição histórica"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "O botão 'Adicionar à carteira' deve aparecer na página /ativos/[ticker] independente do estado de autenticação.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Usuário logado clica no botão e é levado para /assets/new com ticker e assetClass pré-preenchidos via query params.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Usuário não logado clica no botão e é redirecionado para /login?next=/assets/new?ticker=X&assetClass=Y. Após login, o fluxo continua para /assets/new pré-preenchido.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "AssetForm deve ler ticker e assetClass dos query params e pré-preencher os campos correspondentes, mantendo-os editáveis.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "A criação do Asset via POST /api/assets continua exigindo autenticação (inalterada da SPEC-0006/0011).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "Asset",
+      "change": "none",
+      "fields": [],
+      "notes": "Sem alteração. O fluxo de criação de Asset via POST /api/assets é o mesmo da SPEC-0006."
+    }
+  ],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuário logado na página /ativos/PETR4",
+      "when": "clica em 'Adicionar à carteira'",
+      "then": "é levado para /assets/new com o campo ticker já preenchido com 'PETR4' e assetClass com 'STOCK_BR'"
+    },
+    {
+      "id": "AC-02",
+      "given": "usuário não logado na página /ativos/PETR4",
+      "when": "clica em 'Adicionar à carteira'",
+      "then": "é redirecionado para /login?next=/assets/new?ticker=PETR4&assetClass=STOCK_BR"
+    },
+    {
+      "id": "AC-03",
+      "given": "usuário não logado faz login após clicar em 'Adicionar à carteira'",
+      "when": "o login é concluído",
+      "then": "é redirecionado para /assets/new?ticker=PETR4&assetClass=STOCK_BR com campos pré-preenchidos"
+    },
+    {
+      "id": "AC-04",
+      "given": "AssetForm aberto via /assets/new?ticker=PETR4&assetClass=STOCK_BR",
+      "when": "o usuário edita o ticker manualmente",
+      "then": "o campo é editável normalmente (não bloqueado)"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Botão 'Adicionar à carteira': usuário logado navega para /assets/new com query params corretos.",
+      "kind": "unit",
+      "covers": ["REQ-01", "REQ-02", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "Botão 'Adicionar à carteira': usuário não logado é redirecionado para /login?next=... com URL correta.",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "AssetForm: campos ticker e assetClass são pré-preenchidos quando query params presentes e permanecem editáveis.",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-04"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Adicionar botão 'Adicionar à carteira' ao componente AssetHeader (SPEC-0013), verificando estado de auth via cookie no client.",
+      "target": "apps/web/src/components/market/AssetHeader.tsx",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Atualizar AssetForm para ler ticker e assetClass dos searchParams e pré-preencher os campos via defaultValues do react-hook-form.",
+      "target": "apps/web/src/components/assets/AssetForm.tsx",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Atualizar página /assets/new para passar searchParams ao AssetForm.",
+      "target": "apps/web/src/app/(app)/assets/new/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Escrever testes TC-01..TC-03.",
+      "target": "apps/web/src/test/",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Atualizar docs/specs/README.md com entrada da SPEC-0014.",
+      "target": "docs/specs/README.md",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Query params com ticker e assetClass podem ser manipulados pelo usuário — o POST /api/assets já valida e associa ao user_id logado, então não há risco de segurança.",
+    "Se o ticker pesquisado for STOCK_US e o AssetForm exigir data_source FINNHUB, o pré-preenchimento de assetClass facilita mas não determina data_source — o usuário deve selecionar."
+  ],
+  "observability": [],
+  "rollback": "Remover botão do AssetHeader e reverter AssetForm para ignorar query params. Sem impacto em dados persistidos."
+}

@@ -105,5 +105,8 @@ e idealmente um check de CI.
 
 | ID        | Título                                                            | Status      |
 | --------- | ----------------------------------------------------------------- | ----------- |
+| SPEC-0012 | Home pública com busca de ativos e destaques de mercado           | approved    |
+| SPEC-0013 | Página de análise individual de ativo (/ativos/[ticker])          | approved    |
+| SPEC-0014 | Adicionar ativo pesquisado à carteira a partir da análise         | draft       |
 
 > Mantenha esta tabela ao adicionar specs.
