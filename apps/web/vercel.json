@@ -1,0 +1,4 @@
+{
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @databolsa/core build && pnpm exec prisma generate && pnpm exec prisma migrate deploy && next build"
+}
