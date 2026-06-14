@@ -1,10 +1,19 @@
 import { AssetForm } from '@/components/assets/AssetForm';
 
-export default function NewAssetPage() {
+interface NewAssetPageProps {
+  searchParams: { ticker?: string; assetClass?: string };
+}
+
+export default function NewAssetPage({ searchParams }: NewAssetPageProps) {
+  const { ticker, assetClass } = searchParams;
+
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold text-content">Novo Ativo</h1>
-      <AssetForm />
+      <AssetForm
+        defaultTicker={ticker}
+        defaultAssetClass={assetClass}
+      />
     </div>
   );
 }

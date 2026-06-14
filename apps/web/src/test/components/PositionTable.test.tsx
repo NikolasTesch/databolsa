@@ -2,7 +2,7 @@
  * TC-01 — PositionTable: P/L colorido+sinal, alocação, estado vazio, campo null exibe '—'.
  * Cobre REQ-02, REQ-05, AC-02, AC-05.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { PositionTable } from '@/components/portfolio/PositionTable';
 import type { PositionSummaryDto } from '@/types/api';
@@ -24,6 +24,7 @@ const makePosition = (overrides: Partial<PositionSummaryDto> = {}): PositionSumm
   lucro_prejuizo_pct: '16.67',
   alocacao_pct: '23.33',
   is_stale: false,
+  current_price_brl: '35.00',
   ...overrides,
 });
 

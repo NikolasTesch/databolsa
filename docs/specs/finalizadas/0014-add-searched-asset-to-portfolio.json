@@ -2,10 +2,10 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0014",
   "title": "Adicionar ativo pesquisado à carteira a partir da análise",
-  "status": "draft",
+  "status": "verified",
   "type": "feature",
   "created": "2026-06-13",
-  "updated": "2026-06-13",
+  "updated": "2026-06-14",
   "authors": ["Nikolas"],
   "summary": "Adicionar botão 'Adicionar à carteira' na página de análise /ativos/[ticker], que pré-preenche o AssetForm para usuários logados ou redireciona para /login?next=... para não autenticados. Fecha a ponte entre a área pública de análise e a área privada de carteira.",
   "motivation": "Após ver a análise de PETR4, o usuário logado deve poder adicionar o ativo à sua carteira com um clique, sem redigitar ticker e classe. Esta é a conversão natural do fluxo público → privado.",
@@ -45,7 +45,7 @@
     },
     {
       "id": "REQ-03",
-      "description": "Usuário não logado clica no botão e é redirecionado para /login?next=/assets/new?ticker=X&assetClass=Y. Após login, o fluxo continua para /assets/new pré-preenchido.",
+      "description": "Usuário não logado clica no botão e é redirecionado para /login?next=<valor>. O valor do param 'next' deve ser codificado com encodeURIComponent porque contém '?' e '&' internos (ex: next=encodeURIComponent('/assets/new?ticker=PETR4&assetClass=STOCK_BR')). Após login bem-sucedido, o middleware/página de login lê 'next' e redireciona para /assets/new pré-preenchido.",
       "priority": "must"
     },
     {
@@ -80,13 +80,13 @@
       "id": "AC-02",
       "given": "usuário não logado na página /ativos/PETR4",
       "when": "clica em 'Adicionar à carteira'",
-      "then": "é redirecionado para /login?next=/assets/new?ticker=PETR4&assetClass=STOCK_BR"
+      "then": "é redirecionado para /login?next=%2Fassets%2Fnew%3Fticker%3DPETR4%26assetClass%3DSTOCK_BR (valor do param 'next' URL-encoded com encodeURIComponent)"
     },
     {
       "id": "AC-03",
       "given": "usuário não logado faz login após clicar em 'Adicionar à carteira'",
       "when": "o login é concluído",
-      "then": "é redirecionado para /assets/new?ticker=PETR4&assetClass=STOCK_BR com campos pré-preenchidos"
+      "then": "a página de login lê o param 'next' (decodeURIComponent) e redireciona para /assets/new?ticker=PETR4&assetClass=STOCK_BR com campos pré-preenchidos"
     },
     {
       "id": "AC-04",
@@ -105,7 +105,7 @@
     },
     {
       "id": "TC-02",
-      "description": "Botão 'Adicionar à carteira': usuário não logado é redirecionado para /login?next=... com URL correta.",
+      "description": "Botão 'Adicionar à carteira': usuário não logado é redirecionado para /login com param 'next' URL-encoded via encodeURIComponent. Verificar que o valor decodificado resulta em /assets/new?ticker=PETR4&assetClass=STOCK_BR.",
       "kind": "unit",
       "covers": ["REQ-03", "AC-02"],
       "mocks_external": false

@@ -3,10 +3,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { queryKeys } from '@/lib/query-keys';
-import { getPortfolioSummary } from '@/lib/api/portfolio';
+import { getPortfolioSummary, getPortfolioHistory, getMonthlyActivity } from '@/lib/api/portfolio';
 import { SummaryCards } from '@/components/portfolio/SummaryCards';
 import { PositionTable } from '@/components/portfolio/PositionTable';
 import { AllocationChartDynamic } from '@/components/portfolio/AllocationChartDynamic';
+import { GrowthChartDynamic } from '@/components/portfolio/GrowthChartDynamic';
+import { MonthlyActivityCard } from '@/components/portfolio/MonthlyActivityCard';
 import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
 
@@ -46,6 +48,16 @@ export default function DashboardPage() {
     queryFn: getPortfolioSummary,
   });
 
+  const { data: history } = useQuery({
+    queryKey: queryKeys.portfolio.history(),
+    queryFn: getPortfolioHistory,
+  });
+
+  const { data: monthly } = useQuery({
+    queryKey: queryKeys.portfolio.monthlyActivity(),
+    queryFn: getMonthlyActivity,
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -82,6 +94,19 @@ export default function DashboardPage() {
             className="space-y-6"
           >
             <SummaryCards data={data} />
+
+            {/* Crescimento Patrimonial */}
+            <Card padding="md">
+              <h2 className="mb-4 text-sm font-medium text-content-muted">Crescimento do Capital Investido</h2>
+              <GrowthChartDynamic dataPoints={history?.data_points ?? []} />
+            </Card>
+
+            {/* Atividade do Mês */}
+            {monthly && (
+              <Card padding="md">
+                <MonthlyActivityCard data={monthly} />
+              </Card>
+            )}
 
             {data.positions.filter((p) => p.valor_atual_brl !== null).length > 0 && (
               <Card padding="md">

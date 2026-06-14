@@ -2,7 +2,7 @@
  * TC-03 — StaleBadge/PositionTable com is_stale=true: renderiza indicador âmbar.
  * Cobre REQ-03, AC-03.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { StaleBadge } from '@/components/portfolio/StaleBadge';
 import { PositionTable } from '@/components/portfolio/PositionTable';
@@ -40,6 +40,7 @@ describe('PositionTable com is_stale', () => {
     lucro_prejuizo_pct: '-10.00',
     alocacao_pct: '60.00',
     is_stale: true,
+    current_price_brl: '90.00',
   };
 
   it('exibe o StaleBadge para posição com is_stale=true', () => {

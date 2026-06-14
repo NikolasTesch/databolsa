@@ -2,10 +2,10 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0013",
   "title": "Página de análise individual de ativo (/ativos/[ticker])",
-  "status": "approved",
+  "status": "verified",
   "type": "feature",
   "created": "2026-06-13",
-  "updated": "2026-06-13",
+  "updated": "2026-06-14",
   "authors": ["Nikolas"],
   "summary": "Criar a página pública /ativos/[ticker] no estilo Investidor10/StatusInvest: AssetHeader com cotação + variação, IndicatorGrid com P/L, DY, P/VP, ROE (ou equivalentes por classe), PriceHistoryChart com seletor de período e DividendsTable. Acessível sem login. Introduz AssetFundamentalsCache e FundamentalsService desacoplado dos adapters de cotação.",
   "motivation": "Com a busca da SPEC-0012, o usuário chega em /ativos/PETR4 mas não há nada para ver. Esta spec entrega o conteúdo central: análise fundamentalista e técnica de qualquer ativo, mesmo sem conta cadastrada. A estrutura da página espelha os sites de referência: header com price hero, grid de indicadores em cards, gráfico de histórico e tabela de proventos.",
@@ -97,7 +97,7 @@
       "PriceHistoryChart": {
         "description": "Recharts AreaChart com gradiente. Eixo X: datas, Eixo Y: preço em R$ (mono). Tooltip com data e preço formatado.",
         "import": "next/dynamic para não bloquear SSR (mesmo padrão do AllocationChartDynamic existente)",
-        "tokens": "stroke: brand.navy.500 (#2756A4), fill: gradiente de brand.navy.500 com opacity 0.15→0. Eixos: text-xs font-mono text-content-muted. Tooltip: bg-surface border border-border rounded shadow-md p-2."
+        "tokens": "stroke: brand.navy.600 (#2756A4 = brand.primary), fill: gradiente de brand.navy.600 com opacity 0.15→0. Eixos: text-xs font-mono text-content-muted. Tooltip: bg-surface border border-border rounded shadow-md p-2."
       }
     },
 
@@ -122,7 +122,7 @@
         "name": "AssetHeader",
         "path": "apps/web/src/components/market/AssetHeader.tsx",
         "props": "ticker: string, name: string, assetClass: AssetClass, price: string, priceInBrl?: string, currency: string, changePercent: string | null, changeValue: string | null, stale?: boolean",
-        "notes": "Server Component. TrendBadge (SPEC-0012) para variação. Botão 'Adicionar à carteira' será adicionado na SPEC-0014 (slot reservado)."
+        "notes": "Server Component. TrendBadge (SPEC-0012) para variação. Botão 'Adicionar à carteira' será adicionado na SPEC-0014: como AssetHeader é Server Component, o botão deve ser um Client Component filho isolado (ex: AddToPortfolioButton.tsx) para poder ler o estado de autenticação via cookie no client."
       },
       {
         "name": "IndicatorCard",
@@ -233,7 +233,7 @@
         "symbol: String",
         "source: DataSource",
         "data: Json  -- payload normalizado de indicadores",
-        "fetched_at: DateTime @default(now())",
+        "fetched_at: DateTime @default(now()) @map(\"fetched_at\")",
         "@@unique([symbol, source])",
         "@@map(\"asset_fundamentals_cache\")"
       ],
@@ -304,8 +304,8 @@
     {
       "id": "AC-03",
       "given": "brapi retorna erro ao buscar fundamentos de PETR4",
-      "when": "existe dado em AssetFundamentalsCache com fetched_at < 6h",
-      "then": "a página exibe os indicadores com badge 'Desatualizado' e não quebra"
+      "when": "existe dado em AssetFundamentalsCache com fetched_at > 6h (cache expirado)",
+      "then": "a página exibe os indicadores com badge 'Desatualizado' (stale:true) e não quebra — FundamentalsService revalida em background e, ao falhar, serve o cache expirado marcado como stale"
     },
     {
       "id": "AC-04",
@@ -395,6 +395,13 @@
       "kind": "unit",
       "covers": ["REQ-04"],
       "mocks_external": false
+    },
+    {
+      "id": "TC-10",
+      "description": "FundamentalsService: fonte offline E sem cache disponível — retorna todos os campos como null (nunca lança exceção; não retorna NaN ou undefined).",
+      "kind": "unit",
+      "covers": ["REQ-03", "REQ-05", "REQ-11"],
+      "mocks_external": true
     }
   ],
   "tasks": [
@@ -454,7 +461,7 @@
     },
     {
       "id": "T-10",
-      "description": "Escrever testes TC-01..TC-09 com Vitest + MSW.",
+      "description": "Escrever testes TC-01..TC-10 com Vitest + MSW.",
       "target": "apps/web/src/test/",
       "done": false
     },

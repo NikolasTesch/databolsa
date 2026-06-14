@@ -6,7 +6,7 @@
 export type AssetClass = 'STOCK_BR' | 'FII' | 'ETF' | 'BDR' | 'CRYPTO' | 'STOCK_US';
 export type Currency = 'BRL' | 'USD';
 export type DataSource = 'BRAPI' | 'COINGECKO' | 'FINNHUB';
-export type TransactionType = 'BUY' | 'SELL';
+export type TransactionType = 'BUY' | 'SELL' | 'DIVIDEND';
 
 // ---- Auth ----
 
@@ -90,11 +90,33 @@ export interface PositionSummaryDto {
   lucro_prejuizo_pct: string | null;
   alocacao_pct: string | null;
   is_stale: boolean;
+  current_price_brl: string | null;
 }
 
 export interface PortfolioSummaryDto {
   positions: PositionSummaryDto[];
   patrimonio_total_brl: string;
+}
+
+// ---- Portfolio History ----
+
+export interface PortfolioHistoryDataPoint {
+  date: string;
+  cumulative_invested_brl: string;
+}
+
+export interface PortfolioHistoryDto {
+  data_points: PortfolioHistoryDataPoint[];
+}
+
+// ---- Monthly Activity ----
+
+export interface MonthlyActivityDto {
+  total_bought_brl: string;
+  total_sold_brl: string;
+  total_dividends_brl: string;
+  estimated_realized_gain_brl: string;
+  transaction_count: number;
 }
 
 // ---- Error ----

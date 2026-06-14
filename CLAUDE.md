@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-**MVP web implementado.** O monorepo está scaffoldado (`/apps/{web,mobile}`, `/packages/{core,types,ui}`), a infraestrutura Docker funciona e o design system base existe. A API NestJS foi **migrada para Next.js Route Handlers** dentro de `apps/web` (ADR-0004, SPEC-0011) — `apps/api` foi removido.
+**MVP web implementado — home pública em andamento.** O monorepo está scaffoldado (`/apps/{web,mobile}`, `/packages/{core,types,ui}`), a infraestrutura Docker funciona e o design system base existe. A API NestJS foi **migrada para Next.js Route Handlers** dentro de `apps/web` (ADR-0004, SPEC-0011) — `apps/api` foi removido.
 
 `packages/core` é um projeto Node.js standalone (TypeScript + Jest + decimal.js) com cobertura completa de testes. pnpm workspaces está configurado na raiz (`pnpm-workspace.yaml`).
 
-Specs concluídas (todas `verified`): SPEC-0001 (cálculos `packages/core`), SPEC-0002 (scaffold + design system), SPEC-0003 (Docker), SPEC-0004 (design tokens), SPEC-0005 (schema Prisma + migrations), SPEC-0006 (backend auth + CRUD), SPEC-0007 (cotações + cache), SPEC-0008 (web Next.js + dashboard), SPEC-0009 (mobile Flutter), SPEC-0010 (E2E + CI), SPEC-0011 (migração API → Next.js Route Handlers). Consulte `docs/SPEC.md` para arquitetura e `docs/specs/README.md` para o índice completo.
+Specs concluídas (todas `verified`): SPEC-0001..SPEC-0011. Em andamento: SPEC-0012 (`implemented` — home pública com busca e destaques de mercado; pendente verificação e testes). Pendentes: SPEC-0013 (página de análise de ativo), SPEC-0014 (adicionar ativo pesquisado à carteira). Consulte `docs/SPEC.md` para arquitetura e `docs/specs/README.md` para o índice completo.
 
 ### Build/test commands
 
@@ -76,7 +76,7 @@ Three asset classes in the MVP: B3 securities (stocks, FIIs, ETFs, BDRs), crypto
 Client-server with a **single Next.js app** (`apps/web`) serving both the web frontend and the REST API (via Route Handlers), brokering all external quote APIs. **API keys and business logic live exclusively on the server side** — browser and mobile clients never call external data sources directly (ADR-0004).
 
 Monorepo layout:
-- `/apps/web` — Next.js + TypeScript + Tailwind (Recharts). **Também é o backend**: Route Handlers em `src/app/api/` implementam auth, assets, transactions, portfolio e quotes. Prisma em `apps/web/prisma/`.
+- `/apps/web` — Next.js + TypeScript + Tailwind (Recharts). **Também é o backend**: Route Handlers em `src/app/api/` implementam auth, assets, transactions, portfolio, quotes e market data. Prisma em `apps/web/prisma/`. Route groups: `(app)` (área logada — dashboard, portfolio, ativos) e `(public)` (vitrine pública — home, `/ativos/*`).
 - `/apps/mobile` — Flutter + Dart (fl_chart) — decided in `docs/adr/0002-mobile-flutter.md`; standalone sub-project within the monorepo (managed by `flutter` CLI, not pnpm workspace). Consome a mesma API REST do `apps/web`.
 - `/packages/core` — **financial calculations and business rules** (RN-01..RN-11), framework-agnostic and reusable
 - `/packages/types` — shared API contracts/types
@@ -121,19 +121,24 @@ Key subtleties:
 
 ## Data model
 
-Implementado em `apps/web/prisma/schema.prisma`. `User` (id, email unique, password_hash) → `Asset` (user_id FK, ticker, asset_class enum `STOCK_BR|FII|ETF|BDR|CRYPTO|STOCK_US`, currency `BRL|USD`, data_source `BRAPI|COINGECKO|FINNHUB`) → `Transaction` (asset_id FK, type `BUY|SELL`, date, unit_price, quantity, fees). `QuoteCache` (symbol, price, currency, fetched_at; unique per symbol+source).
+Implementado em `apps/web/prisma/schema.prisma`. `User` (id, email unique, password_hash) → `Asset` (user_id FK, ticker, **name**, asset_class enum `STOCK_BR|FII|ETF|BDR|CRYPTO|STOCK_US`, currency `BRL|USD`, data_source `BRAPI|COINGECKO|FINNHUB`) → `Transaction` (asset_id FK, type **`BUY|SELL|DIVIDEND`**, date, unit_price, quantity, fees). `QuoteCache` (symbol, price, currency, fetched_at; unique per symbol+source).
+
+Mudanças recentes: campo `name` adicionado a `Asset`; tipo `DIVIDEND` adicionado a `TransactionType` (suporte a proventos no portfólio).
 
 ## Key API endpoints
 
 Implementados como Next.js Route Handlers em `apps/web/src/app/api/`:
 
-- Auth (sem JWT): `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh`
+- Auth (sem JWT): `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout`
 - Auth BFF (cookies HttpOnly, web only): `POST /api/session/login`, `POST /api/session/register`, `POST /api/session/refresh`, `POST /api/session/logout`
 - Assets: `GET|POST /api/assets`, `GET|DELETE /api/assets/:id`, `GET|POST /api/assets/:id/transactions`
 - Transactions: `PATCH|DELETE /api/transactions/:id`
-- Portfolio: `GET /api/portfolio/summary`
+- Portfolio (requer JWT): `GET /api/portfolio/summary`, `GET /api/portfolio/history`, `GET /api/portfolio/monthly-activity`
+- Market (público, sem JWT): `GET /api/market/search?q=`, `GET /api/market/indices`, `GET /api/market/highlights?type=`
 
-Full table in `docs/SPEC.md §5` and `docs/specs/finalizadas/0011-migrate-api-to-nextjs.json`.
+Endpoints de market usam `QuoteCache` com TTL 5min e degradação `stale` (RN-10). Nunca consultam User/Asset/Transaction (RN-11).
+
+Full table in `docs/SPEC.md §5`, `docs/specs/finalizadas/0011-migrate-api-to-nextjs.json` e `docs/specs/em-andamento/0012-public-home-and-asset-search.json`.
 
 ## Scope discipline
 

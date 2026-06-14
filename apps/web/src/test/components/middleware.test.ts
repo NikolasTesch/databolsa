@@ -57,4 +57,29 @@ describe('middleware', () => {
     const res = middleware(req);
     expect(res.status).toBe(200);
   });
+
+  // TC-01: rotas públicas acessíveis sem cookie
+  it('TC-01: permite acesso a / sem cookie', () => {
+    const req = makeRequest('/');
+    const res = middleware(req);
+    expect(res.status).toBe(200);
+  });
+
+  it('TC-01: permite acesso a /ativos/PETR4 sem cookie', () => {
+    const req = makeRequest('/ativos/PETR4');
+    const res = middleware(req);
+    expect(res.status).toBe(200);
+  });
+
+  it('TC-01: permite acesso a /ativos/BTC?class=CRYPTO sem cookie', () => {
+    const req = makeRequest('/ativos/BTC?class=CRYPTO');
+    const res = middleware(req);
+    expect(res.status).toBe(200);
+  });
+
+  it('TC-01: permite acesso a / com cookie (usuário logado vê home pública)', () => {
+    const req = makeRequest('/', { access_token: 'fake-token' });
+    const res = middleware(req);
+    expect(res.status).toBe(200);
+  });
 });

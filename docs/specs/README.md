@@ -95,18 +95,16 @@ e idealmente um check de CI.
 | SPEC-0009 | Mobile Flutter — consulta e edição do portfólio                   | verified |
 | SPEC-0010 | Testes E2E e pipeline de CI/CD                                    | verified |
 | SPEC-0011 | Migração da API para Next.js Route Handlers                       | verified |
+| SPEC-0012 | Home pública com busca de ativos e destaques de mercado           | verified |
+| SPEC-0013 | Página de análise individual de ativo (/ativos/[ticker])          | verified |
+| SPEC-0014 | Adicionar ativo pesquisado à carteira a partir da análise         | verified |
 
 ### Em andamento (`em-andamento/`)
 
-| ID        | Título                                                            | Status      |
-| --------- | ----------------------------------------------------------------- | ----------- |
+_Nenhuma spec em andamento no momento._
 
 ### Pendentes (`pendentes/`)
 
-| ID        | Título                                                            | Status      |
-| --------- | ----------------------------------------------------------------- | ----------- |
-| SPEC-0012 | Home pública com busca de ativos e destaques de mercado           | approved    |
-| SPEC-0013 | Página de análise individual de ativo (/ativos/[ticker])          | approved    |
-| SPEC-0014 | Adicionar ativo pesquisado à carteira a partir da análise         | draft       |
+_Nenhuma spec pendente no momento._
 
 > Mantenha esta tabela ao adicionar specs.

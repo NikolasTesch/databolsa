@@ -20,6 +20,7 @@ export const portfolioSummaryHandler = http.get(`${BASE}/portfolio/summary`, () 
         lucro_prejuizo_pct: '16.67',
         alocacao_pct: '23.33',
         is_stale: false,
+        current_price_brl: '35.00',
       },
       {
         asset_id: 'asset-2',
@@ -32,6 +33,7 @@ export const portfolioSummaryHandler = http.get(`${BASE}/portfolio/summary`, () 
         lucro_prejuizo_pct: '-5.00',
         alocacao_pct: '25.33',
         is_stale: false,
+        current_price_brl: '76.00',
       },
       {
         asset_id: 'asset-3',
@@ -44,6 +46,7 @@ export const portfolioSummaryHandler = http.get(`${BASE}/portfolio/summary`, () 
         lucro_prejuizo_pct: '9.09',
         alocacao_pct: '51.33',
         is_stale: true,
+        current_price_brl: null,
       },
     ],
   };
@@ -67,6 +70,7 @@ export const portfolioSummaryWithNullHandler = http.get(
           lucro_prejuizo_pct: null,
           alocacao_pct: null,
           is_stale: false,
+          current_price_brl: null,
         },
       ],
     };

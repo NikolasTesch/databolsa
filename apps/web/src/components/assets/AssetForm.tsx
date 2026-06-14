@@ -48,7 +48,12 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export function AssetForm() {
+interface AssetFormProps {
+  defaultTicker?: string;
+  defaultAssetClass?: string;
+}
+
+export function AssetForm({ defaultTicker, defaultAssetClass }: AssetFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -59,6 +64,10 @@ export function AssetForm() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      ticker: defaultTicker ?? '',
+      asset_class: (defaultAssetClass as FormValues['asset_class']) ?? undefined,
+    },
   });
 
   const onSubmit = async (values: FormValues) => {

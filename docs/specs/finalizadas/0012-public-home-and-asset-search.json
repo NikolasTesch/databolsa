@@ -2,10 +2,10 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0012",
   "title": "Home pública com busca de ativos e destaques de mercado",
-  "status": "approved",
+  "status": "verified",
   "type": "feature",
   "created": "2026-06-13",
-  "updated": "2026-06-13",
+  "updated": "2026-06-14",
   "authors": ["Nikolas"],
   "summary": "Criar a home pública do DataBolsa no estilo Investidor10/StatusInvest: header sticky com nav por classe de ativo, hero com busca + chips de 'Mais buscados', barra de índices (IBOV, IFIX, USD/BRL, BTC), e seção de mercado com tabs por classe (Ações, FIIs, ETFs, BDRs, Crypto, Stocks US) mostrando 6 maiores altas e 6 maiores baixas em grid de cards. Cria o route group (public) separando a vitrine pública da área logada (app).",
   "motivation": "O DataBolsa hoje é exclusivamente um rastreador de carteira privado. Para atrair e converter usuários, precisa de uma vitrine pública com análise de mercado — mesma proposta de valor do Investidor10 e StatusInvest, adaptada ao design system da marca (IBM Plex, paleta navy/finance, tokens de surface/border).",
@@ -86,11 +86,11 @@
         "fields": [
           "label: string (ex: 'IBOV', 'IFIX', 'USD/BRL', 'BTC', 'CDI a.a.')",
           "value: string mono (ex: '128.450', 'R$ 5,27', 'US$ 98.200')",
-          "changePercent: string (ex: '+1,23%' | '-0,45%')",
+          "changePercent: string | null (ex: '+1,23%' | '-0,45%' | null para CDI hardcoded sem variação)",
           "stale?: boolean"
         ],
-        "tokens": "label text-xs text-content-muted font-sans uppercase tracking-wide; value text-sm font-mono font-semibold text-content; changePercent text-xs font-mono font-medium — profit.dark se positivo, loss.dark se negativo; separador border-r border-border entre itens",
-        "stale": "Ícone de relógio âmbar (color: stale.dark) ao lado do value quando stale=true"
+        "tokens": "label text-xs text-content-muted font-sans uppercase tracking-wide; value text-sm font-mono font-semibold text-content; changePercent text-xs font-mono font-medium — text-profit se positivo, text-loss se negativo; separador border-r border-border entre itens",
+        "stale": "Ícone de relógio âmbar (classe text-stale) ao lado do value quando stale=true"
       },
       "indices": ["IBOV", "IFIX", "USD/BRL", "BTC/BRL", "CDI a.a."],
       "sources": "IBOV e IFIX via brapi; USD/BRL via AwesomeAPI (já existente); BTC via CoinGecko; CDI via hardcoded ou ANBIMA (Fase 2)"
@@ -136,8 +136,8 @@
         "TrendBadge": {
           "description": "Badge inline de variação percentual. Reutilizável em IndexBar, AssetMiniCard e AssetHeader (SPEC-0013).",
           "variants": {
-            "positive": "text-profit (finance.profit.dark) + ícone ↑ (TrendingUp do lucide-react)",
-            "negative": "text-loss (finance.loss.dark) + ícone ↓ (TrendingDown)",
+            "positive": "text-profit + ícone ↑ (TrendingUp do lucide-react)",
+            "negative": "text-loss + ícone ↓ (TrendingDown)",
             "neutral": "text-content-muted + ícone — (Minus)"
           },
           "tokens": "text-xs font-mono font-medium, inline-flex items-center gap-0.5"
@@ -173,13 +173,13 @@
         "name": "QuickChip",
         "path": "apps/web/src/components/market/QuickChip.tsx",
         "props": "label: string, href: string",
-        "notes": "Chip/tag clicável para 'Mais buscados'. Estilo: badge rounded-full, hover muda para primary."
+        "notes": "Chip/tag clicável para 'Mais buscados'. Estilo: badge rounded-full, hover muda para primary. O href deve incluir ?class=ASSET_CLASS (ex: /ativos/BTC?class=CRYPTO) para que a página de detalhe não precise rederivá-la heuristicamente."
       },
       {
         "name": "SearchBar",
         "path": "apps/web/src/components/market/SearchBar.tsx",
         "props": "variant: 'hero' | 'compact', placeholder?: string",
-        "notes": "variant=hero é o grande do HeroSection; variant=compact é o do PublicHeader. Ambos compartilham a lógica de autocomplete e debounce 200ms. Dropdown com até 10 resultados, cada item: ticker (mono) + nome + AssetClassBadge. Keyboard nav: ↑↓ para navegar, Enter para selecionar, Escape para fechar."
+        "notes": "variant=hero é o grande do HeroSection; variant=compact é o do PublicHeader. Ambos compartilham a lógica de autocomplete e debounce 200ms. Dropdown com até 10 resultados, cada item: ticker (mono) + nome + AssetClassBadge. Keyboard nav: ↑↓ para navegar, Enter para selecionar, Escape para fechar. Ao navegar para /ativos/[ticker], incluir o assetClass retornado pela API como query param: /ativos/PETR4?class=STOCK_BR — a API de search já retorna assetClass no objeto de resultado."
       },
       {
         "name": "IndexCard",
@@ -240,7 +240,7 @@
     },
     {
       "id": "REQ-02",
-      "description": "Middleware deve liberar /, /ativos/*, mantendo /dashboard e /assets/* protegidos.",
+      "description": "/ e /ativos/* devem ser acessíveis sem autenticação. O middleware atual usa allow-list de PROTECTED_PREFIXES (['/dashboard', '/assets']) — qualquer rota fora dessas é pública por padrão, portanto /ativos/* já é pública sem alteração. O bloqueio a remover é o redirect('/dashboard') em apps/web/src/app/page.tsx.",
       "rule_ref": "RN-11",
       "priority": "must"
     },
@@ -256,7 +256,7 @@
     },
     {
       "id": "REQ-05",
-      "description": "GET /api/market/indices retorna IBOV, IFIX, USD/BRL, BTC/BRL com value e changePercent. Cache 5min em QuoteCache. Degradação stale RN-10.",
+      "description": "GET /api/market/indices retorna IBOV, IFIX, USD/BRL, BTC/BRL, CDI a.a. com value e changePercent (null para CDI). CDI retornado como valor hardcoded na v1 (ex: '10,65% a.a.') com stale:false — Fase 2 automatiza via ANBIMA. Demais índices: cache 5min em QuoteCache, degradação stale RN-10.",
       "rule_ref": "RN-10",
       "priority": "must"
     },
@@ -356,7 +356,7 @@
       "id": "AC-01",
       "given": "usuário não autenticado acessa /",
       "when": "a página carrega",
-      "then": "vê PublicHeader (com 'Entrar'/'Criar conta'), HeroSection com SearchBar, IndexBar com IBOV/IFIX/USD/BTC, MarketSection com tab 'Ações' ativa e 6 cards de altas e 6 de baixas"
+      "then": "vê PublicHeader (com 'Entrar'/'Criar conta'), HeroSection com SearchBar, IndexBar com IBOV/IFIX/USD/BTC/CDI, MarketSection com tab 'Ações' ativa e 6 cards de altas e 6 de baixas"
     },
     {
       "id": "AC-02",
@@ -491,81 +491,81 @@
   "tasks": [
     {
       "id": "T-01",
-      "description": "Atualizar middleware.ts: adicionar /ativos/* aos prefixos públicos; remover redirect de / para /dashboard.",
-      "target": "apps/web/src/middleware.ts",
-      "done": false
+      "description": "Remover apps/web/src/app/page.tsx — atualmente faz redirect('/dashboard') e colide com (public)/page.tsx para a rota /. O middleware NÃO precisa de alteração: ele usa allow-list de PROTECTED_PREFIXES (['/dashboard', '/assets']), então / e /ativos/* já são públicas sem mudança de código.",
+      "target": "apps/web/src/app/page.tsx",
+      "done": true
     },
     {
       "id": "T-02",
       "description": "Criar route group (public) e seu layout: apps/web/src/app/(public)/layout.tsx com PublicHeader + PublicFooter.",
       "target": "apps/web/src/app/(public)/layout.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-03",
       "description": "Criar componentes de layout público: PublicHeader.tsx (sticky, logo+nav+SearchBar compact+auth) e PublicFooter.tsx.",
       "target": "apps/web/src/components/layout/",
-      "done": false
+      "done": true
     },
     {
       "id": "T-04",
       "description": "Criar componente TrendBadge.tsx (variação % com ícone ↑↓ e cores profit/loss/neutral do design system).",
       "target": "apps/web/src/components/ui/TrendBadge.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-05",
       "description": "Criar componente SearchBar.tsx (variant hero + compact, autocomplete, debounce 200ms, keyboard nav).",
       "target": "apps/web/src/components/market/SearchBar.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-06",
       "description": "Criar componentes IndexCard.tsx e IndexBar.tsx (barra horizontal IBOV, IFIX, USD/BRL, BTC).",
       "target": "apps/web/src/components/market/",
-      "done": false
+      "done": true
     },
     {
       "id": "T-07",
       "description": "Criar componentes AssetMiniCard.tsx, QuickChip.tsx, MarketTabs.tsx e MarketSection.tsx (grid de cards com tabs).",
       "target": "apps/web/src/components/market/",
-      "done": false
+      "done": true
     },
     {
       "id": "T-08",
-      "description": "Criar API route GET /api/market/search: busca em brapi /available + lista curada crypto/US.",
+      "description": "Criar BrapiSearchAdapter (apps/web/src/lib/market/brapi-search.adapter.ts) que consome brapi GET /available e mantém índice em memória (cache local do processo) para evitar chamar o endpoint a cada busca. Criar API route GET /api/market/search que usa esse adapter + lista curada de crypto/US.",
       "target": "apps/web/src/app/api/market/search/route.ts",
-      "done": false
+      "done": true
     },
     {
       "id": "T-09",
       "description": "Criar API route GET /api/market/indices: busca IBOV/IFIX via brapi, USD/BRL via AwesomeAPI, BTC via CoinGecko. Cache 5min em QuoteCache, stale RN-10.",
       "target": "apps/web/src/app/api/market/indices/route.ts",
-      "done": false
+      "done": true
     },
     {
       "id": "T-10",
       "description": "Criar API route GET /api/market/highlights?type=: 6 gainers + 6 losers por classe. Cache 5min em QuoteCache, stale RN-10.",
       "target": "apps/web/src/app/api/market/highlights/route.ts",
-      "done": false
+      "done": true
     },
     {
       "id": "T-11",
       "description": "Criar/recriar apps/web/src/app/(public)/page.tsx compondo HeroSection + IndexBar + MarketSection.",
       "target": "apps/web/src/app/(public)/page.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-12",
       "description": "Escrever testes TC-01..TC-11 com Vitest + MSW.",
       "target": "apps/web/src/test/",
-      "done": false
+      "done": true
     },
     {
       "id": "T-13",
       "description": "Atualizar docs/specs/README.md com entrada da SPEC-0012.",
       "target": "docs/specs/README.md",
-      "done": false
+      "done": true
     }
   ],
 

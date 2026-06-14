@@ -42,7 +42,9 @@ export async function GET(request: NextRequest) {
   let totalBrl = new Decimal(0);
 
   for (const asset of assets) {
-    const coreTxs = asset.transactions.map(prismaToCoreTx);
+    const coreTxs = asset.transactions
+      .filter((tx) => tx.type === 'BUY' || tx.type === 'SELL')
+      .map(prismaToCoreTx);
     if (coreTxs.length === 0) continue;
 
     const quoteResult = await quoteService.getQuote(
@@ -79,6 +81,7 @@ export async function GET(request: NextRequest) {
       lucro_prejuizo_pct: lucroPct,
       alocacao_pct: null,
       is_stale: quoteResult?.isStale ?? false,
+      current_price_brl: quoteResult ? quoteResult.priceBrl.toString() : null,
     });
   }
 
