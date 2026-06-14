@@ -1,0 +1,130 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0018",
+  "title": "Seção de cursos gratuitos da B3",
+  "status": "draft",
+  "type": "feature",
+  "created": "2026-06-14",
+  "updated": "2026-06-14",
+  "authors": ["Antigravity", "Nikolas"],
+  "summary": "Implementar atalhos na barra de busca e navegação para cursos, e criar a seção de Cursos Gratuitos da B3 posicionado logo antes do footer na home pública, apresentando cursos curados com links diretos de direcionamento.",
+  "motivation": "Melhorar a experiência educacional do investidor iniciante, fornecendo indicações diretas e curadas de cursos de alta qualidade e gratuitos oferecidos pela B3 Educação. Isso posiciona o DataBolsa como um hub educativo confiável e útil para o aprendizado prático de investimentos.",
+  "related": {
+    "prd": ["PRD §4", "PRD §5"],
+    "spec_doc": ["SPEC §5"],
+    "business_rules": ["RN-11"],
+    "adrs": [],
+    "depends_on": ["SPEC-0012"]
+  },
+  "scope": {
+    "in_scope": [
+      "Adicionar item 'Cursos' na barra de busca (SearchBar.tsx) e links correspondentes de navegação.",
+      "Criar componente B3CourseCard exibindo título, descrição, carga horária, nível e link oficial do curso.",
+      "Criar componente B3CoursesSection exibindo uma grade responsiva com cursos sugeridos.",
+      "Posicionar a seção de cursos logo acima do PublicFooter.tsx na home principal.",
+      "Criar lista curada estática de cursos em arquivo JSON ou constante local para carregamento instantâneo."
+    ],
+    "out_of_scope": [
+      "Hospedagem própria de vídeos ou controle de progresso de aulas/cursos dentro do DataBolsa.",
+      "Sistema de geração ou armazenamento de certificados de cursos."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Incluir item de navegação 'Cursos' no menu principal do portal público e na barra de busca.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Seção de cursos deve ser exibida imediatamente antes do rodapé (PublicFooter) na home pública do site.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Cada card de curso deve conter o título, descrição, duração estimada (ex: 2h), nível (Iniciante/Intermediário/Avançado) e o botão para acessar a B3.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Os links de acesso devem abrir em uma nova aba do navegador e conter parâmetros UTM de rastreabilidade (ex: utm_source=databolsa).",
+      "priority": "should"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "n/a",
+      "change": "none",
+      "fields": [],
+      "notes": "Os dados dos cursos serão gerenciados localmente no frontend, sem necessidade de consultas a banco de dados ou APIs dinâmicas nesta v1."
+    }
+  ],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuário acessa a página inicial pública",
+      "when": "rola até o final da página",
+      "then": "visualiza a seção 'Cursos Gratuitos da B3' contendo uma grade de cards de cursos antes do rodapé do site."
+    },
+    {
+      "id": "AC-02",
+      "given": "usuário clica no card do curso 'Como começar a investir'",
+      "when": "interage com o botão de acesso",
+      "then": "uma nova aba é aberta navegando para o endereço correto da plataforma B3 Educação."
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "B3CoursesSection Component: garante que todos os cursos configurados na lista local são renderizados corretamente.",
+      "kind": "unit",
+      "covers": ["REQ-02", "REQ-03", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "B3CourseCard link: valida se os links abrem em novas abas (_blank) com os parâmetros UTM necessários.",
+      "kind": "unit",
+      "covers": ["REQ-03", "REQ-04", "AC-02"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Definir a lista estática curada de cursos em constante no arquivo apps/web/src/lib/courses-data.ts.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Adicionar item 'Cursos' na barra de busca (SearchBar.tsx) e no PublicHeader.tsx.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar componentes B3CourseCard.tsx e B3CoursesSection.tsx em apps/web/src/components/market/.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Integrar a B3CoursesSection na home principal (apps/web/src/app/(public)/page.tsx) imediatamente antes do PublicFooter.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Escrever testes unitários e de renderização para os cards de cursos.",
+      "target": "apps/web",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Links da plataforma da B3 Educação podem mudar no futuro. Mitigação: usar centralização de dados no arquivo de constante para que correções sejam rápidas de se aplicar."
+  ],
+  "observability": [],
+  "rollback": "Remover a seção de cursos B3CoursesSection do arquivo de página da home e os links correspondentes."
+}

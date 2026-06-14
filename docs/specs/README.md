@@ -105,6 +105,11 @@ _Nenhuma spec em andamento no momento._
 
 ### Pendentes (`pendentes/`)
 
-_Nenhuma spec pendente no momento._
+| ID        | Título                                              | Status   |
+| --------- | --------------------------------------------------- | -------- |
+| SPEC-0015 | Mobile Flutter — histórico de cotações de ativos     | draft    |
+| SPEC-0016 | Seção de notícias relacionadas na home pública e ativos | draft    |
+| SPEC-0017 | Seção de ferramentas financeiras na home pública e cabeçalho | draft    |
+| SPEC-0018 | Seção de cursos gratuitos da B3                     | draft    |
 
 > Mantenha esta tabela ao adicionar specs.

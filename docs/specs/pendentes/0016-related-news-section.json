@@ -1,0 +1,163 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0016",
+  "title": "Seção de notícias relacionadas na home pública e ativos",
+  "status": "draft",
+  "type": "feature",
+  "created": "2026-06-14",
+  "updated": "2026-06-14",
+  "authors": ["Antigravity", "Nikolas"],
+  "summary": "Implementar uma API route de busca de notícias e componentes frontend para exibir notícias do mercado financeiro na home pública e notícias direcionadas na página de detalhes de ativos (/ativos/[ticker]).",
+  "motivation": "A atração e retenção de usuários dependem de um ecossistema informativo robusto. Apresentar notícias de mercado contextualizadas nas páginas de ativos (ex: PETR4) aumenta o engajamento e educa o investidor. O sistema de busca deve ser flexível para evoluir para motores mais robustos futuramente.",
+  "related": {
+    "prd": ["PRD §4", "PRD §5"],
+    "spec_doc": ["SPEC §5", "SPEC §6"],
+    "business_rules": ["RN-10", "RN-11"],
+    "adrs": ["ADR-0004"],
+    "depends_on": ["SPEC-0012", "SPEC-0013"]
+  },
+  "scope": {
+    "in_scope": [
+      "Nova API route GET /api/market/news?q= que recebe termos de busca (ticker, termo geral, classe de ativo).",
+      "Integração do backend Next.js com provedores externos de notícias públicas (RSS feeds da B3/CVM, Finnhub News, ou mock curado estruturado com suporte a busca local de alta fidelidade).",
+      "Cache de 15 minutos nas respostas de notícias no servidor Next.js para controle de limites.",
+      "Componente RelatedNewsSection no frontend web com design premium (cards responsivos com gradiente e hover animations).",
+      "Integração do componente na home pública (notícias gerais) e na página /ativos/[ticker] (filtrado pelo ticker/empresa)."
+    ],
+    "out_of_scope": [
+      "Sistema de envio de newsletter ou alertas de e-mail de notícias.",
+      "Funcionalidade de curtidas, compartilhamento social ou comentários nas notícias."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "A rota GET /api/market/news deve receber query param 'q' (opcional) e retornar lista de notícias normalizadas: id, title, summary, source, url, imageUrl, publishedAt.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Notícias de um ticker específico devem mostrar matérias associadas ao ticker ou ao seu setor/classe de ativos correspondente.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Cache local no servidor de 15 minutos por query term para evitar requisições excessivas a fontes de notícias.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Os cards de notícias no frontend devem usar layouts responsivos, exibir imagens de fallback se imageUrl falhar, e abrir a matéria original em nova aba.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "n/a",
+      "change": "none",
+      "fields": [],
+      "notes": "As notícias não precisam ser persistidas no banco de dados da aplicação, atuando sob cache em memória no servidor."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/news",
+      "auth": false,
+      "request": "query: q (string, ticker ou termo geral de busca)",
+      "response": "{ news: Array<{ id: string, title: string, summary: string, source: string, url: string, imageUrl: string, publishedAt: string }>, q?: string }",
+      "errors": [
+        "200 com array vazio se nenhuma notícia for encontrada"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuário acessa a home do portal",
+      "when": "a página é renderizada",
+      "then": "visualiza uma seção 'Notícias do Mercado' contendo uma lista de notícias gerais com títulos, imagens ilustrativas e fontes."
+    },
+    {
+      "id": "AC-02",
+      "given": "usuário acessa a página /ativos/PETR4",
+      "when": "a página carrega",
+      "then": "visualiza a seção de notícias contendo matérias específicas relacionadas à Petrobras ou ao setor de Petróleo e Gás."
+    },
+    {
+      "id": "AC-03",
+      "given": "o servidor de notícias falha ou excede timeout de 5 segundos",
+      "when": "a requisição é feita",
+      "then": "o backend serve notícias salvas sob cache ou um conjunto de notícias padrão (fallback) sem quebrar o carregamento da página principal."
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "GET /api/market/news: valida retorno correto e formatação do payload normalizado.",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "GET /api/market/news?q=PETR4: valida filtragem de notícias associadas ao termo pesquisado.",
+      "kind": "unit",
+      "covers": ["REQ-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "RelatedNewsSection Component: garante que renderiza os cards corretamente, exibe shimmers no carregamento e abre links em nova aba.",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-01"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Implementar o NewsAdapter e integração com RSS feeds ou APIs de notícias no backend.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar a API route GET /api/market/news/route.ts aplicando lógica de cache e fallback em caso de erros.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar os componentes: NewsCard.tsx e RelatedNewsSection.tsx em apps/web/src/components/market/.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Integrar a seção de notícias na home pública (apps/web/src/app/(public)/page.tsx) posicionada abaixo da MarketSection.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Integrar a seção de notícias na página pública de ativos /ativos/[ticker]/page.tsx.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Escrever testes unitários e de integração com MSW mockando as fontes de notícias.",
+      "target": "apps/web",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Limitações de cota ou limites de taxa (rate limits) em APIs de notícias externas. Mitigação: usar cache agressivo no servidor e base local de falback estático para garantir que a home sempre mostre conteúdo."
+  ],
+  "observability": [
+    "Logar erros de conexão com feeds de notícias: [news.service] error fetching from source=X.",
+    "Logar hits/misses no cache de busca de notícias."
+  ],
+  "rollback": "Remover a rota /api/market/news e os componentes de notícias da UI pública."
+}

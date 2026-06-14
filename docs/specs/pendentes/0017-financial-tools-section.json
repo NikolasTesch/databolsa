@@ -1,0 +1,167 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0017",
+  "title": "Seção de ferramentas financeiras na home pública e cabeçalho",
+  "status": "draft",
+  "type": "feature",
+  "created": "2026-06-14",
+  "updated": "2026-06-14",
+  "authors": ["Antigravity", "Nikolas"],
+  "summary": "Implementar atalhos na barra de busca e menu de ferramentas, criar a página pública de ferramentas (/ferramentas) e a seção correspondente na home pública com conversor de moedas (fiat), conversor de criptoativos e análise de múltiplos agregados de índices.",
+  "motivation": "A busca orgânica por conversores de câmbio (USD/BRL) e conversores de cripto é volumosa no Brasil. Trazer estas ferramentas utilitárias para dentro do DataBolsa atrai novos investidores e melhora a autoridade de SEO da marca, encaminhando o tráfego para a criação de conta.",
+  "related": {
+    "prd": ["PRD §4", "PRD §5"],
+    "spec_doc": ["SPEC §5", "SPEC §6"],
+    "business_rules": ["RN-10"],
+    "adrs": ["ADR-0004"],
+    "depends_on": ["SPEC-0012"]
+  },
+  "scope": {
+    "in_scope": [
+      "Adicionar item 'Ferramentas' na navegação do PublicHeader (e dropdown na SearchBar).",
+      "Criar página pública /ferramentas contendo os conversores e a análise de índices.",
+      "Criar o widget Conversor de Moedas consumindo as taxas de câmbio atuais da AwesomeAPI.",
+      "Criar o widget Conversor de Criptoativos consumindo dados de preço de cripto do CoinGecko.",
+      "Criar o widget de Análise de Índices exibindo múltiplos agregados históricos do IBOV e IFIX (como P/L médio histórico vs atual).",
+      "API Route GET /api/market/tools/convert para processar conversões no servidor com segurança."
+    ],
+    "out_of_scope": [
+      "Ferramentas de simulação de IR (Imposto de Renda) ou projeção de juros compostos avançadas nesta spec."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Incluir item de navegação 'Ferramentas' no menu principal do site e nos atalhos de busca rápida.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Conversor de moedas fiat deve suportar USD, EUR, GBP para BRL usando taxas em tempo de cache (5 min) da AwesomeAPI.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Conversor de criptomoedas deve converter de BTC, ETH, SOL para BRL/USD consumindo dados de preço do CoinGecko.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Widget de Análise de Índices deve mostrar dados fundamentalistas dos índices principais (ex: P/L do IBOV, Yield médio do IFIX) consumindo dados consolidados no servidor.",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Os cálculos matemáticos de conversão devem ser feitos no servidor via API para manter a precisão de dados e segurança das chaves.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "n/a",
+      "change": "none",
+      "fields": [],
+      "notes": "Funcionalidades estritamente stateless (cálculos e consultas de mercado sem persistência de estado do usuário)."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/tools/convert",
+      "auth": false,
+      "request": "query params: from (moeda de origem), to (moeda de destino), amount (quantidade)",
+      "response": "{ from, to, amount, rate, result, updatedTime }",
+      "errors": [
+        "400 se parâmetros forem inválidos ou moedas não suportadas"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuário acessa a home ou clica na busca",
+      "when": "interage com a navegação",
+      "then": "visualiza a opção de ir para a página de ferramentas ou rolar para a seção correspondente."
+    },
+    {
+      "id": "AC-02",
+      "given": "usuário digita um valor no Conversor de Moedas (ex: 150 USD)",
+      "when": "solicita conversão",
+      "then": "visualiza o resultado correspondente calculado em BRL instantaneamente, junto com a taxa e a hora de atualização."
+    },
+    {
+      "id": "AC-03",
+      "given": "usuário consulta a ferramenta de análise de índices",
+      "when": "seleciona IBOVESPA",
+      "then": "exibe o P/L médio atual (ex: 8.5x) comparado com a média histórica (ex: 10.2x) indicando se o índice está barato ou caro."
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "GET /api/market/tools/convert: valida conversões fiat/cripto corretas aplicando arredondamentos necessários.",
+      "kind": "unit",
+      "covers": ["REQ-02", "REQ-03", "REQ-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "CurrencyConverter Component: garante que a digitação e a troca de moedas atualiza o valor corretamente sem quebras de layout.",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "IndexAnalysis Widget: garante a renderização correta de múltiplos agregados e badges (Barato/Neutro/Caro).",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-03"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar a API route GET /api/market/tools/convert/route.ts consumindo AwesomeAPI e CoinGecko.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Adicionar item 'Ferramentas' na barra de busca (SearchBar.tsx) e no PublicHeader.tsx.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar widgets: CurrencyConverter.tsx, CryptoConverter.tsx e IndexAnalysisPanel.tsx em apps/web/src/components/market/.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Criar página /ferramentas com os novos componentes e adicionar link amigável.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Integrar a seção de Ferramentas (ToolsSection) na home principal.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Escrever testes de unidade e widgets para os conversores e múltiplos de índices.",
+      "target": "apps/web",
+      "done": false
+    }
+  ],
+  "risks": [
+    "AwesomeAPI/CoinGecko fora do ar ou com rate-limit. Mitigação: usar cotações cacheadas e fallback local de taxas aproximadas."
+  ],
+  "observability": [
+    "Logar erros de conexão de câmbio ou cripto com nível warn."
+  ],
+  "rollback": "Remover rota /ferramentas, a API /api/market/tools/convert e os links no menu."
+}

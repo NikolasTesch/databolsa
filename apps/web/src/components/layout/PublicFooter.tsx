@@ -60,6 +60,9 @@ export function PublicFooter() {
           <p className="text-xs text-content-muted text-center">
             &copy; {year} DataBolsa. Todos os direitos reservados.
           </p>
+          <p className="text-xs text-content-subtle text-center mt-2 max-w-3xl mx-auto leading-relaxed">
+            Aviso: O conteúdo apresentado neste site tem caráter meramente informativo e educacional, não constituindo recomendação, indicação, consulta ou conselho de investimento de qualquer natureza.
+          </p>
         </div>
       </div>
     </footer>

@@ -196,7 +196,8 @@
             "type": "array",
             "items": { "type": "string" },
             "description": "Erros esperados, p.ex. '422 venda maior que posição (RN-02)'."
-          }
+          },
+          "notes": { "type": "string", "description": "Notas sobre o endpoint." }
         }
       }
     },
