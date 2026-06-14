@@ -9,9 +9,8 @@ class AuthState {
 
   const AuthState.unknown() : status = AuthStatus.unknown, error = null;
   const AuthState.authenticated() : status = AuthStatus.authenticated, error = null;
-  const AuthState.unauthenticated({String? error})
-      : status = AuthStatus.unauthenticated,
-        error = error;
+  const AuthState.unauthenticated({this.error})
+      : status = AuthStatus.unauthenticated;
 
   bool get isAuthenticated => status == AuthStatus.authenticated;
   bool get isUnknown => status == AuthStatus.unknown;

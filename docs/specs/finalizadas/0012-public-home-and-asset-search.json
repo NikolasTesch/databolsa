@@ -308,7 +308,7 @@
   "data_model": [
     {
       "entity": "QuoteCache",
-      "change": "reuse",
+      "change": "none",
       "fields": [],
       "notes": "Reutilizado para cache de highlights e indices. Sem alteração no schema."
     }

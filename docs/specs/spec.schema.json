@@ -254,7 +254,8 @@
           "id": { "type": "string", "pattern": "^T-[0-9]{2}$" },
           "description": { "type": "string" },
           "target": { "type": "string", "description": "Pacote/app afetado, p.ex. 'packages/core'." },
-          "done": { "type": "boolean" }
+          "done": { "type": "boolean" },
+          "notes": { "type": "string", "description": "Notas específicas sobre esta tarefa." }
         }
       }
     },
@@ -271,6 +272,18 @@
     "rollback": {
       "type": "string",
       "description": "Como reverter com segurança se necessário."
+    },
+    "layout": {
+      "type": "object",
+      "description": "Descreve a estrutura visual de cada seção e seus componentes."
+    },
+    "components": {
+      "type": "object",
+      "description": "Lista de novos componentes a criar e componentes reutilizados."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notas adicionais de implementação."
     }
   }
 }

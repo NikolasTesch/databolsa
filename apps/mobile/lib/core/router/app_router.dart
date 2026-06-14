@@ -67,6 +67,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 /// Listenable que notifica o GoRouter quando o AuthState muda.
 class _AuthNotifierListenable extends ChangeNotifier {
   _AuthNotifierListenable(Ref ref) {
-    ref.listen(authControllerProvider, (_, __) => notifyListeners());
+    ref.listen(authControllerProvider, (_, _) => notifyListeners());
   }
 }

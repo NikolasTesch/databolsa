@@ -18,7 +18,7 @@ class StaleBadge extends StatelessWidget {
           vertical: 2,
         ),
         decoration: BoxDecoration(
-          color: scheme.stale.withOpacity(0.15),
+          color: scheme.stale.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(AppRadius.full),
           border: Border.all(color: scheme.stale, width: 1),
         ),

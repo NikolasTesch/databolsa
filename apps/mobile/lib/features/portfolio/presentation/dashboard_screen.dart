@@ -93,8 +93,7 @@ class DashboardScreen extends ConsumerWidget {
                 )
               else
                 ...portfolio.positions
-                    .map((p) => PositionCard(position: p))
-                    .toList(),
+                    .map((p) => PositionCard(position: p)),
             ],
           ),
         ),

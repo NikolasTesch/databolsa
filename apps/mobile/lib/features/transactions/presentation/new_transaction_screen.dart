@@ -217,7 +217,7 @@ class _NewTransactionScreenState
                     padding: const EdgeInsets.all(AppSpacing.s3),
                     margin: const EdgeInsets.only(bottom: AppSpacing.s4),
                     decoration: BoxDecoration(
-                      color: scheme.danger.withOpacity(0.08),
+                      color: scheme.danger.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(AppRadius.md),
                       border: Border.all(color: scheme.danger),
                     ),
@@ -265,10 +265,10 @@ class _TypeButton extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.s3),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.12) : Colors.transparent,
+          color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color: selected ? color : Colors.grey.withOpacity(0.3),
+            color: selected ? color : Colors.grey.withValues(alpha: 0.3),
             width: selected ? 2 : 1,
           ),
         ),
