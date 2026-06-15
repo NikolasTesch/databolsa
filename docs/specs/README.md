@@ -98,6 +98,10 @@ e idealmente um check de CI.
 | SPEC-0012 | Home pública com busca de ativos e destaques de mercado           | verified |
 | SPEC-0013 | Página de análise individual de ativo (/ativos/[ticker])          | verified |
 | SPEC-0014 | Adicionar ativo pesquisado à carteira a partir da análise         | verified |
+| SPEC-0015 | Mobile Flutter — histórico de cotações de ativos                  | implemented |
+| SPEC-0016 | Seção de notícias relacionadas na home pública e ativos           | implemented |
+| SPEC-0017 | Seção de ferramentas financeiras na home pública e cabeçalho      | implemented |
+| SPEC-0018 | Seção de cursos gratuitos da B3                                    | implemented |
 
 ### Em andamento (`em-andamento/`)
 
@@ -105,11 +109,6 @@ _Nenhuma spec em andamento no momento._
 
 ### Pendentes (`pendentes/`)
 
-| ID        | Título                                              | Status   |
-| --------- | --------------------------------------------------- | -------- |
-| SPEC-0015 | Mobile Flutter — histórico de cotações de ativos     | draft    |
-| SPEC-0016 | Seção de notícias relacionadas na home pública e ativos | draft    |
-| SPEC-0017 | Seção de ferramentas financeiras na home pública e cabeçalho | draft    |
-| SPEC-0018 | Seção de cursos gratuitos da B3                     | draft    |
+_Nenhuma spec pendente no momento._
 
 > Mantenha esta tabela ao adicionar specs.

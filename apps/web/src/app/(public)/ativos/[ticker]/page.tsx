@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import type { AssetClass } from '@/types/api';
 import { inferAssetClassForFundamentals, getFundamentals } from '@/lib/fundamentals/fundamentals.service';
@@ -5,6 +6,7 @@ import { AssetHeader } from '@/components/market/AssetHeader';
 import { IndicatorGrid } from '@/components/market/IndicatorGrid';
 import { PriceHistorySection } from '@/components/market/PriceHistorySection';
 import { DividendsTable } from '@/components/market/DividendsTable';
+import { RelatedNewsSection } from '@/components/market/RelatedNewsSection';
 import { Decimal } from 'decimal.js';
 import { DataSource } from '@prisma/client';
 import { fetchCachedMarketValue } from '@/lib/market/market-cache';
@@ -188,6 +190,10 @@ export default async function AssetAnalysisPage({ params, searchParams }: PagePr
       <PriceHistorySection ticker={ticker} />
 
       <DividendsTable dividends={dividends} assetClass={assetClass} />
+
+      <Suspense fallback={null}>
+        <RelatedNewsSection ticker={ticker} limit={6} />
+      </Suspense>
     </>
   );
 }

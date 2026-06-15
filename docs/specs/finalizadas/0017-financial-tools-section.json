@@ -1,0 +1,191 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0017",
+  "title": "Seção de ferramentas financeiras na home pública e cabeçalho",
+  "status": "in_progress",
+  "type": "feature",
+  "created": "2026-06-14",
+  "updated": "2026-06-14",
+  "authors": ["Antigravity", "Nikolas"],
+  "summary": "Implementar atalhos na barra de busca e menu de ferramentas, criar a página pública de ferramentas (/ferramentas) e a seção correspondente na home pública com conversor de moedas (fiat), conversor de criptoativos e painel de análise de índices com P/L médio do IBOV e dividend yield do IFIX.",
+  "motivation": "A busca orgânica por conversores de câmbio (USD/BRL) e conversores de cripto é volumosa no Brasil. Trazer estas ferramentas utilitárias para dentro do DataBolsa atrai novos investidores e melhora a autoridade de SEO da marca, encaminhando o tráfego para a criação de conta.",
+  "related": {
+    "prd": ["PRD §4", "PRD §5"],
+    "spec_doc": ["SPEC §5", "SPEC §6"],
+    "business_rules": ["RN-10"],
+    "adrs": ["ADR-0004"],
+    "depends_on": ["SPEC-0012"]
+  },
+  "scope": {
+    "in_scope": [
+      "Adicionar item 'Ferramentas' na navegação do PublicHeader e nos QuickChips/SearchBar.",
+      "Criar página pública /ferramentas contendo os conversores e o painel de índices.",
+      "Criar o widget Conversor de Moedas consumindo as taxas de câmbio atuais da AwesomeAPI (USD, EUR, GBP → BRL). Cálculo feito server-side via API route.",
+      "Criar o widget Conversor de Criptoativos consumindo dados de preço de cripto do CoinGecko (BTC, ETH, SOL → BRL/USD). Cálculo feito server-side via API route.",
+      "Criar o painel IndexAnalysisPanel exibindo P/L atual do IBOV e Dividend Yield atual do IFIX obtidos da brapi fundamentals, comparados com médias históricas curadas localmente (P/L histórico IBOV ≈ 10–12×; DY histórico IFIX ≈ 7–9%). Dados históricos são constantes atualizadas manualmente, com campo lastUpdated.",
+      "API Route GET /api/market/tools/convert para processar conversões no servidor. Fiat e crypto são roteados internamente pelo parâmetro 'type' (fiat|crypto) ou inferidos pelo par from/to."
+    ],
+    "out_of_scope": [
+      "Ferramentas de simulação de IR (Imposto de Renda) ou projeção de juros compostos avançadas nesta spec.",
+      "Dados fundamentalistas em tempo real de P/L histórico de índices via API externa — médias históricas são curadas localmente e atualizadas manualmente."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Incluir item de navegação 'Ferramentas' no menu principal do PublicHeader e nos QuickChips/atalhos da SearchBar.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Conversor de moedas fiat deve suportar USD, EUR, GBP para BRL usando taxas em tempo real com cache de 5 min da AwesomeAPI.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Conversor de criptomoedas deve converter de BTC, ETH, SOL para BRL/USD consumindo dados de preço do CoinGecko com cache de 5 min.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Widget IndexAnalysisPanel deve mostrar P/L atual do IBOV e DY atual do IFIX (obtidos via brapi) comparados com a média histórica curada localmente, exibindo badge 'Barato', 'Neutro' ou 'Caro' com base na posição relativa à média histórica.",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Todos os cálculos de conversão devem ser feitos no servidor via API route /api/market/tools/convert para manter a segurança das chaves de API e a precisão decimal.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "n/a",
+      "change": "none",
+      "fields": [],
+      "notes": "Funcionalidades stateless. Médias históricas de índices são constantes em apps/web/src/lib/market/index-benchmarks.ts com campo lastUpdated. Nenhuma persistência em banco."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/tools/convert",
+      "auth": false,
+      "request": "query params: from (ex: 'USD', 'BTC'), to (ex: 'BRL', 'USD'), amount (number > 0). O servidor infere o tipo (fiat vs crypto) com base nos valores de from/to: se from estiver em {BTC,ETH,SOL,BNB,ADA,...} → rota CoinGecko; caso contrário → rota AwesomeAPI.",
+      "response": "{ from, to, amount, rate, result, updatedAt, stale }",
+      "errors": [
+        "400 se parâmetros forem inválidos, ausentes, amount <= 0, ou par from/to não suportado",
+        "400 se amount não for um número válido"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuário acessa a home ou o menu do site",
+      "when": "visualiza o PublicHeader",
+      "then": "encontra o item 'Ferramentas' na navegação principal que leva à página /ferramentas."
+    },
+    {
+      "id": "AC-02",
+      "given": "usuário digita 150 no Conversor de Moedas com par USD → BRL",
+      "when": "clica em 'Converter'",
+      "then": "visualiza o resultado calculado em BRL com a taxa e a hora de atualização; sem erros de arredondamento (decimal preciso)."
+    },
+    {
+      "id": "AC-03",
+      "given": "usuário consulta o painel de análise do IBOVESPA",
+      "when": "os dados carregam",
+      "then": "exibe o P/L atual do IBOV e o badge comparativo ('Barato'/'Neutro'/'Caro') com base na média histórica curada."
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "GET /api/market/tools/convert?from=USD&to=BRL&amount=100: valida conversão fiat correta com AwesomeAPI mockada.",
+      "kind": "unit",
+      "covers": ["REQ-02", "REQ-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "GET /api/market/tools/convert?from=BTC&to=BRL&amount=0.5: valida conversão crypto correta com CoinGecko mockado.",
+      "kind": "unit",
+      "covers": ["REQ-03", "REQ-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "GET /api/market/tools/convert com inputs inválidos: amount=0, amount=-10, from='XYZ', campos ausentes — valida que todos retornam 400.",
+      "kind": "unit",
+      "covers": ["REQ-05"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "CurrencyConverter Component: garante que a digitação e a troca de moedas atualiza o valor corretamente sem quebras de layout.",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-05",
+      "description": "IndexAnalysisPanel Widget: garante a renderização correta dos badges (Barato/Neutro/Caro) com dados mockados de P/L e DY.",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-03"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar constante de benchmarks históricos em apps/web/src/lib/market/index-benchmarks.ts com P/L histórico do IBOV e DY histórico do IFIX, campo lastUpdated e faixas de classificação (Barato/Neutro/Caro).",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar a API route GET /api/market/tools/convert/route.ts. Inferir tipo pelo from/to: se from ∈ conjunto de tickers crypto conhecidos → CoinGecko; caso contrário → AwesomeAPI. Cache de cotação de 5 min em memória. Validar amount > 0.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Adicionar item 'Ferramentas' no PublicHeader.tsx e como QuickChip/atalho na SearchBar.tsx apontando para /ferramentas.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Criar widgets: CurrencyConverter.tsx, CryptoConverter.tsx e IndexAnalysisPanel.tsx em apps/web/src/components/market/.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Criar página apps/web/src/app/(public)/ferramentas/page.tsx com os três widgets e metadata de SEO.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Criar componente ToolsSection.tsx e integrá-lo na home pública (apps/web/src/app/(public)/page.tsx) após a MarketSection.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-07",
+      "description": "Escrever testes unitários cobrindo TC-01, TC-02, TC-03, TC-04 e TC-05.",
+      "target": "apps/web",
+      "done": false
+    }
+  ],
+  "risks": [
+    "AwesomeAPI/CoinGecko fora do ar ou com rate-limit. Mitigação: usar cotações cacheadas (5 min em memória) e retornar stale:true em vez de erro.",
+    "Dados de P/L/DY atual do IBOV/IFIX via brapi podem ser indisponíveis. Mitigação: IndexAnalysisPanel exibe apenas as médias históricas curadas com aviso de 'dados indisponíveis' sem quebrar o widget."
+  ],
+  "observability": [
+    "Logar erros de conexão com AwesomeAPI ou CoinGecko: [tools.convert] error fetching rate for {pair}: {error}.",
+    "Logar cache hits/misses das taxas de câmbio: [tools.convert] cache {hit|miss} for pair={from}/{to}."
+  ],
+  "rollback": "Remover rota /ferramentas, a API /api/market/tools/convert, os componentes de ferramentas e os links no PublicHeader/SearchBar."
+}

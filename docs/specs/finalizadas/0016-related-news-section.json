@@ -1,0 +1,185 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0016",
+  "title": "Seção de notícias relacionadas na home pública e ativos",
+  "status": "in_progress",
+  "type": "feature",
+  "created": "2026-06-14",
+  "updated": "2026-06-14",
+  "authors": ["Antigravity", "Nikolas"],
+  "summary": "Implementar uma API route de busca de notícias e componentes frontend para exibir notícias do mercado financeiro na home pública e notícias direcionadas na página de detalhes de ativos (/ativos/[ticker]).",
+  "motivation": "A atração e retenção de usuários dependem de um ecossistema informativo robusto. Apresentar notícias de mercado contextualizadas nas páginas de ativos (ex: PETR4) aumenta o engajamento e educa o investidor. O sistema de busca deve ser flexível para evoluir para motores mais robustos futuramente.",
+  "related": {
+    "prd": ["PRD §4", "PRD §5"],
+    "spec_doc": ["SPEC §5", "SPEC §6"],
+    "business_rules": ["RN-10", "RN-11"],
+    "adrs": ["ADR-0004"],
+    "depends_on": ["SPEC-0012", "SPEC-0013"]
+  },
+  "scope": {
+    "in_scope": [
+      "Nova API route GET /api/market/news?q=&limit= que recebe termos de busca (ticker, termo geral, classe de ativo) e limita o número de itens retornados (padrão: 10, máx: 30).",
+      "Provedor primário: Finnhub News API (/v1/company-news para ticker específico; /v1/news?category=general para notícias gerais) — já integrado no projeto via FINNHUB_TOKEN. Fallback: lista estática curada de notícias financeiras gerais embarcada no servidor.",
+      "Cache em memória no servidor (Map<string, {data, expiresAt}>) com TTL de 15 minutos por query key — independente do QuoteCache do Prisma, pois notícias não são persistidas em banco.",
+      "Componente RelatedNewsSection no frontend web com design premium (cards responsivos com gradiente e hover animations).",
+      "Integração do componente na home pública (notícias gerais) e na página /ativos/[ticker] (filtrado pelo ticker/empresa)."
+    ],
+    "out_of_scope": [
+      "Sistema de envio de newsletter ou alertas de e-mail de notícias.",
+      "Funcionalidade de curtidas, compartilhamento social ou comentários nas notícias.",
+      "Integração de notícias no app mobile Flutter (escopo de spec futura).",
+      "Persistência de notícias no banco de dados PostgreSQL."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "A rota GET /api/market/news deve receber query param 'q' (opcional) e 'limit' (opcional, padrão 10, máx 30) e retornar lista de notícias normalizadas: id, title, summary, source, url, imageUrl, publishedAt.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Notícias de um ticker específico devem mostrar matérias associadas ao ticker ou ao seu setor/classe de ativos correspondente, usando a Finnhub Company News API.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Cache em memória no servidor com TTL de 15 minutos por query key. Em caso de falha do provedor primário (Finnhub), servir a lista estática de fallback sem retornar erro 5xx.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Os cards de notícias no frontend devem usar layouts responsivos, exibir imagem de placeholder SVG se imageUrl estiver ausente ou falhar ao carregar (onError no elemento img), e abrir a matéria original em nova aba com rel='noopener noreferrer'.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "n/a",
+      "change": "none",
+      "fields": [],
+      "notes": "As notícias não são persistidas no banco de dados. O cache usa um Map singleton no processo Node.js com a estrutura: Map<queryKey, { articles: NewsArticle[], expiresAt: number }>. queryKey = 'news:{q|general}'."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/news",
+      "auth": false,
+      "request": "query: q (string opcional — ticker ou termo de busca), limit (number opcional, padrão 10, máx 30)",
+      "response": "{ news: Array<{ id: string, title: string, summary: string, source: string, url: string, imageUrl: string | null, publishedAt: string }>, q?: string, cached: boolean }",
+      "errors": [
+        "200 com array vazio se nenhuma notícia for encontrada",
+        "400 se limit for inválido (não numérico ou > 30)"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuário acessa a home do portal",
+      "when": "a página é renderizada",
+      "then": "visualiza uma seção 'Notícias do Mercado' contendo uma lista de notícias gerais com títulos, imagens ilustrativas e fontes."
+    },
+    {
+      "id": "AC-02",
+      "given": "usuário acessa a página /ativos/PETR4",
+      "when": "a página carrega",
+      "then": "visualiza a seção de notícias contendo matérias específicas relacionadas à Petrobras ou ao setor de Petróleo e Gás."
+    },
+    {
+      "id": "AC-03",
+      "given": "o servidor Finnhub falha ou excede timeout de 5 segundos",
+      "when": "a requisição GET /api/market/news é feita",
+      "then": "o backend serve a lista estática de fallback com status 200 sem quebrar o carregamento da página."
+    },
+    {
+      "id": "AC-04",
+      "given": "uma notícia não possui imageUrl válida",
+      "when": "o card é renderizado",
+      "then": "exibe um placeholder SVG/ícone padrão no lugar da imagem sem quebrar o layout."
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "GET /api/market/news: valida retorno correto e formatação do payload normalizado com Finnhub mockado.",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "GET /api/market/news?q=PETR4: valida filtragem de notícias associadas ao termo pesquisado com Finnhub mockado.",
+      "kind": "unit",
+      "covers": ["REQ-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "RelatedNewsSection Component: garante que renderiza os cards corretamente com dados injetados via props, exibe shimmers no carregamento e abre links em nova aba.",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-01", "AC-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "GET /api/market/news com Finnhub simulando erro (throw): valida que o handler retorna 200 com a lista de fallback estática, não 5xx.",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-03"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Implementar newsCache (Map singleton) e NewsAdapter com métodos fetchGeneralNews() e fetchTickerNews(ticker) integrando Finnhub News API em apps/web/src/lib/news/news.service.ts.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar lista estática de fallback em apps/web/src/lib/news/news-fallback.ts com ao menos 6 artigos financeiros curados.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar a API route GET /api/market/news/route.ts aplicando lógica de cache em memória (15 min TTL) e fallback estático em caso de erros.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Criar os componentes NewsCard.tsx e RelatedNewsSection.tsx em apps/web/src/components/market/.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Integrar a seção de notícias na home pública (apps/web/src/app/(public)/page.tsx) posicionada abaixo da MarketSection.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Integrar a seção de notícias na página pública de ativos /ativos/[ticker]/page.tsx.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-07",
+      "description": "Escrever testes unitários com MSW mockando Finnhub cobrindo TC-01, TC-02, TC-03 e TC-04.",
+      "target": "apps/web",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Limitações de cota ou rate limits na Finnhub News API. Mitigação: cache agressivo de 15 min no servidor e fallback estático garantem que a home sempre mostre conteúdo."
+  ],
+  "observability": [
+    "Logar erros de conexão com Finnhub: [news.service] error fetching from Finnhub: {error}. Servindo fallback.",
+    "Logar hits e misses no cache de notícias: [news.service] cache {hit|miss} for key={queryKey}."
+  ],
+  "rollback": "Remover a rota /api/market/news, o newsCache singleton e os componentes de notícias da UI pública."
+}

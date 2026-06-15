@@ -33,6 +33,18 @@ export function PublicHeader({ isAuthenticated }: PublicHeaderProps) {
                 {link.label}
               </Link>
             ))}
+            <Link
+              href="/ferramentas"
+              className="px-3 py-1.5 text-sm font-medium text-content-muted hover:text-content rounded transition-colors"
+            >
+              Ferramentas
+            </Link>
+            <Link
+              href="/#cursos"
+              className="px-3 py-1.5 text-sm font-medium text-content-muted hover:text-content rounded transition-colors"
+            >
+              Cursos
+            </Link>
           </nav>
 
           <div className="hidden md:flex flex-1 lg:flex-none lg:w-64">

@@ -6,6 +6,7 @@ import 'core/api/dio_client.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/domain/auth_controller.dart';
 import 'features/assets/data/assets_repository.dart';
+import 'features/assets/data/market_repository.dart';
 import 'features/portfolio/data/portfolio_repository.dart';
 import 'features/portfolio/domain/dashboard_controller.dart';
 import 'features/transactions/presentation/transaction_repository.dart';
@@ -27,6 +28,9 @@ void main() async {
     dio: createDio(), // Dio sem interceptor de auth — para login/register/refresh
     storage: storage,
   );
+
+  // Dio público para endpoints de mercado sem auth (ADR-0006)
+  final publicDio = createDio();
 
   // Dio autenticado com AuthInterceptor que delega ao authRepo
   final authedDio = createDio(
@@ -56,6 +60,9 @@ void main() async {
         ),
         transactionRepositoryProvider.overrideWithValue(
           TransactionRepository(dio: authedDio),
+        ),
+        marketRepositoryProvider.overrideWithValue(
+          MarketRepository(dio: publicDio),
         ),
       ],
       child: const _Bootstrap(),

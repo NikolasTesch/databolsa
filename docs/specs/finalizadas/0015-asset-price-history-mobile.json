@@ -1,0 +1,195 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0015",
+  "title": "Mobile Flutter — histórico de cotações de ativos",
+  "status": "in_progress",
+  "type": "feature",
+  "created": "2026-06-14",
+  "updated": "2026-06-14",
+  "authors": ["Antigravity", "Nikolas"],
+  "summary": "Introduzir a visualização de cotação atualizada, variação % do dia e gráfico de linha histórico (1m, 6m, 1y, 5y) usando fl_chart na tela de detalhes de ativo do app móvel.",
+  "motivation": "No momento, o aplicativo móvel apenas mostra a lista de transações de um ativo na tela de detalhes. O usuário não consegue visualizar o preço atual do ativo, a variação do dia ou o comportamento histórico do preço, limitando a utilidade analítica do aplicativo complementar.",
+  "related": {
+    "prd": ["PRD §3", "PRD §4", "PRD §5"],
+    "spec_doc": ["SPEC §1", "SPEC §5"],
+    "business_rules": ["RN-10"],
+    "adrs": ["ADR-0002", "ADR-0006"],
+    "depends_on": ["SPEC-0009", "SPEC-0013"]
+  },
+  "scope": {
+    "in_scope": [
+      "Integração do app Flutter com os endpoints públicos existentes /api/market/[ticker]/quote e /api/market/[ticker]/history (ambos verificados no código em apps/web/src/app/api/market/[ticker]/).",
+      "Criação do componente AssetDetailHeader exibindo preço atual, moeda, variação do dia (com TrendBadge mobile) e StaleBadge se a cotação for stale.",
+      "Criação do componente PriceHistoryChartMobile usando a biblioteca fl_chart para plotar o histórico, com subsampling para ranges longos (5y: 1 ponto/semana; 1y: 1 ponto/3 dias).",
+      "Seletor de período (1m, 6m, 1y, 5y) controlando o parâmetro range na chamada da API — usar os valores em inglês minúsculo conforme o contrato do endpoint.",
+      "Tratamento de estados de carregamento (shimmers), erros de rede e histórico vazio — exibir placeholder informativo sem quebrar o app."
+    ],
+    "out_of_scope": [
+      "Gráficos de análise técnica avançados (velas/candlesticks, médias móveis).",
+      "Gráfico de histórico consolidado de toda a carteira.",
+      "Compra/venda direta por dentro do gráfico (apenas visualização analítica)."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Exibir a cotação atualizada do ativo e sua variação percentual diária na tela de detalhes de ativo.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Se a resposta do servidor retornar stale: true, exibir o StaleBadge âmbar indicando dados desatualizados (RN-10).",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Renderizar um gráfico de linha do histórico de preços do ativo usando fl_chart no Flutter.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Fornecer seletor de períodos (1m, 6m, 1y, 5y) que atualiza o gráfico buscando dados com o range correspondente. Os valores passados à API devem ser em inglês minúsculo: '1m', '6m', '1y', '5y'.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Tratamento adequado de ausência de dados de cotação histórica (série vazia) ou falha de rede — mostrar placeholder ou mensagem amigável sem quebrar o app. Divisão por zero em cálculos de variação deve ser tratada retornando null/zero, nunca jogando exceção.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "n/a",
+      "change": "none",
+      "fields": [],
+      "notes": "Cliente puro. Os dados de cotação e histórico são consumidos diretamente da API de mercado existente. Não há persistência local."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/[ticker]/quote",
+      "auth": false,
+      "request": "ticker no path",
+      "response": "{ ticker, name, assetClass, price, currency, priceInBrl, changePercent, changeValue, stale, asOf }",
+      "notes": "Endpoint existente — implementado em apps/web/src/app/api/market/[ticker]/quote/route.ts."
+    },
+    {
+      "method": "GET",
+      "path": "/api/market/[ticker]/history",
+      "auth": false,
+      "request": "ticker no path; query param: range ('1m'|'6m'|'1y'|'5y') — padrão: '1y'. Valores em inglês minúsculo conforme validação no backend.",
+      "response": "{ ticker, range, series: Array<{ date: string, close: string }>, stale?: boolean }",
+      "notes": "Endpoint existente — implementado em apps/web/src/app/api/market/[ticker]/history/route.ts. Retorna série vazia e stale:true em caso de falha."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuário abre a tela de detalhe de PETR4 no app mobile",
+      "when": "a tela carrega",
+      "then": "exibe o preço atual R$ 38,50 (+1,20%) no topo da tela com cor verde para lucro ou vermelho para prejuízo."
+    },
+    {
+      "id": "AC-02",
+      "given": "o servidor está offline ou sem conexão e a cotação está em cache expirado",
+      "when": "a tela carrega",
+      "then": "o app exibe a cotação antiga com o StaleBadge âmbar e a mensagem de cotação desatualizada."
+    },
+    {
+      "id": "AC-03",
+      "given": "o usuário visualiza o gráfico de histórico",
+      "when": "seleciona o período '6m'",
+      "then": "o gráfico mostra uma animação suave e reconstrói a linha com os pontos correspondentes aos últimos 6 meses de preço de fechamento."
+    },
+    {
+      "id": "AC-04",
+      "given": "o endpoint de histórico retorna série vazia (ex: ativo recém-listado ou falha de API)",
+      "when": "a tela renderiza o gráfico",
+      "then": "exibe um placeholder 'Histórico indisponível' sem lançar exceção ou mostrar tela de erro."
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Unit: AssetQuoteModel mapping — garante parsing correto dos valores decimais, changePercent e stale da resposta da API mockada.",
+      "kind": "unit",
+      "covers": ["REQ-01", "REQ-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "Widget: AssetDetailHeader — verifica se exibe valores de cotação, variação colorida e StaleBadge condicionalmente.",
+      "kind": "unit",
+      "covers": ["REQ-01", "REQ-02", "AC-01", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "Widget: PriceHistoryChartMobile — garante que os pontos do fl_chart são plotados e que o toque (tooltip) mostra data/valor formatados.",
+      "kind": "unit",
+      "covers": ["REQ-03", "REQ-04", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "Widget: PriceHistoryChartMobile com série vazia — garante que o widget renderiza o placeholder sem exceção quando series: [] é recebido.",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-04"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar modelos de domínio AssetQuote (ticker, name, price Decimal, changePercent String?, stale bool, currency String) e AssetHistorySeries (ticker, range, series List<PricePoint>) em lib/features/assets/domain/asset_models.dart.",
+      "target": "apps/mobile",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar IMarketRepository e MarketRepository separados (não em IAssetsRepository) com métodos fetchQuote(String ticker) e fetchHistory(String ticker, String range), usando instância Dio pública criada via createDio() sem callbacks de auth (ADR-0005). Providers Riverpod: marketRepositoryProvider, assetQuoteProvider (family<AssetQuote, String>), assetHistoryProvider (family por record Dart 3). Override de marketRepositoryProvider em main.dart com publicDio. Valores válidos de range: '1m', '6m', '1y', '5y'.",
+      "target": "apps/mobile",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar ou reutilizar widget TrendBadge em lib/shared/widgets/ — exibe variação % com cor verde/vermelho e ícone de seta.",
+      "target": "apps/mobile",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Criar componente PriceHistoryChartMobile em lib/features/assets/presentation/widgets/ usando fl_chart. Aplicar subsampling antes de entregar pontos ao fl_chart: range 5y → 1 ponto/semana (≈260 pts), range 1y → 1 ponto/3 dias (≈120 pts), ranges menores sem subsampling. Renderizar placeholder quando series estiver vazio.",
+      "target": "apps/mobile",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Criar componente AssetDetailHeader em lib/features/assets/presentation/widgets/ — exibe preço atual, currency, TrendBadge e StaleBadge condicional.",
+      "target": "apps/mobile",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Atualizar AssetDetailScreen para integrar com os novos Providers de cotação e histórico de preços. Adicionar seletor de período (1m/6m/1y/5y) acima do gráfico.",
+      "target": "apps/mobile",
+      "done": false
+    },
+    {
+      "id": "T-07",
+      "description": "Adicionar testes unitários e de widgets cobrindo TC-01, TC-02, TC-03 e TC-04 na pasta test/.",
+      "target": "apps/mobile",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Pontos excessivos de dados históricos (5 anos de cotações diárias) podem causar lentidão na renderização do fl_chart. Mitigação: subsampling implementado em T-04 antes de passar dados ao widget."
+  ],
+  "observability": [
+    "Logar erros de rede no repositório Flutter: [AssetsRepository] fetchQuote error for {ticker}: {error}.",
+    "Logar quando histórico retornar série vazia: [PriceHistoryChartMobile] empty series for {ticker}/{range}."
+  ],
+  "rollback": "Reverter as modificações em asset_detail_screen.dart e remover novos widgets/modelos de assets."
+}
