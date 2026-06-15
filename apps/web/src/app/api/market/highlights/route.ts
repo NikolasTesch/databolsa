@@ -80,20 +80,22 @@ async function getHighlightsForB3(
 ): Promise<HighlightItem[]> {
   const results = await Promise.allSettled(
     tickers.map(async (ticker) => {
-      let changePercent: string | null = null;
-      let name = ticker;
       const cached = await fetchCachedMarketValue(
         ticker,
         DataSource.BRAPI,
         5 * 60 * 1000,
         async () => {
           const r = await fetchBrapiQuote(ticker);
-          changePercent = r.changePercent;
-          name = r.name;
-          return { price: r.price, currency: r.currency };
+          return {
+            price: r.price,
+            currency: r.currency,
+            name: r.name,
+            changePercent: r.changePercent,
+            changeValue: null,
+          };
         },
       );
-      return { ticker, name, assetClass, cached, changePercent };
+      return { ticker, name: cached?.name ?? ticker, assetClass, cached, changePercent: cached?.changePercent ?? null };
     }),
   );
 
@@ -119,7 +121,6 @@ async function getHighlightsForCrypto(coinIds: string[]): Promise<HighlightItem[
 
     for (const coinId of coinIds) {
       const ticker = CRYPTO_ID_TO_TICKER[coinId] ?? coinId.toUpperCase();
-      let changePercent: string | null = null;
 
       const cached = await fetchCachedMarketValue(
         ticker,
@@ -128,18 +129,23 @@ async function getHighlightsForCrypto(coinIds: string[]): Promise<HighlightItem[
         async () => {
           const d = liveData[coinId];
           if (!d) throw new Error(`No CoinGecko data for ${coinId}`);
-          changePercent = d.change;
-          return { price: d.price, currency: d.currency };
+          return {
+            price: d.price,
+            currency: d.currency,
+            name: CRYPTO_ID_TO_NAME[coinId] ?? ticker,
+            changePercent: d.change,
+            changeValue: null,
+          };
         },
       );
 
       if (cached) {
         items.push({
           ticker,
-          name: CRYPTO_ID_TO_NAME[coinId] ?? ticker,
+          name: cached.name,
           assetClass: 'CRYPTO',
           price: `R$ ${cached.price.toFixed(2)}`,
-          changePercent: changePercent ?? '0',
+          changePercent: cached.changePercent ?? '0',
           stale: cached.isStale,
         });
       }
@@ -155,28 +161,32 @@ async function getHighlightsForCrypto(coinIds: string[]): Promise<HighlightItem[
 async function getHighlightsForUS(tickers: string[]): Promise<HighlightItem[]> {
   const results = await Promise.allSettled(
     tickers.map(async (ticker) => {
-      let changePercent: string | null = null;
       const cached = await fetchCachedMarketValue(
         ticker,
         DataSource.FINNHUB,
         5 * 60 * 1000,
         async () => {
           const r = await fetchFinnhubQuote(ticker);
-          changePercent = r.changePercent;
-          return { price: r.price, currency: r.currency };
+          return {
+            price: r.price,
+            currency: r.currency,
+            name: ticker,
+            changePercent: r.changePercent,
+            changeValue: null,
+          };
         },
       );
-      return { ticker, cached, changePercent };
+      return { ticker, cached, changePercent: cached?.changePercent ?? null, name: cached?.name ?? ticker };
     }),
   );
 
   return results
     .filter((r) => r.status === 'fulfilled' && r.value.cached !== null)
     .map((r) => {
-      const v = (r as PromiseFulfilledResult<{ ticker: string; cached: { price: Decimal; isStale: boolean } | null; changePercent: string | null }>).value;
+      const v = (r as PromiseFulfilledResult<{ ticker: string; cached: { price: Decimal; isStale: boolean } | null; changePercent: string | null; name: string }>).value;
       return {
         ticker: v.ticker,
-        name: v.ticker,
+        name: v.name,
         assetClass: 'STOCK_US' as AssetClass,
         price: `US$ ${v.cached!.price.toFixed(2)}`,
         changePercent: v.changePercent ?? '0',

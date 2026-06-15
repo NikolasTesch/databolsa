@@ -65,9 +65,13 @@ async function getQuoteData(ticker: string, assetClass: AssetClass) {
         if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
         const data = await res.json();
         if (!data[coinId]?.brl) throw new Error(`No price`);
-        changePercent = data[coinId].brl_24h_change != null ? String(data[coinId].brl_24h_change) : null;
-        name = CRYPTO_ID_TO_NAME[coinId] ?? ticker;
-        return { price: new Decimal(String(data[coinId].brl)), currency: 'BRL' };
+        return {
+          price: new Decimal(String(data[coinId].brl)),
+          currency: 'BRL',
+          name: CRYPTO_ID_TO_NAME[coinId] ?? ticker,
+          changePercent: data[coinId].brl_24h_change != null ? String(data[coinId].brl_24h_change) : null,
+          changeValue: null,
+        };
       }
 
       if (assetClass === 'STOCK_US') {
@@ -80,11 +84,13 @@ async function getQuoteData(ticker: string, assetClass: AssetClass) {
         const qData = await qRes.json();
         if (!qData?.c) throw new Error(`No price`);
         const pData = pRes.ok ? await pRes.json() : {};
-        changePercent = qData.dp != null ? String(qData.dp) : null;
-        changeValue = qData.d != null ? String(qData.d) : null;
-        name = pData?.name ?? ticker;
-        currency = 'USD';
-        return { price: new Decimal(String(qData.c)), currency: 'USD' };
+        return {
+          price: new Decimal(String(qData.c)),
+          currency: 'USD',
+          name: pData?.name ?? ticker,
+          changePercent: qData.dp != null ? String(qData.dp) : null,
+          changeValue: qData.d != null ? String(qData.d) : null,
+        };
       }
 
       // B3 (STOCK_BR, FII, ETF, BDR)
@@ -96,12 +102,22 @@ async function getQuoteData(ticker: string, assetClass: AssetClass) {
       const data = await res.json();
       const q = data?.results?.[0];
       if (!q?.regularMarketPrice) throw new Error(`No price`);
-      changePercent = q.regularMarketChangePercent != null ? String(q.regularMarketChangePercent) : null;
-      changeValue = q.regularMarketChange != null ? String(q.regularMarketChange) : null;
-      name = q.longName ?? q.shortName ?? ticker;
-      return { price: new Decimal(String(q.regularMarketPrice)), currency: 'BRL' };
+      return {
+        price: new Decimal(String(q.regularMarketPrice)),
+        currency: 'BRL',
+        name: q.longName ?? q.shortName ?? ticker,
+        changePercent: q.regularMarketChangePercent != null ? String(q.regularMarketChangePercent) : null,
+        changeValue: q.regularMarketChange != null ? String(q.regularMarketChange) : null,
+      };
     },
   );
+
+  if (cached) {
+    name = cached.name;
+    changePercent = cached.changePercent;
+    changeValue = cached.changeValue;
+    currency = cached.currency as 'BRL' | 'USD';
+  }
 
   return { cached, name, changePercent, changeValue, currency };
 }

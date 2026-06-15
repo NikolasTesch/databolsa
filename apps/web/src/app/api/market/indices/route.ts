@@ -69,25 +69,50 @@ export async function GET() {
   const [ibovResult, ifixResult, usdBrlResult, btcResult] = await Promise.all([
     fetchCachedMarketValue('IBOVESPA', DataSource.BRAPI, 5 * 60 * 1000, async () => {
       const r = await fetchBrapiIndex('^BVSP');
-      ibovChangePercent = r.changePercent;
-      return { price: r.price, currency: r.currency };
+      return {
+        price: r.price,
+        currency: r.currency,
+        name: 'IBOVESPA',
+        changePercent: r.changePercent,
+        changeValue: null,
+      };
     }),
     fetchCachedMarketValue('IFIX', DataSource.BRAPI, 5 * 60 * 1000, async () => {
       const r = await fetchBrapiIndex('IFIX');
-      ifixChangePercent = r.changePercent;
-      return { price: r.price, currency: r.currency };
+      return {
+        price: r.price,
+        currency: r.currency,
+        name: 'IFIX',
+        changePercent: r.changePercent,
+        changeValue: null,
+      };
     }),
     fetchCachedMarketValue('USDBRL', DataSource.BRAPI, 5 * 60 * 1000, async () => {
       const r = await fetchUsdBrl();
-      usdBrlChangePercent = r.changePercent;
-      return { price: r.price, currency: r.currency };
+      return {
+        price: r.price,
+        currency: r.currency,
+        name: 'USD/BRL',
+        changePercent: r.changePercent,
+        changeValue: null,
+      };
     }),
     fetchCachedMarketValue('BTC', DataSource.COINGECKO, 5 * 60 * 1000, async () => {
       const r = await fetchBtcBrl();
-      btcChangePercent = r.changePercent;
-      return { price: r.price, currency: r.currency };
+      return {
+        price: r.price,
+        currency: r.currency,
+        name: 'Bitcoin',
+        changePercent: r.changePercent,
+        changeValue: null,
+      };
     }),
   ]);
+
+  ibovChangePercent = ibovResult?.changePercent ?? null;
+  ifixChangePercent = ifixResult?.changePercent ?? null;
+  usdBrlChangePercent = usdBrlResult?.changePercent ?? null;
+  btcChangePercent = btcResult?.changePercent ?? null;
 
   if (!ibovResult && !ifixResult && !usdBrlResult && !btcResult) {
     return NextResponse.json(

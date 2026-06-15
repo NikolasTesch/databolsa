@@ -96,7 +96,7 @@ describe('GET /api/market/highlights (TC-05, TC-06)', () => {
       currency: 'BRL',
       fetched_at: new Date(Date.now() - 10 * 60 * 1000),
     });
-    mockPrisma.quoteCache.upsert.mockResolvedValue({});
+    mockPrisma.quoteCache.upsert.mockRejectedValue(new Error('simulated write fail'));
 
     const req = new NextRequest('http://localhost:3000/api/market/highlights?type=STOCK_BR');
     const res = await highlightsGet(req);

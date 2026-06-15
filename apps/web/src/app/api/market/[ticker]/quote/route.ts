@@ -108,40 +108,54 @@ export async function GET(
     async () => {
       if (assetClass === 'CRYPTO') {
         const r = await fetchCoinGeckoQuote(ticker);
-        changePercent = r.changePercent;
-        name = r.name;
-        currency = r.currency;
-        return { price: r.price, currency: r.currency };
+        return {
+          price: r.price,
+          currency: r.currency,
+          name: r.name,
+          changePercent: r.changePercent,
+          changeValue: null,
+        };
       }
       if (assetClass === 'STOCK_US' || assetClass === 'BDR') {
         if (assetClass === 'STOCK_US') {
           const r = await fetchFinnhubQuote(ticker);
-          changePercent = r.changePercent;
-          changeValue = r.changeValue;
-          name = r.name;
-          currency = r.currency;
-          return { price: r.price, currency: r.currency };
+          return {
+            price: r.price,
+            currency: r.currency,
+            name: r.name,
+            changePercent: r.changePercent,
+            changeValue: r.changeValue,
+          };
         }
         // BDR usa brapi
         const r = await fetchBrapiQuote(ticker);
-        changePercent = r.changePercent;
-        changeValue = r.changeValue;
-        name = r.name;
-        currency = r.currency;
-        return { price: r.price, currency: r.currency };
+        return {
+          price: r.price,
+          currency: r.currency,
+          name: r.name,
+          changePercent: r.changePercent,
+          changeValue: r.changeValue,
+        };
       }
       const r = await fetchBrapiQuote(ticker);
-      changePercent = r.changePercent;
-      changeValue = r.changeValue;
-      name = r.name;
-      currency = r.currency;
-      return { price: r.price, currency: r.currency };
+      return {
+        price: r.price,
+        currency: r.currency,
+        name: r.name,
+        changePercent: r.changePercent,
+        changeValue: r.changeValue,
+      };
     },
   );
 
   if (!cached) {
     return NextResponse.json({ message: `Ativo não encontrado: ${ticker}` }, { status: 404 });
   }
+
+  name = cached.name;
+  changePercent = cached.changePercent;
+  changeValue = cached.changeValue;
+  currency = cached.currency as 'BRL' | 'USD';
 
   // Conversão USD -> BRL para STOCK_US
   const currencyStr = currency as string;
