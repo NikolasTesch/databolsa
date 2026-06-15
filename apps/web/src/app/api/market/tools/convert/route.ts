@@ -204,5 +204,3 @@ export async function GET(request: NextRequest) {
   );
 }
 
-/** Expose cache for testing — do not use in production code */
-export { rateCache as _rateCache };
