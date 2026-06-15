@@ -1,3 +1,5 @@
+'use client';
+
 import type { NewsArticle } from '@/lib/news/news.service';
 
 const PLACEHOLDER_SVG =
