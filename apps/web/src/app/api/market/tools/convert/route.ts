@@ -15,11 +15,14 @@ interface RateCacheEntry {
 const rateCache = createMemoryCache<RateCacheEntry>(RATE_TTL_MS);
 
 // Supported fiat pairs: from → BRL via AwesomeAPI
-const SUPPORTED_FIAT_FROM = new Set(['USD', 'EUR', 'GBP']);
+const SUPPORTED_FIAT_FROM = new Set(['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'ARS']);
 // Supported crypto sources (keys of CRYPTO_TICKER_MAP)
 const CRYPTO_TICKERS = new Set(Object.keys(CRYPTO_TICKER_MAP));
 // Supported targets for crypto
 const SUPPORTED_CRYPTO_TO = new Set(['BRL', 'USD']);
+
+// Global in-memory fallback cache to store the last known successful rate for a pair (RN-10)
+const fallbackRates = new Map<string, Decimal>();
 
 async function fetchFiatRate(from: string, to: string): Promise<{ rate: Decimal; stale: boolean }> {
   const cacheKey = `rate:${from}/${to}`;
@@ -48,12 +51,18 @@ async function fetchFiatRate(from: string, to: string): Promise<{ rate: Decimal;
       stale: false,
     };
     rateCache.set(cacheKey, entry);
+    fallbackRates.set(cacheKey, rate); // Save to fallback cache
     return { rate, stale: false };
   } catch (err) {
     console.error(`[tools.convert] error fetching rate for ${from}/${to}: ${String(err)}`);
 
-    // Return a stale value if we have one in cache — but the TTL expired just now
-    // Since we can't access expired entries, we signal unavailability
+    // Degradação graciosa (RN-10): retornar a última cotação conhecida se houver
+    const fallback = fallbackRates.get(cacheKey);
+    if (fallback) {
+      console.warn(`[tools.convert] using fallback rate for fiat pair=${from}/${to}`);
+      return { rate: fallback, stale: true };
+    }
+
     throw err;
   }
 }
@@ -89,9 +98,18 @@ async function fetchCryptoRate(from: string, to: string): Promise<{ rate: Decima
       stale: false,
     };
     rateCache.set(cacheKey, entry);
+    fallbackRates.set(cacheKey, rate); // Save to fallback cache
     return { rate, stale: false };
   } catch (err) {
     console.error(`[tools.convert] error fetching rate for ${from}/${to}: ${String(err)}`);
+
+    // Degradação graciosa (RN-10): retornar a última cotação conhecida se houver
+    const fallback = fallbackRates.get(cacheKey);
+    if (fallback) {
+      console.warn(`[tools.convert] using fallback rate for crypto pair=${from}/${to}`);
+      return { rate: fallback, stale: true };
+    }
+
     throw err;
   }
 }

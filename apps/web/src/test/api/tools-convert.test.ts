@@ -90,6 +90,22 @@ describe('TC-01 — GET /api/market/tools/convert: conversão fiat (USD → BRL)
     expect(body.from).toBe('GBP');
     expect(parseFloat(body.result)).toBeCloseTo(67, 1);
   });
+
+  it('suporta CAD → BRL', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        CADBRL: { bid: '4.10' },
+      }),
+    });
+
+    const req = makeReq({ from: 'CAD', to: 'BRL', amount: '10' });
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.from).toBe('CAD');
+    expect(parseFloat(body.result)).toBeCloseTo(41, 1);
+  });
 });
 
 describe('TC-02 — GET /api/market/tools/convert: conversão crypto (BTC → BRL)', () => {
@@ -145,6 +161,36 @@ describe('TC-02 — GET /api/market/tools/convert: conversão crypto (BTC → BR
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(parseFloat(body.result)).toBeCloseTo(7500, 0);
+  });
+
+  it('suporta DOGE → BRL e SHIB → USD', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        dogecoin: { brl: 0.85 },
+      }),
+    });
+
+    const req1 = makeReq({ from: 'DOGE', to: 'BRL', amount: '100' });
+    const res1 = await GET(req1);
+    expect(res1.status).toBe(200);
+    const body1 = await res1.json();
+    expect(body1.from).toBe('DOGE');
+    expect(parseFloat(body1.result)).toBeCloseTo(85, 1);
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        'shiba-inu': { usd: 0.000022 },
+      }),
+    });
+
+    const req2 = makeReq({ from: 'SHIB', to: 'USD', amount: '1000000' });
+    const res2 = await GET(req2);
+    expect(res2.status).toBe(200);
+    const body2 = await res2.json();
+    expect(body2.from).toBe('SHIB');
+    expect(parseFloat(body2.result)).toBeCloseTo(22, 1);
   });
 });
 
@@ -205,5 +251,43 @@ describe('TC-03 — Validações de inputs inválidos (retornam 400)', () => {
     const req = makeReq({ from: 'USD', to: 'BRL' });
     const res = await GET(req);
     expect(res.status).toBe(400);
+  });
+});
+
+describe('TC-04 — Degradação Graciosa com fallbackRates (RN-10)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('retorna taxa stale de fallbackRates se a API falhar após cache miss', async () => {
+    // 1. Primeira chamada: sucesso para preencher fallbackRates
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        USDBRL: { bid: '5.20' },
+      }),
+    });
+
+    const req1 = makeReq({ from: 'USD', to: 'BRL', amount: '100' });
+    const res1 = await GET(req1);
+    expect(res1.status).toBe(200);
+    const body1 = await res1.json();
+    expect(body1.stale).toBe(false);
+    expect(body1.rate).toBe('5.2');
+
+    // 2. Segunda chamada: falha na API externa
+    mockFetch.mockRejectedValueOnce(new Error('AwesomeAPI fora do ar'));
+
+    // Executamos a chamada. Como a API falhou, ela deve usar o fallbackRates
+    const req2 = makeReq({ from: 'USD', to: 'BRL', amount: '100' });
+    const res2 = await GET(req2);
+
+    expect(res2.status).toBe(200);
+    const body2 = await res2.json();
+    expect(body2.from).toBe('USD');
+    expect(body2.to).toBe('BRL');
+    expect(body2.rate).toBe('5.2');
+    expect(body2.stale).toBe(true); // Marcado como stale!
+    expect(parseFloat(body2.result)).toBeCloseTo(520, 1);
   });
 });

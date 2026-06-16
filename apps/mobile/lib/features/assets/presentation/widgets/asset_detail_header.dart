@@ -26,7 +26,7 @@ class AssetDetailHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return quoteAsync.when(
       loading: () => const _QuoteShimmer(),
-      error: (_, __) => const _QuoteError(),
+      error: (error, stack) => const _QuoteError(),
       data: (quote) => _QuoteData(quote: quote),
     );
   }

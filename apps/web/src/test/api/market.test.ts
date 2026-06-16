@@ -110,7 +110,13 @@ describe('GET /api/market/highlights (TC-05, TC-06)', () => {
   });
 
   it('usa STOCK_BR como padrão quando type não fornecido', async () => {
-    mockPrisma.quoteCache.findUnique.mockResolvedValue(null);
+    mockPrisma.quoteCache.findUnique.mockResolvedValue({
+      symbol: 'PETR4',
+      source: 'BRAPI',
+      price: '38.50',
+      currency: 'BRL',
+      fetched_at: new Date(),
+    });
 
     const req = new NextRequest('http://localhost:3000/api/market/highlights');
     const res = await highlightsGet(req);
@@ -127,7 +133,13 @@ describe('GET /api/market/indices (TC-04)', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('TC-04: inclui CDI hardcoded com stale=false', async () => {
-    mockPrisma.quoteCache.findUnique.mockResolvedValue(null);
+    mockPrisma.quoteCache.findUnique.mockResolvedValue({
+      symbol: 'IBOVESPA',
+      source: 'BRAPI',
+      price: '128450',
+      currency: 'BRL',
+      fetched_at: new Date(),
+    });
 
     const req = new NextRequest('http://localhost:3000/api/market/indices');
     const res = await indicesGet();

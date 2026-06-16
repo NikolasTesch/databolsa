@@ -7,6 +7,7 @@ import { RelatedNewsSection } from '@/components/market/RelatedNewsSection';
 import { ToolsSection } from '@/components/market/ToolsSection';
 import { B3CoursesSection } from '@/components/market/B3CoursesSection';
 import { Spinner } from '@/components/ui/Spinner';
+import { GET as getIndices } from '@/app/api/market/indices/route';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,13 +22,11 @@ const QUICK_CHIPS = [
 
 async function fetchIndices() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/market/indices`, {
-      cache: 'no-store',
-    });
+    const res = await getIndices();
     if (!res.ok) return null;
     return res.json();
-  } catch {
+  } catch (err) {
+    console.error('[PublicHomePage] Error fetching indices:', err);
     return null;
   }
 }

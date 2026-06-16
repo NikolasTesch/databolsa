@@ -102,6 +102,7 @@ e idealmente um check de CI.
 | SPEC-0016 | Seção de notícias relacionadas na home pública e ativos           | implemented |
 | SPEC-0017 | Seção de ferramentas financeiras na home pública e cabeçalho      | implemented |
 | SPEC-0018 | Seção de cursos gratuitos da B3                                    | implemented |
+| SPEC-0019 | Expandir moedas fiat e cripto no conversor          | verified |
 
 ### Em andamento (`em-andamento/`)
 

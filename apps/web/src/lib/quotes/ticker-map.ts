@@ -9,4 +9,9 @@ export const CRYPTO_TICKER_MAP: Record<string, string> = {
   LINK: 'chainlink',
   LTC: 'litecoin',
   XRP: 'ripple',
+  DOGE: 'dogecoin',
+  AVAX: 'avalanche-2',
+  SHIB: 'shiba-inu',
+  TRX: 'tron',
+  TON: 'toncoin',
 };

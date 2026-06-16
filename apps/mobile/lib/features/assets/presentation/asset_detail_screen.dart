@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/money/money.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/async_value_view.dart';
 import '../data/assets_repository.dart';
 import '../data/market_repository.dart';
 import '../domain/asset_models.dart';
@@ -129,7 +128,7 @@ class _AssetDetailBody extends ConsumerWidget {
                 height: 220,
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (_, __) => const SizedBox(
+              error: (error, stack) => const SizedBox(
                 height: 220,
                 child: Center(child: Text('Histórico indisponível')),
               ),
