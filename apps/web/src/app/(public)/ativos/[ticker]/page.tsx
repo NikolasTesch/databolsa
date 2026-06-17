@@ -18,6 +18,7 @@ import {
   fetchCoinGeckoMulti,
   fetchFinnhubQuote,
   fetchUsdBrlRate,
+  fetchBrapiDividends,
 } from '@/lib/market/market-fetchers';
 
 export const dynamic = 'force-dynamic';
@@ -137,20 +138,7 @@ export default async function AssetAnalysisPage({ params, searchParams }: PagePr
 
   if (hasDividends) {
     try {
-      const token = process.env.BRAPI_TOKEN;
-      const divRes = await fetch(
-        `https://brapi.dev/api/quote/${ticker}?dividends=true&token=${token ?? ''}`,
-        { signal: AbortSignal.timeout(5000) },
-      );
-      if (divRes.ok) {
-        const divData = await divRes.json();
-        const rawDividends = divData?.results?.[0]?.dividendsData?.cashDividends ?? [];
-        dividends = rawDividends.map((d: { paymentDate?: string; rate?: number; type?: string }) => ({
-          paymentDate: d.paymentDate?.split('T')[0] ?? '',
-          value: d.rate != null ? new Decimal(String(d.rate)).toFixed(4) : '0.0000',
-          type: d.type ?? 'Dividendo',
-        }));
-      }
+      dividends = await fetchBrapiDividends(ticker);
     } catch {
       // ignorar falha de dividendos
     }

@@ -114,3 +114,32 @@ export async function fetchUsdBrlRate(): Promise<{ price: Decimal; changePercent
     changePercent: pctChange != null ? String(pctChange) : null,
   };
 }
+
+export interface DividendEntry {
+  paymentDate: string;
+  value: string;
+  type: string;
+}
+
+const dividendCache = new Map<string, { data: DividendEntry[]; expiresAt: number }>();
+const DIVIDEND_TTL_MS = 60 * 60 * 1000; // 1 hora — histórico muda raramente
+
+export async function fetchBrapiDividends(symbol: string): Promise<DividendEntry[]> {
+  const cached = dividendCache.get(symbol);
+  if (cached && Date.now() < cached.expiresAt) return cached.data;
+
+  const token = process.env.BRAPI_TOKEN ?? '';
+  const url = `https://brapi.dev/api/quote/${symbol}?dividends=true&token=${token}`;
+  const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  if (!response.ok) throw new Error(`brapi dividends returned ${response.status} for ${symbol}`);
+  const data = await response.json();
+  const raw: Array<{ paymentDate?: string; rate?: number; type?: string }> =
+    data?.results?.[0]?.dividendsData?.cashDividends ?? [];
+  const result = raw.map((d) => ({
+    paymentDate: d.paymentDate?.split('T')[0] ?? '',
+    value: d.rate != null ? new Decimal(String(d.rate)).toFixed(4) : '0.0000',
+    type: d.type ?? 'Dividendo',
+  }));
+  dividendCache.set(symbol, { data: result, expiresAt: Date.now() + DIVIDEND_TTL_MS });
+  return result;
+}
