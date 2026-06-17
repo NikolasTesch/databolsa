@@ -2,10 +2,10 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0017",
   "title": "Seção de ferramentas financeiras na home pública e cabeçalho",
-  "status": "implemented",
+  "status": "verified",
   "type": "feature",
   "created": "2026-06-14",
-  "updated": "2026-06-17",
+  "updated": "2026-06-17T20:30:00",
   "authors": ["Antigravity", "Nikolas"],
   "summary": "Implementar atalhos na barra de busca e menu de ferramentas, criar a página pública de ferramentas (/ferramentas) e a seção correspondente na home pública com conversor de moedas (fiat), conversor de criptoativos e painel de análise de índices com P/L médio do IBOV e dividend yield do IFIX.",
   "motivation": "A busca orgânica por conversores de câmbio (USD/BRL) e conversores de cripto é volumosa no Brasil. Trazer estas ferramentas utilitárias para dentro do DataBolsa atrai novos investidores e melhora a autoridade de SEO da marca, encaminhando o tráfego para a criação de conta.",
@@ -140,43 +140,43 @@
       "id": "T-01",
       "description": "Criar constante de benchmarks históricos em apps/web/src/lib/market/index-benchmarks.ts com P/L histórico do IBOV e DY histórico do IFIX, campo lastUpdated e faixas de classificação (Barato/Neutro/Caro).",
       "target": "apps/web",
-      "done": false
+      "done": true
     },
     {
       "id": "T-02",
       "description": "Criar a API route GET /api/market/tools/convert/route.ts. Inferir tipo pelo from/to: se from ∈ conjunto de tickers crypto conhecidos → CoinGecko; caso contrário → AwesomeAPI. Cache de cotação de 5 min em memória. Validar amount > 0.",
       "target": "apps/web",
-      "done": false
+      "done": true
     },
     {
       "id": "T-03",
       "description": "Adicionar item 'Ferramentas' no PublicHeader.tsx e como QuickChip/atalho na SearchBar.tsx apontando para /ferramentas.",
       "target": "apps/web",
-      "done": false
+      "done": true
     },
     {
       "id": "T-04",
       "description": "Criar widgets: CurrencyConverter.tsx, CryptoConverter.tsx e IndexAnalysisPanel.tsx em apps/web/src/components/market/.",
       "target": "apps/web",
-      "done": false
+      "done": true
     },
     {
       "id": "T-05",
       "description": "Criar página apps/web/src/app/(public)/ferramentas/page.tsx com os três widgets e metadata de SEO.",
       "target": "apps/web",
-      "done": false
+      "done": true
     },
     {
       "id": "T-06",
       "description": "Criar componente ToolsSection.tsx e integrá-lo na home pública (apps/web/src/app/(public)/page.tsx) após a MarketSection.",
       "target": "apps/web",
-      "done": false
+      "done": true
     },
     {
       "id": "T-07",
       "description": "Escrever testes unitários cobrindo TC-01, TC-02, TC-03, TC-04 e TC-05.",
       "target": "apps/web",
-      "done": false
+      "done": true
     }
   ],
   "risks": [

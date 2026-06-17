@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0029",
   "title": "Correção de bugs de cálculo e parsing (parseDate, CDI, PATCH RN-02)",
-  "status": "implemented",
+  "status": "verified",
   "type": "bugfix",
   "created": "2026-06-17",
   "updated": "2026-06-17",

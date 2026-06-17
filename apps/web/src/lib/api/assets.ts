@@ -1,8 +1,17 @@
 import { apiFetch } from './client';
 import type { Asset, CreateAssetRequest } from '@/types/api';
 
+interface PaginatedAssetsResponse {
+  data: Asset[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export async function listAssets(): Promise<Asset[]> {
-  return apiFetch<Asset[]>('/assets');
+  const response = await apiFetch<PaginatedAssetsResponse>('/assets');
+  return response.data;
 }
 
 export async function getAsset(id: string): Promise<Asset> {

@@ -34,7 +34,7 @@ export function AssetList({ assets }: AssetListProps) {
   if (assets.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-surface py-12 text-center">
-        <p className="text-content-muted">Nenhum ativo cadastrado.</p>
+        <p className="text-content-muted">Nenhum ativo registrado ainda</p>
         <p className="mt-2">
           <Link href="/assets/new" className="text-sm font-medium text-primary hover:underline">
             Adicionar primeiro ativo

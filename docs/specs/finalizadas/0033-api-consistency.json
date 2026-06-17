@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0033",
   "title": "Consistência de API — envelope de erro e PATCHes faltantes",
-  "status": "implemented",
+  "status": "verified",
   "type": "feature",
   "created": "2026-06-17",
   "updated": "2026-06-17",

@@ -1,0 +1,172 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0039",
+  "title": "Grupos de investimento — interface de usuário Next.js (fase 3/3)",
+  "status": "approved",
+  "type": "feature",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["Antigravity", "Nikolas"],
+  "summary": "Cria a interface de usuário (UI) na aplicação web Next.js para gerenciamento de grupos de investimento, permitindo listar, criar e visualizar detalhes dos grupos. Permite que o líder gere e gerencie convites, e visualize a carteira de membros em modo de apenas-leitura com banner de advertência.",
+  "motivation": "Com as entidades de banco (SPEC-0037) e os endpoints REST (SPEC-0038) prontos, o usuário precisa de telas amigáveis no Next.js para usufruir da feature de compartilhamento de carteiras.",
+  "related": {
+    "prd": ["PRD §7 (regras de negócio)"],
+    "spec_doc": ["SPEC §5 (endpoints)"],
+    "business_rules": ["RN-11"],
+    "adrs": ["ADR-0013"],
+    "depends_on": ["SPEC-0038"]
+  },
+  "scope": {
+    "in_scope": [
+      "Página de listagem e criação de grupos em /portfolio/groups.",
+      "Página de detalhes de grupo /portfolio/groups/[id] mostrando membros, convites ativos e ações de líder/membro.",
+      "Geração visual de convites (copiar link com código de convite para a área de transferência) e revogação de convites via botão na UI.",
+      "Página para aceitar convite /portfolio/groups/join?code=xxx com tratamento para redirecionamento de login se deslogado.",
+      "Banner visual no topo das páginas de portfólio (/portfolio, /portfolio/allocation, /portfolio/dividends) ao visualizar a carteira de um membro, indicando o modo 'Apenas Leitura'.",
+      "Ocultar ou desabilitar botões e ações de escrita (como '+ Novo Ativo', 'Adicionar Transação', 'Excluir', 'Importar CSV') quando visualizando a carteira do membro."
+    ],
+    "out_of_scope": [
+      "Páginas correspondentes no aplicativo mobile (Flutter).",
+      "Mecanismo de convidar diretamente por e-mail na UI (apenas compartilhamento manual de link)."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "A UI deve permitir criar grupos informando nome e descrição opcional.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Se o usuário logado for LEADER do grupo, a página do grupo deve mostrar a seção de 'Gestão de Convites' para gerar novos convites e revogar os ativos.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Se o usuário logado for LEADER, a tabela de membros do grupo deve conter links para visualizar a carteira individual de cada membro.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "A visualização da carteira do membro deve carregar os dados das rotas de portfolio passando o query param `targetUserId` e exibir de forma proeminente o banner: 'Visualizando carteira de [Email do Membro] (Apenas Leitura)'.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Quando o modo apenas-leitura estiver ativo, todos os elementos interativos de modificação de dados (formulários, modais, botões de exclusão de transação, etc.) devem ser ocultados ou desabilitados na UI.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "A tela de aceitação de convite deve exibir o nome do grupo e o nome/email de quem convidou antes de confirmar o aceite pelo usuário logado.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "Um usuário na página /portfolio/groups",
+      "when": "Clica em 'Criar Grupo', digita 'Família Silva' e confirma no modal",
+      "then": "O grupo é criado e ele é redirecionado para a página /portfolio/groups/[id] do novo grupo."
+    },
+    {
+      "id": "AC-02",
+      "given": "O líder do grupo na página /portfolio/groups/[id]",
+      "when": "Clica em 'Gerar Convite'",
+      "then": "Um link com o código de convite é exibido com botão para cópia instantânea."
+    },
+    {
+      "id": "AC-03",
+      "given": "Um usuário deslogado acessando o link de convite /portfolio/groups/join?code=xxx",
+      "when": "Acessa o link",
+      "then": "É redirecionado para a tela de login e, após se autenticar, retorna à página de convite onde mostra os detalhes e botão de 'Aceitar Convite'."
+    },
+    {
+      "id": "AC-04",
+      "given": "Um líder visualizando a carteira de um membro em /portfolio?targetUserId=xxx",
+      "when": "A página é renderizada",
+      "then": "O banner 'Visualizando carteira de [Email] (Apenas Leitura)' aparece destacado no topo, e o botão '+ Novo Ativo' fica oculto."
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Validar renderização e criação de grupo na página /portfolio/groups via teste E2E Playwright.",
+      "kind": "e2e",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "Validar geração visual de convite e cópia para clipboard na página do grupo.",
+      "kind": "e2e",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "Validar o redirecionamento de login no fluxo de aceitação de convite.",
+      "kind": "e2e",
+      "covers": ["REQ-06", "AC-03"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "Validar a exibição do banner de leitura e o bloqueio de botões de escrita na UI de portfolio em modo cross-user.",
+      "kind": "e2e",
+      "covers": ["REQ-04", "REQ-05", "AC-04"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar a página de listagem e criação de grupos (/portfolio/groups) integrada com o design system do projeto.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar a página de detalhes do grupo (/portfolio/groups/[id]) com lista de membros e convites.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar a página de aceitação de convites (/portfolio/groups/join).",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Criar o componente BannerReadOnly e integrá-lo no layout principal do portfólio.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Modificar as páginas de portfólio (/portfolio, /portfolio/allocation, etc.) para capturar targetUserId e desabilitar ações de escrita.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Escrever os testes E2E com Playwright para certificar o funcionamento de todos os fluxos de UI.",
+      "target": "apps/web",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Usuário tentar contornar a desativação de botões alterando o código HTML localmente. Mitigação: O backend (SPEC-0038) já possui validação de autorização estrita, então qualquer tentativa de escrita resultará em erro 403 HTTP no servidor."
+  ],
+  "observability": [
+    "Monitoramento de taxas de erro HTTP 403 e 404 nas requisições da UI aos endpoints de grupo."
+  ],
+  "rollback": "Remover os arquivos de páginas criados sob /portfolio/groups e desativar a exibição do BannerReadOnly e os tratamentos de query params nas páginas de portfólio."
+}

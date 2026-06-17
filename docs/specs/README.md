@@ -98,12 +98,29 @@ e idealmente um check de CI.
 | SPEC-0012 | Home pública com busca de ativos e destaques de mercado           | verified |
 | SPEC-0013 | Página de análise individual de ativo (/ativos/[ticker])          | verified |
 | SPEC-0014 | Adicionar ativo pesquisado à carteira a partir da análise         | verified |
-| SPEC-0015 | Mobile Flutter — histórico de cotações de ativos                  | implemented |
-| SPEC-0016 | Seção de notícias relacionadas na home pública e ativos           | implemented |
-| SPEC-0017 | Seção de ferramentas financeiras na home pública e cabeçalho      | implemented |
-| SPEC-0018 | Seção de cursos gratuitos da B3                                    | implemented |
+| SPEC-0015 | Mobile Flutter — histórico de cotações de ativos                  | verified |
+| SPEC-0016 | Seção de notícias relacionadas na home pública e ativos           | verified |
+| SPEC-0017 | Seção de ferramentas financeiras na home pública e cabeçalho      | verified |
+| SPEC-0018 | Seção de cursos gratuitos da B3                                    | verified |
 | SPEC-0019 | Expandir moedas fiat e cripto no conversor          | verified |
 | SPEC-0020 | Market hardening — fetchers centralizados, rate limit e CDI real | verified |
+| SPEC-0021 | Comparação do portfólio com benchmarks (IBOV, CDI, IPCA, S&P500) | verified |
+| SPEC-0022 | Dashboard de dividendos e proventos                               | verified |
+| SPEC-0023 | Alocação por setor, classe de ativo e moeda                       | verified |
+| SPEC-0024 | Metas de renda passiva mensal                                     | verified |
+| SPEC-0025 | Alertas de preço in-app                                           | verified |
+| SPEC-0026 | Importação de transações via CSV                                  | verified |
+| SPEC-0027 | Simulador what-if de posição                                      | verified |
+| SPEC-0028 | Hardening de autenticação — JWT fail-fast e rate limiting         | verified |
+| SPEC-0029 | Correção de bugs de cálculo e parsing (parseDate, CDI, PATCH RN-02) | verified |
+| SPEC-0030 | Camada de serviço de portfólio — centralizar tx-mapper e QuoteService | verified |
+| SPEC-0031 | Performance de leitura — índice DB e dedupe de cotações           | verified |
+| SPEC-0032 | Hardening de importação CSV — limite de tamanho e PATCH de asset  | verified |
+| SPEC-0033 | Consistência de API — envelope de erro e PATCHes faltantes        | verified |
+| SPEC-0034 | Cobertura de testes — csv-parser, alerts, benchmark e endpoints   | verified |
+| SPEC-0035 | Série temporal real do portfólio e benchmark (TWR)                | verified |
+| SPEC-0036 | Gaps de produto — paginação de assets                             | verified |
+| SPEC-0037 | Grupos de investimento — modelo de dados, autorização cross-user e papel admin (fase 1/3) | verified |
 
 ### Em andamento (`em-andamento/`)
 
@@ -113,22 +130,7 @@ _Nenhuma spec em andamento no momento._
 
 | ID        | Título                                                            | Status      |
 | --------- | ----------------------------------------------------------------- | ----------- |
-| SPEC-0021 | Comparação do portfólio com benchmarks (IBOV, CDI, IPCA, S&P500) | implemented |
-| SPEC-0022 | Dashboard de dividendos e proventos                               | implemented |
-| SPEC-0023 | Alocação por setor, classe de ativo e moeda                       | implemented |
-| SPEC-0024 | Metas de renda passiva mensal                                     | implemented |
-| SPEC-0025 | Alertas de preço in-app                                           | implemented |
-| SPEC-0026 | Importação de transações via CSV                                  | implemented |
-| SPEC-0027 | Simulador what-if de posição                                      | implemented |
-| SPEC-0028 | Hardening de autenticação — JWT fail-fast e rate limiting         | implemented |
-| SPEC-0029 | Correção de bugs de cálculo e parsing (parseDate, CDI, PATCH RN-02) | implemented |
-| SPEC-0030 | Camada de serviço de portfólio — centralizar tx-mapper e QuoteService | implemented |
-| SPEC-0031 | Performance de leitura — índice DB e dedupe de cotações           | implemented |
-| SPEC-0032 | Hardening de importação CSV — limite de tamanho e PATCH de asset  | implemented |
-| SPEC-0033 | Consistência de API — envelope de erro e PATCHes faltantes        | implemented |
-| SPEC-0034 | Cobertura de testes — csv-parser, alerts, benchmark e endpoints   | implemented |
-| SPEC-0035 | Série temporal real do portfólio e benchmark (TWR)                | implemented |
-| SPEC-0036 | Gaps de produto — paginação de assets                             | implemented |
-| SPEC-0037 | Grupos de investimento — modelo de dados, autorização cross-user e papel admin (fase 1/3) | implemented |
+| SPEC-0038 | Grupos de investimento — endpoints REST de grupos e convites (fase 2/3) | draft       |
+| SPEC-0039 | Grupos de investimento — interface de usuário Next.js (fase 3/3)   | draft       |
 
 > Mantenha esta tabela ao adicionar specs.

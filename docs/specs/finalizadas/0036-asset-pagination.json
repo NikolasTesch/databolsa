@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0036",
   "title": "Gaps de produto — paginação de assets",
-  "status": "implemented",
+  "status": "verified",
   "type": "feature",
   "created": "2026-06-17",
   "updated": "2026-06-17",

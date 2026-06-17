@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0030",
   "title": "Camada de serviço de portfólio — centralizar tx-mapper e QuoteService",
-  "status": "implemented",
+  "status": "verified",
   "type": "refactor",
   "created": "2026-06-17",
   "updated": "2026-06-17",

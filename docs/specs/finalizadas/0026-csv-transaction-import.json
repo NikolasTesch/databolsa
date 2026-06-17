@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0026",
   "title": "Importação de transações via CSV",
-  "status": "implemented",
+  "status": "verified",
   "type": "feature",
   "created": "2026-06-17",
   "updated": "2026-06-17",

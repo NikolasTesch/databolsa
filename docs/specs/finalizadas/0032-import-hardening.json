@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0032",
   "title": "Hardening de importação CSV — limite de tamanho e PATCH de asset",
-  "status": "implemented",
+  "status": "verified",
   "type": "enhancement",
   "created": "2026-06-17",
   "updated": "2026-06-17T18:00:00Z",

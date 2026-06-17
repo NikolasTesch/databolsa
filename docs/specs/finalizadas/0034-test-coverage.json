@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0034",
   "title": "Cobertura de testes — csv-parser, alerts, benchmark-fetchers e endpoints de portfólio",
-  "status": "implemented",
+  "status": "verified",
   "type": "test",
   "created": "2026-06-17",
   "updated": "2026-06-17",

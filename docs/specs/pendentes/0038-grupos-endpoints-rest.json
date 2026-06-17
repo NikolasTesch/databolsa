@@ -1,0 +1,294 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0038",
+  "title": "Grupos de investimento — endpoints REST de grupos e convites (fase 2/3)",
+  "status": "approved",
+  "type": "feature",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["Antigravity", "Nikolas"],
+  "summary": "Implementa os endpoints REST do Next.js (Route Handlers) para criação, exclusão, listagem de grupos de investimento, gerenciamento de convites (geração, revogação e aceitação) e de membros. Adapta os endpoints de portfólio para suportar visualização cross-user autorizada por assertCanViewPortfolio.",
+  "motivation": "Para finalizar a funcionalidade de grupos de investimento iniciada na SPEC-0037, é necessário expor os recursos do banco de dados através de uma API segura e permitir que líderes de grupos acessem os dados de portfólio dos membros sob demanda.",
+  "related": {
+    "prd": ["PRD §7 (regras de negócio)"],
+    "spec_doc": ["SPEC §5 (endpoints)"],
+    "business_rules": ["RN-11"],
+    "adrs": ["ADR-0013"],
+    "depends_on": ["SPEC-0037"]
+  },
+  "scope": {
+    "in_scope": [
+      "Endpoint POST /api/groups para criação de grupo.",
+      "Endpoint GET /api/groups para listagem de grupos do usuário.",
+      "Endpoint GET /api/groups/[id] para detalhes do grupo (membros e, se líder, os convites ativos).",
+      "Endpoint DELETE /api/groups/[id] para excluir o grupo (apenas o criador).",
+      "Endpoint POST /api/groups/[id]/invites para gerar um código de convite opaco.",
+      "Endpoint POST /api/groups/invites/accept para aceitar um convite e entrar no grupo.",
+      "Endpoint DELETE /api/groups/[id]/invites/[inviteId] para revogar um convite.",
+      "Endpoint DELETE /api/groups/[id]/members/[userId] para remover membro ou sair do grupo.",
+      "Modificação dos Route Handlers de carteira /api/portfolio/* (summary, allocation, dividends, history, monthly-activity) para aceitar o query param opcional `targetUserId` e aplicar `assertCanViewPortfolio(currentUserId, targetUserId)`."
+    ],
+    "out_of_scope": [
+      "Páginas e componentes visuais de UI (SPEC-0039).",
+      "Notificações por email ao convidar membros.",
+      "Transferência de propriedade/criador do grupo para outro usuário (exclusão de conta com transferência de grupo)."
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "A criação de grupo deve associar o criador automaticamente com o papel LEADER.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "O endpoint GET /api/groups/[id] deve expor a lista de convites gerados apenas se o usuário logado for LEADER do grupo.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "A geração de convite deve produzir um código opaco único (UUID) no banco, suportando expiração opcional e limite máximo de usos.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "A aceitação de convite deve validar se o código existe, não está expirado, não está revogado, não excedeu o limite máximo de usos e se o usuário logado ainda não participa do grupo. A operação deve ser atômica/transacional.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "A saída ou remoção de membros deve ser validada: um membro comum só pode excluir sua própria membership (sair); um LEADER pode excluir a membership de qualquer MEMBER. O último LEADER não pode sair do grupo sem excluí-lo ou nomear outro líder.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Os endpoints de portfólio (/api/portfolio/*) devem barrar acessos cross-user (quando informado query param targetUserId) se o usuário logado não for LEADER de algum grupo em comum com o target, usando a função assertCanViewPortfolio.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    }
+  ],
+  "api": [
+    {
+      "method": "POST",
+      "path": "/api/groups",
+      "auth": true,
+      "request": "{ \"name\": \"string\", \"description\": \"string (opcional)\" }",
+      "response": "{ \"id\": \"string\", \"name\": \"string\", \"description\": \"string\", \"created_by\": \"string\", \"created_at\": \"string\" }",
+      "errors": [
+        "400: Nome do grupo vazio",
+        "401: Não autenticado"
+      ],
+      "notes": "Cria o grupo no banco e cria automaticamente o GroupMembership com role: LEADER para o criador."
+    },
+    {
+      "method": "GET",
+      "path": "/api/groups",
+      "auth": true,
+      "request": "Nenhum",
+      "response": "[{ \"id\": \"string\", \"name\": \"string\", \"description\": \"string\", \"role\": \"LEADER|MEMBER\", \"memberCount\": 5 }]",
+      "errors": [
+        "401: Não autenticado"
+      ],
+      "notes": "Lista os grupos nos quais o usuário logado possui associação de membros."
+    },
+    {
+      "method": "GET",
+      "path": "/api/groups/[id]",
+      "auth": true,
+      "request": "Params: id (string)",
+      "response": "{ \"id\": \"string\", \"name\": \"string\", \"description\": \"string\", \"created_by\": \"string\", \"members\": [{ \"user_id\": \"string\", \"email\": \"string\", \"role\": \"LEADER|MEMBER\", \"joined_at\": \"string\" }], \"invites\": [{ \"id\": \"string\", \"code\": \"string\", \"role\": \"LEADER|MEMBER\", \"expires_at\": \"string\", \"max_uses\": 10, \"uses\": 1, \"revoked\": false }] (somente se líder) }",
+      "errors": [
+        "401: Não autenticado",
+        "403: Usuário não é membro deste grupo",
+        "404: Grupo não encontrado"
+      ],
+      "notes": "Retorna os dados do grupo e membros. O campo 'invites' é omitido se o usuário solicitante não for LEADER."
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/groups/[id]",
+      "auth": true,
+      "request": "Params: id (string)",
+      "response": "{ \"success\": true }",
+      "errors": [
+        "401: Não autenticado",
+        "403: Usuário não é criador/líder do grupo",
+        "404: Grupo não encontrado"
+      ],
+      "notes": "Exclui o grupo e todas as memberships/convites associados (deletados em cascata)."
+    },
+    {
+      "method": "POST",
+      "path": "/api/groups/[id]/invites",
+      "auth": true,
+      "request": "{ \"role\": \"LEADER|MEMBER\", \"expires_in_days\": 7 (opcional), \"max_uses\": 10 (opcional) }",
+      "response": "{ \"id\": \"string\", \"code\": \"string\", \"role\": \"LEADER|MEMBER\", \"expires_at\": \"string\", \"max_uses\": 10 }",
+      "errors": [
+        "401: Não autenticado",
+        "403: Usuário não é LEADER deste grupo",
+        "404: Grupo não encontrado"
+      ],
+      "notes": "Gera um convite com código opaco (UUID). Apenas líderes podem criar."
+    },
+    {
+      "method": "POST",
+      "path": "/api/groups/invites/accept",
+      "auth": true,
+      "request": "{ \"code\": \"string\" }",
+      "response": "{ \"success\": true, \"group_id\": \"string\", \"role\": \"LEADER|MEMBER\" }",
+      "errors": [
+        "400: Convite inválido, revogado ou expirado",
+        "401: Não autenticado",
+        "409: Usuário já é membro deste grupo"
+      ],
+      "notes": "Valida e aceita o convite na transação do banco, adicionando a associação de membros."
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/groups/[id]/invites/[inviteId]",
+      "auth": true,
+      "request": "Params: id (string), inviteId (string)",
+      "response": "{ \"success\": true }",
+      "errors": [
+        "401: Não autenticado",
+        "403: Usuário não é LEADER do grupo",
+        "404: Convite ou grupo não encontrado"
+      ],
+      "notes": "Revoga/deleta o convite ativo. Apenas líderes podem fazer."
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/groups/[id]/members/[userId]",
+      "auth": true,
+      "request": "Params: id (string), userId (string)",
+      "response": "{ \"success\": true }",
+      "errors": [
+        "400: Último LEADER não pode sair do grupo",
+        "401: Não autenticado",
+        "403: Permissão insuficiente (não-líder tentando remover outro ou membro tentando sair com violações)",
+        "404: Membro não encontrado"
+      ],
+      "notes": "Se userId === logado, significa que o usuário está saindo por conta própria. Se userId !== logado, apenas um LEADER do grupo pode executar para remover o membro."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "Um usuário autenticado",
+      "when": "Envia POST /api/groups com { \"name\": \"Grupo Alfa\" }",
+      "then": "Retorna o grupo criado e cria a associação com papel LEADER para ele."
+    },
+    {
+      "id": "AC-02",
+      "given": "Um usuário que participa do Grupo Alfa",
+      "when": "Chama GET /api/groups",
+      "then": "O Grupo Alfa é listado com seu ID, nome e papel."
+    },
+    {
+      "id": "AC-03",
+      "given": "Um líder do Grupo Alfa",
+      "when": "Envia POST /api/groups/[id]/invites com { \"role\": \"MEMBER\" }",
+      "then": "Retorna o convite com código opaco do tipo UUID."
+    },
+    {
+      "id": "AC-04",
+      "given": "Um convite ativo do Grupo Alfa com código UUID e max_uses = 1",
+      "when": "Dois usuários tentam aceitar o convite em concorrência via POST /api/groups/invites/accept",
+      "then": "Apenas o primeiro tem sucesso; o segundo recebe erro 400 por limite de usos excedido."
+    },
+    {
+      "id": "AC-05",
+      "given": "Um líder do Grupo Alfa e um membro do Grupo Alfa",
+      "when": "O líder chama GET /api/portfolio/summary?targetUserId=[membroId]",
+      "then": "Retorna as posições consolidadas da carteira do membro com sucesso."
+    },
+    {
+      "id": "AC-06",
+      "given": "Um membro comum do Grupo Alfa (role MEMBER)",
+      "when": "Tenta ver a carteira de outro membro chamando GET /api/portfolio/summary?targetUserId=[outroMembroId]",
+      "then": "Retorna erro 403 Forbidden."
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Testar fluxo feliz de criação de grupo, verificação de membership LEADER e listagem subsequente.",
+      "kind": "integration",
+      "covers": ["REQ-01", "AC-01", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "Testar geração de convites por LEADER (sucesso) e por MEMBER (erro 403).",
+      "kind": "integration",
+      "covers": ["REQ-02", "REQ-03", "AC-03"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "Testar aceitação de convite com validações de expiração, limite de usos e concorrência.",
+      "kind": "integration",
+      "covers": ["REQ-04", "AC-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "Testar exclusão/saída de membros: membro comum saindo, líder expulsando membro e bloqueio de saída do último líder.",
+      "kind": "integration",
+      "covers": ["REQ-05"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-05",
+      "description": "Testar isolamento e visualização cruzada em /api/portfolio/summary para líder, membro e não-membro.",
+      "kind": "integration",
+      "covers": ["REQ-06", "AC-05", "AC-06"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar os Route Handlers de grupos e convites (POST, GET, DELETE /api/groups/*).",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar o Route Handler para aceitação de convites (/api/groups/invites/accept).",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar o Route Handler para exclusão/saída de membros (/api/groups/[id]/members/[userId]).",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Atualizar os Route Handlers de carteira (/api/portfolio/*) para aceitar targetUserId e validar com assertCanViewPortfolio.",
+      "target": "apps/web",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Escrever os testes de integração usando Vitest para cobrir os novos endpoints e a segurança cross-user.",
+      "target": "apps/web",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Race conditions ao aceitar convites concorrentemente estourando max_uses. Mitigação: usar transações do Prisma ($transaction) com atualização do contador antes da criação da membership."
+  ],
+  "observability": [
+    "Logs em nível INFO na criação de grupos e convites aceitos.",
+    "Logs em nível WARN/SECURITY para acessos negados a carteiras de outros usuários."
+  ],
+  "rollback": "Remover os Route Handlers criados sob /api/groups e desfazer as modificações nos Route Handlers de portfólio."
+}

@@ -2,10 +2,10 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0016",
   "title": "Seção de notícias relacionadas na home pública e ativos",
-  "status": "implemented",
+  "status": "verified",
   "type": "feature",
   "created": "2026-06-14",
-  "updated": "2026-06-17",
+  "updated": "2026-06-17T20:30:00",
   "authors": ["Antigravity", "Nikolas"],
   "summary": "Implementar uma API route de busca de notícias e componentes frontend para exibir notícias do mercado financeiro na home pública e notícias direcionadas na página de detalhes de ativos (/ativos/[ticker]).",
   "motivation": "A atração e retenção de usuários dependem de um ecossistema informativo robusto. Apresentar notícias de mercado contextualizadas nas páginas de ativos (ex: PETR4) aumenta o engajamento e educa o investidor. O sistema de busca deve ser flexível para evoluir para motores mais robustos futuramente.",
@@ -135,43 +135,43 @@
       "id": "T-01",
       "description": "Implementar newsCache (Map singleton) e NewsAdapter com métodos fetchGeneralNews() e fetchTickerNews(ticker) integrando Finnhub News API em apps/web/src/lib/news/news.service.ts.",
       "target": "apps/web",
-      "done": false
+      "done": true
     },
     {
       "id": "T-02",
       "description": "Criar lista estática de fallback em apps/web/src/lib/news/news-fallback.ts com ao menos 6 artigos financeiros curados.",
       "target": "apps/web",
-      "done": false
+      "done": true
     },
     {
       "id": "T-03",
       "description": "Criar a API route GET /api/market/news/route.ts aplicando lógica de cache em memória (15 min TTL) e fallback estático em caso de erros.",
       "target": "apps/web",
-      "done": false
+      "done": true
     },
     {
       "id": "T-04",
       "description": "Criar os componentes NewsCard.tsx e RelatedNewsSection.tsx em apps/web/src/components/market/.",
       "target": "apps/web",
-      "done": false
+      "done": true
     },
     {
       "id": "T-05",
       "description": "Integrar a seção de notícias na home pública (apps/web/src/app/(public)/page.tsx) posicionada abaixo da MarketSection.",
       "target": "apps/web",
-      "done": false
+      "done": true
     },
     {
       "id": "T-06",
       "description": "Integrar a seção de notícias na página pública de ativos /ativos/[ticker]/page.tsx.",
       "target": "apps/web",
-      "done": false
+      "done": true
     },
     {
       "id": "T-07",
       "description": "Escrever testes unitários com MSW mockando Finnhub cobrindo TC-01, TC-02, TC-03 e TC-04.",
       "target": "apps/web",
-      "done": false
+      "done": true
     }
   ],
   "risks": [

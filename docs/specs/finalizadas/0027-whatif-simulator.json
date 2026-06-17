@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0027",
   "title": "Simulador What-If de posição",
-  "status": "implemented",
+  "status": "verified",
   "type": "feature",
   "created": "2026-06-17",
   "updated": "2026-06-17",

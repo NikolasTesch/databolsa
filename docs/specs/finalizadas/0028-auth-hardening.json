@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0028",
   "title": "Hardening de autenticação — JWT fail-fast e rate limiting",
-  "status": "implemented",
+  "status": "verified",
   "type": "infra",
   "created": "2026-06-17",
   "updated": "2026-06-17",

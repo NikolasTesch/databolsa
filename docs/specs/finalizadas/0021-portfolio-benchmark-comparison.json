@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0021",
   "title": "Comparação do portfólio com benchmarks",
-  "status": "implemented",
+  "status": "verified",
   "type": "feature",
   "created": "2026-06-17",
   "updated": "2026-06-17",

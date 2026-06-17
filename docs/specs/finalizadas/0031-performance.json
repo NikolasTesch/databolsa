@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0031",
   "title": "Performance de leitura — índice DB e dedupe de cotações",
-  "status": "implemented",
+  "status": "verified",
   "type": "refactor",
   "created": "2026-06-17",
   "updated": "2026-06-17",
