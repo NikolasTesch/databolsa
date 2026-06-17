@@ -17,9 +17,39 @@ vi.mock('@/lib/cache/memory-cache', () => ({
   }),
 }));
 
+const mockDbQuotes = new Map();
+
+vi.mock('@/lib/prisma', () => ({
+  default: {
+    quoteCache: {
+      findUnique: vi.fn().mockImplementation(({ where }) => {
+        const { symbol, source } = where.symbol_source;
+        return Promise.resolve(mockDbQuotes.get(`${symbol}:${source}`) || null);
+      }),
+      upsert: vi.fn().mockImplementation(({ where, update, create }) => {
+        const { symbol, source } = where.symbol_source;
+        const entry = {
+          symbol,
+          source,
+          price: create.price,
+          currency: create.currency,
+          fetched_at: create.fetched_at || new Date(),
+        };
+        mockDbQuotes.set(`${symbol}:${source}`, entry);
+        return Promise.resolve(entry);
+      }),
+    },
+  },
+}));
+
+beforeEach(() => {
+  mockDbQuotes.clear();
+});
+
 // We test the route handler directly; external fetches are mocked via global fetch
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
+
 
 import { GET } from '@/app/api/market/tools/convert/route';
 
@@ -278,7 +308,13 @@ describe('TC-04 — Degradação Graciosa com fallbackRates (RN-10)', () => {
     // 2. Segunda chamada: falha na API externa
     mockFetch.mockRejectedValueOnce(new Error('AwesomeAPI fora do ar'));
 
-    // Executamos a chamada. Como a API falhou, ela deve usar o fallbackRates
+    // Forçar expiração do cache do banco para que tente buscar na API e caia no fallback
+    const entry = mockDbQuotes.get('USDBRL:BRAPI');
+    if (entry) {
+      entry.fetched_at = new Date(Date.now() - 10 * 60 * 1000); // 10 minutos atrás (expirado)
+    }
+
+    // Executamos a chamada. Como a API falhou, ela deve usar o fallback do banco de dados
     const req2 = makeReq({ from: 'USD', to: 'BRL', amount: '100' });
     const res2 = await GET(req2);
 

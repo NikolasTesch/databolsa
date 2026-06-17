@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Decimal } from 'decimal.js';
 import { createMemoryCache } from '@/lib/cache/memory-cache';
 import { CRYPTO_TICKER_MAP } from '@/lib/quotes/ticker-map';
+import prisma from '@/lib/prisma';
 
 const RATE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -21,20 +22,37 @@ const CRYPTO_TICKERS = new Set(Object.keys(CRYPTO_TICKER_MAP));
 // Supported targets for crypto
 const SUPPORTED_CRYPTO_TO = new Set(['BRL', 'USD']);
 
-// Global in-memory fallback cache to store the last known successful rate for a pair (RN-10)
-const fallbackRates = new Map<string, Decimal>();
+// Global in-memory fallback cache is replaced by PostgreSQL database QuoteCache for persistence across restarts/serverless functions.
 
 async function fetchFiatRate(from: string, to: string): Promise<{ rate: Decimal; stale: boolean }> {
   const cacheKey = `rate:${from}/${to}`;
 
-  const cached = rateCache.get(cacheKey);
-  if (cached) {
-    console.log(`[tools.convert] cache hit for pair=${from}/${to}`);
-    return { rate: cached.rate, stale: cached.stale };
+  // 1. Check in-memory cache
+  const cachedMem = rateCache.get(cacheKey);
+  if (cachedMem) {
+    console.log(`[tools.convert] in-memory cache hit for pair=${from}/${to}`);
+    return { rate: cachedMem.rate, stale: cachedMem.stale };
   }
 
-  console.log(`[tools.convert] cache miss for pair=${from}/${to}`);
+  // 2. Check database cache
+  const cachedDb = await prisma.quoteCache.findUnique({
+    where: { symbol_source: { symbol: `${from}${to}`, source: 'BRAPI' } },
+  });
+  const isExpired = cachedDb ? (Date.now() - new Date(cachedDb.fetched_at).getTime() > RATE_TTL_MS) : true;
+  if (cachedDb && !isExpired) {
+    console.log(`[tools.convert] database cache hit for pair=${from}/${to}`);
+    const rate = new Decimal(cachedDb.price.toString());
+    rateCache.set(cacheKey, {
+      rate,
+      updatedAt: cachedDb.fetched_at.toISOString(),
+      stale: false,
+    });
+    return { rate, stale: false };
+  }
 
+  console.log(`[tools.convert] cache miss or expired for pair=${from}/${to}`);
+
+  // 3. Fetch from API
   try {
     const url = `https://economia.awesomeapi.com.br/last/${from}-${to}`;
     const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
@@ -45,22 +63,30 @@ async function fetchFiatRate(from: string, to: string): Promise<{ rate: Decimal;
     if (!bid) throw new Error(`No rate for ${from}-${to}`);
 
     const rate = new Decimal(String(bid));
-    const entry: RateCacheEntry = {
+    const updatedAt = new Date();
+
+    // 4. Update database cache
+    await prisma.quoteCache.upsert({
+      where: { symbol_source: { symbol: `${from}${to}`, source: 'BRAPI' } },
+      update: { price: rate.toString(), currency: to, fetched_at: updatedAt },
+      create: { symbol: `${from}${to}`, source: 'BRAPI', price: rate.toString(), currency: to, fetched_at: updatedAt },
+    });
+
+    // 5. Update in-memory cache
+    rateCache.set(cacheKey, {
       rate,
-      updatedAt: new Date().toISOString(),
+      updatedAt: updatedAt.toISOString(),
       stale: false,
-    };
-    rateCache.set(cacheKey, entry);
-    fallbackRates.set(cacheKey, rate); // Save to fallback cache
+    });
+
     return { rate, stale: false };
   } catch (err) {
     console.error(`[tools.convert] error fetching rate for ${from}/${to}: ${String(err)}`);
 
-    // Degradação graciosa (RN-10): retornar a última cotação conhecida se houver
-    const fallback = fallbackRates.get(cacheKey);
-    if (fallback) {
-      console.warn(`[tools.convert] using fallback rate for fiat pair=${from}/${to}`);
-      return { rate: fallback, stale: true };
+    // 6. Degradação graciosa (RN-10): retornar a última cotação conhecida do banco
+    if (cachedDb) {
+      console.warn(`[tools.convert] using database fallback rate for fiat pair=${from}/${to}`);
+      return { rate: new Decimal(cachedDb.price.toString()), stale: true };
     }
 
     throw err;
@@ -70,14 +96,32 @@ async function fetchFiatRate(from: string, to: string): Promise<{ rate: Decimal;
 async function fetchCryptoRate(from: string, to: string): Promise<{ rate: Decimal; stale: boolean }> {
   const cacheKey = `rate:${from}/${to}`;
 
-  const cached = rateCache.get(cacheKey);
-  if (cached) {
-    console.log(`[tools.convert] cache hit for pair=${from}/${to}`);
-    return { rate: cached.rate, stale: cached.stale };
+  // 1. Check in-memory cache
+  const cachedMem = rateCache.get(cacheKey);
+  if (cachedMem) {
+    console.log(`[tools.convert] in-memory cache hit for pair=${from}/${to}`);
+    return { rate: cachedMem.rate, stale: cachedMem.stale };
   }
 
-  console.log(`[tools.convert] cache miss for pair=${from}/${to}`);
+  // 2. Check database cache
+  const cachedDb = await prisma.quoteCache.findUnique({
+    where: { symbol_source: { symbol: `${from}${to}`, source: 'COINGECKO' } },
+  });
+  const isExpired = cachedDb ? (Date.now() - new Date(cachedDb.fetched_at).getTime() > RATE_TTL_MS) : true;
+  if (cachedDb && !isExpired) {
+    console.log(`[tools.convert] database cache hit for pair=${from}/${to}`);
+    const rate = new Decimal(cachedDb.price.toString());
+    rateCache.set(cacheKey, {
+      rate,
+      updatedAt: cachedDb.fetched_at.toISOString(),
+      stale: false,
+    });
+    return { rate, stale: false };
+  }
 
+  console.log(`[tools.convert] cache miss or expired for pair=${from}/${to}`);
+
+  // 3. Fetch from API
   try {
     const coinId = CRYPTO_TICKER_MAP[from.toUpperCase()];
     if (!coinId) throw new Error(`Unknown crypto ticker: ${from}`);
@@ -92,27 +136,36 @@ async function fetchCryptoRate(from: string, to: string): Promise<{ rate: Decima
     if (price == null) throw new Error(`No price for ${from} in ${to}`);
 
     const rate = new Decimal(String(price));
-    const entry: RateCacheEntry = {
+    const updatedAt = new Date();
+
+    // 4. Update database cache
+    await prisma.quoteCache.upsert({
+      where: { symbol_source: { symbol: `${from}${to}`, source: 'COINGECKO' } },
+      update: { price: rate.toString(), currency: to, fetched_at: updatedAt },
+      create: { symbol: `${from}${to}`, source: 'COINGECKO', price: rate.toString(), currency: to, fetched_at: updatedAt },
+    });
+
+    // 5. Update in-memory cache
+    rateCache.set(cacheKey, {
       rate,
-      updatedAt: new Date().toISOString(),
+      updatedAt: updatedAt.toISOString(),
       stale: false,
-    };
-    rateCache.set(cacheKey, entry);
-    fallbackRates.set(cacheKey, rate); // Save to fallback cache
+    });
+
     return { rate, stale: false };
   } catch (err) {
     console.error(`[tools.convert] error fetching rate for ${from}/${to}: ${String(err)}`);
 
-    // Degradação graciosa (RN-10): retornar a última cotação conhecida se houver
-    const fallback = fallbackRates.get(cacheKey);
-    if (fallback) {
-      console.warn(`[tools.convert] using fallback rate for crypto pair=${from}/${to}`);
-      return { rate: fallback, stale: true };
+    // 6. Degradação graciosa (RN-10): retornar a última cotação conhecida do banco
+    if (cachedDb) {
+      console.warn(`[tools.convert] using database fallback rate for crypto pair=${from}/${to}`);
+      return { rate: new Decimal(cachedDb.price.toString()), stale: true };
     }
 
     throw err;
   }
 }
+
 
 /**
  * GET /api/market/tools/convert
