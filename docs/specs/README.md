@@ -126,7 +126,7 @@ _Nenhuma spec em andamento no momento._
 | SPEC-0031 | Performance de leitura — índice DB e dedupe de cotações           | implemented |
 | SPEC-0032 | Hardening de importação CSV — limite de tamanho e PATCH de asset  | implemented |
 | SPEC-0033 | Consistência de API — envelope de erro e PATCHes faltantes        | implemented |
-| SPEC-0034 | Cobertura de testes — csv-parser, alerts, benchmark e endpoints   | pending |
+| SPEC-0034 | Cobertura de testes — csv-parser, alerts, benchmark e endpoints   | implemented |
 | SPEC-0035 | Série temporal real do portfólio e benchmark (TWR)                | implemented |
 | SPEC-0036 | Gaps de produto — paginação de assets                             | implemented |
 | SPEC-0037 | Grupos de investimento — modelo de dados, autorização cross-user e papel admin (fase 1/3) | implemented |

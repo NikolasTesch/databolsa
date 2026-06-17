@@ -20,6 +20,7 @@ vi.mock('@/lib/prisma', () => ({
       findMany: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
+      count: vi.fn(),
     },
     transaction: {
       findMany: vi.fn(),
@@ -104,9 +105,10 @@ describe('Route Handlers API Tests', () => {
       expect(res.status).toBe(401);
     });
 
-    it('retorna ativos do usuário autenticado', async () => {
+    it('retorna ativos do usuário autenticado com paginação', async () => {
       const token = await signAccessToken({ sub: 'user-1', email: 'test@example.com' });
       const mockAssets = [{ id: 'asset-1', ticker: 'PETR4', name: 'Petrobras' }];
+      (prisma.asset.count as any).mockResolvedValue(1);
       (prisma.asset.findMany as any).mockResolvedValue(mockAssets);
 
       const req = new NextRequest('http://localhost:3000/api/assets', {
@@ -115,7 +117,9 @@ describe('Route Handlers API Tests', () => {
       const res = await assetsGet(req);
       expect(res.status).toBe(200);
       const body = await res.json();
-      expect(body).toEqual(mockAssets);
+      expect(body.data).toEqual(mockAssets);
+      expect(body.total).toBe(1);
+      expect(body.page).toBe(1);
     });
   });
 

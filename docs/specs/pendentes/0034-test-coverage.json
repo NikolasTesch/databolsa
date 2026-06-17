@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0034",
   "title": "Cobertura de testes — csv-parser, alerts, benchmark-fetchers e endpoints de portfólio",
-  "status": "in_progress",
+  "status": "implemented",
   "type": "test",
   "created": "2026-06-17",
   "updated": "2026-06-17",
@@ -345,9 +345,9 @@
     { "id": "T-03", "description": "Criar apps/web/src/test/api/alert.service.test.ts", "target": "apps/web", "done": true },
     { "id": "T-04", "description": "Criar apps/web/src/test/api/benchmark-fetchers.test.ts", "target": "apps/web", "done": true },
     { "id": "T-05", "description": "Expandir apps/web/src/test/api/portfolio-routes.test.ts com endpoints SPEC-0021..0027", "target": "apps/web", "done": true },
-    { "id": "T-06", "description": "Rodar npm test em packages/core", "target": "packages/core", "done": false },
-    { "id": "T-07", "description": "Rodar pnpm test em apps/web", "target": "apps/web", "done": false },
-    { "id": "T-08", "description": "Atualizar docs/specs/README.md", "target": "docs", "done": false }
+    { "id": "T-06", "description": "Rodar npm test em packages/core", "target": "packages/core", "done": true },
+    { "id": "T-07", "description": "Rodar pnpm test em apps/web", "target": "apps/web", "done": true },
+    { "id": "T-08", "description": "Atualizar docs/specs/README.md", "target": "docs", "done": true }
   ],
   "risks": [],
   "observability": [],
