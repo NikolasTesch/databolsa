@@ -1,0 +1,355 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0034",
+  "title": "Cobertura de testes — csv-parser, alerts, benchmark-fetchers e endpoints de portfólio",
+  "status": "in_progress",
+  "type": "test",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["testador"],
+  "summary": "Adiciona suítes de teste para csv-parser, alert.service, benchmark-fetchers, timeseries e os endpoints SPEC-0021..0027. Garante cobertura dos edge cases financeiros obrigatórios (venda parcial/total, venda maior que posição, ativo sem cotação, múltiplas compras, moeda estrangeira, zero posição).",
+  "motivation": "As features SPEC-0021..0027 e SPEC-0035 foram implementadas sem cobertura de testes automatizados. Sem testes, bugs silenciosos em cálculos financeiros (P&L, alocação, simulação, CDI base-100) podem passar despercebidos.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §7", "SPEC §9"],
+    "business_rules": ["RN-02", "RN-03", "RN-10", "RN-11"],
+    "adrs": ["ADR-0010", "ADR-0014"],
+    "depends_on": ["SPEC-0021", "SPEC-0022", "SPEC-0023", "SPEC-0025", "SPEC-0026", "SPEC-0027", "SPEC-0035"]
+  },
+  "scope": {
+    "in_scope": [
+      "Testes unitários de csv-parser (parseCsv, parseDate via parseCsv)",
+      "Testes unitários de alert.service (evaluateAlerts)",
+      "Testes unitários de benchmark-fetchers (fetchCdiSeries, fetchIbovSeries)",
+      "Testes unitários de timeseries.ts no packages/core",
+      "Testes de integração dos endpoints: allocation, dividends, benchmark, simulate, alerts, import"
+    ],
+    "out_of_scope": [
+      "Testes E2E (browser/Playwright)",
+      "Testes de UI/componentes React",
+      "Código de produção novo",
+      "Alteração de thresholds de cobertura"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "parseCsv deve detectar formato pt-BR e B3 corretamente e retornar erros por linha sem falha total",
+      "rule_ref": "RN-02",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "evaluateAlerts deve disparar ABOVE/BELOW, ser idempotente para alertas já disparados, e não quebrar quando cotação indisponível (RN-10)",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "fetchCdiSeries deve retornar série em base-100 com return_pct = último_ponto - 100",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "buildPortfolioSeriesWithCurrencies deve aplicar câmbio USD→BRL, fazer forward-fill e retornar [] para série vazia",
+      "rule_ref": "RN-03",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Endpoint /api/portfolio/allocation deve refletir venda parcial na alocação e excluir ativo sem cotação do total",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Endpoint /api/portfolio/simulate deve retornar 422 para SELL > posição (RN-02) e 0% alocação para posição zero",
+      "rule_ref": "RN-02",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-07",
+      "description": "Endpoint /api/portfolio/import deve rejeitar CSV > 1MB (413), CSV > 1000 linhas (422), SELL > posição no commit (422)",
+      "rule_ref": "RN-02",
+      "priority": "must"
+    }
+  ],
+  "data_model": [],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "CSV com data 13/06/2026",
+      "when": "parseCsv processa",
+      "then": "date retornado é 2026-06-13 (DD inequívoco)"
+    },
+    {
+      "id": "AC-02",
+      "given": "Alerta ABOVE com cotação atual acima do target",
+      "when": "evaluateAlerts executa",
+      "then": "triggered_at é setado e is_active=false"
+    },
+    {
+      "id": "AC-03",
+      "given": "Alerta já disparado (triggered_at não nulo)",
+      "when": "evaluateAlerts executa novamente",
+      "then": "updateMany NÃO é chamado para esse alerta (idempotência)"
+    },
+    {
+      "id": "AC-04",
+      "given": "Série CDI com 2 pontos de taxa diária 0.05%",
+      "when": "fetchCdiSeries processa",
+      "then": "primeiro ponto é base-100 e return_pct = último_ponto - 100"
+    },
+    {
+      "id": "AC-05",
+      "given": "Ativo USD com câmbio 5.5",
+      "when": "buildPortfolioSeriesWithCurrencies calcula",
+      "then": "valor BRL = qtd × preço × 5.5"
+    },
+    {
+      "id": "AC-06",
+      "given": "Portfólio sem transações",
+      "when": "buildPortfolioSeriesWithCurrencies calcula",
+      "then": "retorna []"
+    },
+    {
+      "id": "AC-07",
+      "given": "CSV com content-length > 1MB",
+      "when": "POST /api/portfolio/import",
+      "then": "retorna 413"
+    },
+    {
+      "id": "AC-08",
+      "given": "SELL > posição no modo commit",
+      "when": "POST /api/portfolio/import?mode=commit",
+      "then": "transação inválida é rejeitada, restante é importado"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "parseCsv: data DD inequívoco (13/06/2026) → 2026-06-13",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "parseCsv: data MM/DD inequívoco (06/13/2026) → 2026-06-13",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "parseCsv: data ambígua (06/07/2026) → pt-BR default DD/MM → 2026-07-06",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "parseCsv: formato ISO (2026-06-13) → 2026-06-13",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-05",
+      "description": "parseCsv: data inválida (99/99/2026) → erro na linha",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-06",
+      "description": "parseCsv: formato genérico válido retorna ParsedRow correto",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-07",
+      "description": "parseCsv: cabeçalho B3 detectado e linha processada corretamente",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-08",
+      "description": "parseCsv: linha com campos faltando → erro na linha, outras linhas ok",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-09",
+      "description": "parseCsv: CSV vazio → erro global",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-10",
+      "description": "evaluateAlerts: ABOVE dispara quando preço >= target",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-11",
+      "description": "evaluateAlerts: BELOW dispara quando preço <= target",
+      "kind": "unit",
+      "covers": ["REQ-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-12",
+      "description": "evaluateAlerts: alerta já disparado → idempotência (updateMany não chamado)",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-13",
+      "description": "evaluateAlerts: ticker sem cotação → alerta não dispara (RN-10)",
+      "kind": "unit",
+      "covers": ["REQ-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-14",
+      "description": "evaluateAlerts: múltiplos alertas do mesmo ticker → quoteService chamado uma vez",
+      "kind": "unit",
+      "covers": ["REQ-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-15",
+      "description": "fetchCdiSeries: 2 pontos → base 100 no início, return_pct = último-100",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-16",
+      "description": "fetchCdiSeries: fetch com erro → throw propagado",
+      "kind": "unit",
+      "covers": ["REQ-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-17",
+      "description": "buildPortfolioSeriesWithCurrencies: 1 ativo BRL, 3 preços → base 100 no dia 1",
+      "kind": "unit",
+      "covers": ["REQ-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-18",
+      "description": "buildPortfolioSeriesWithCurrencies: forward-fill para data sem preço",
+      "kind": "unit",
+      "covers": ["REQ-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-19",
+      "description": "buildPortfolioSeriesWithCurrencies: venda parcial reduz patrimônio proporcionalmente",
+      "kind": "unit",
+      "covers": ["REQ-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-20",
+      "description": "buildPortfolioSeriesWithCurrencies: ativo USD com câmbio 5.5 → valor BRL correto",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-05"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-21",
+      "description": "buildPortfolioSeriesWithCurrencies: sem transações → []",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-06"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-22",
+      "description": "GET /api/portfolio/allocation: 401 sem JWT",
+      "kind": "integration",
+      "covers": ["REQ-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-23",
+      "description": "GET /api/portfolio/allocation: venda parcial reflete na alocação",
+      "kind": "integration",
+      "covers": ["REQ-05", "AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-24",
+      "description": "GET /api/portfolio/allocation: ativo sem cotação excluído do total (RN-10)",
+      "kind": "integration",
+      "covers": ["REQ-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-25",
+      "description": "POST /api/portfolio/simulate: SELL > posição → 422 SELL_EXCEEDS_POSITION (RN-02)",
+      "kind": "integration",
+      "covers": ["REQ-06", "AC-06"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-26",
+      "description": "POST /api/portfolio/simulate: posição zero / portfolio zero → alocação null (sem div/0)",
+      "kind": "integration",
+      "covers": ["REQ-06"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-27",
+      "description": "POST /api/portfolio/import: content-length > 1MB → 413",
+      "kind": "integration",
+      "covers": ["REQ-07", "AC-07"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-28",
+      "description": "POST /api/portfolio/import: > 1000 linhas válidas → 422",
+      "kind": "integration",
+      "covers": ["REQ-07"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-29",
+      "description": "POST /api/portfolio/import preview: linha inválida coexiste com linhas válidas",
+      "kind": "integration",
+      "covers": ["REQ-07"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-30",
+      "description": "POST /api/portfolio/import commit: SELL > posição → linha rejeitada, restante importado",
+      "kind": "integration",
+      "covers": ["REQ-07", "AC-08"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    { "id": "T-01", "description": "Criar packages/core/src/__tests__/timeseries.test.ts", "target": "packages/core", "done": true },
+    { "id": "T-02", "description": "Criar apps/web/src/test/api/csv-parser.test.ts", "target": "apps/web", "done": true },
+    { "id": "T-03", "description": "Criar apps/web/src/test/api/alert.service.test.ts", "target": "apps/web", "done": true },
+    { "id": "T-04", "description": "Criar apps/web/src/test/api/benchmark-fetchers.test.ts", "target": "apps/web", "done": true },
+    { "id": "T-05", "description": "Expandir apps/web/src/test/api/portfolio-routes.test.ts com endpoints SPEC-0021..0027", "target": "apps/web", "done": true },
+    { "id": "T-06", "description": "Rodar npm test em packages/core", "target": "packages/core", "done": false },
+    { "id": "T-07", "description": "Rodar pnpm test em apps/web", "target": "apps/web", "done": false },
+    { "id": "T-08", "description": "Atualizar docs/specs/README.md", "target": "docs", "done": false }
+  ],
+  "risks": [],
+  "observability": [],
+  "rollback": "Remover os arquivos de teste criados. Não há mudança em código de produção."
+}
