@@ -74,7 +74,7 @@ export function calculateCurrentQuantity(transactions: Transaction[]): Decimal {
   for (const tx of sorted) {
     if (tx.type === 'BUY') {
       currentQty = currentQty.add(tx.quantity);
-    } else {
+    } else if (tx.type === 'SELL') {
       // RN-02: rejeitar venda maior que a posição disponível
       if (tx.quantity.greaterThan(currentQty)) {
         throw new Error(
@@ -84,6 +84,7 @@ export function calculateCurrentQuantity(transactions: Transaction[]): Decimal {
       }
       currentQty = currentQty.sub(tx.quantity);
     }
+    // DIVIDEND: não altera quantidade
   }
 
   return currentQty;
@@ -125,6 +126,21 @@ export function calculatePosition(
     ? new Decimal(0)
     : profit_loss.div(invested_value).mul(100);
 
+  // total_dividends = Σ (quantidade × unit_price) das transações DIVIDEND
+  const total_dividends = transactions
+    .filter((t) => t.type === 'DIVIDEND')
+    .reduce((acc, t) => acc.add(t.quantity.mul(t.unit_price)), new Decimal(0));
+
+  const total_return = profit_loss.add(total_dividends);
+
+  const total_return_pct = invested_value.isZero()
+    ? new Decimal(0)
+    : total_return.div(invested_value).mul(100);
+
+  const yield_on_cost_pct = invested_value.isZero()
+    ? new Decimal(0)
+    : total_dividends.div(invested_value).mul(100);
+
   return {
     current_quantity,
     average_price,
@@ -132,5 +148,45 @@ export function calculatePosition(
     current_value,
     profit_loss,
     profit_loss_pct,
+    total_dividends,
+    total_return,
+    total_return_pct,
+    yield_on_cost_pct,
   };
+}
+
+/**
+ * Calcula o lucro/prejuízo realizado nas operações de venda, usando o
+ * método do custo médio corrido (running average — RN-01, RN-03).
+ *
+ * Para cada SELL: ganho = quantidade × (preço_venda − preço_médio_no_momento).
+ * O preço médio é atualizado a cada BUY com base na posição em aberto.
+ *
+ * @param transactions - Lista de transações do ativo (qualquer ordem; será reordenada).
+ * @returns Ganho realizado total como Decimal (pode ser negativo = prejuízo).
+ */
+export function calculateRealizedGain(transactions: Transaction[]): Decimal {
+  const sorted = [...transactions].sort((a, b) =>
+    a.date < b.date ? -1 : a.date > b.date ? 1 : 0,
+  );
+
+  let currentQty = new Decimal(0);
+  let avgPrice = new Decimal(0);
+  let realizedGain = new Decimal(0);
+
+  for (const tx of sorted) {
+    if (tx.type === 'BUY') {
+      const newQty = currentQty.add(tx.quantity);
+      avgPrice = newQty.isZero()
+        ? new Decimal(0)
+        : currentQty.mul(avgPrice).add(tx.quantity.mul(tx.unit_price)).add(tx.fees).div(newQty);
+      currentQty = newQty;
+    } else if (tx.type === 'SELL') {
+      realizedGain = realizedGain.add(tx.quantity.mul(tx.unit_price.sub(avgPrice)));
+      currentQty = currentQty.sub(tx.quantity);
+    }
+    // DIVIDEND: não afeta avgPrice nem quantidade
+  }
+
+  return realizedGain;
 }

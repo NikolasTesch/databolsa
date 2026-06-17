@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AssetClass, Currency, TransactionType } from '@prisma/client';
+import { AssetClass, Currency, TransactionType, Prisma } from '@prisma/client';
 import { calculatePosition } from '@databolsa/core';
 import { Transaction as CoreTransaction } from '@databolsa/core';
 import { Decimal } from 'decimal.js';
@@ -9,12 +9,26 @@ import { QuoteService } from '@/lib/quotes/quote.service';
 
 const quoteService = new QuoteService();
 
+interface PositionItem {
+  ticker: string;
+  asset_id: string;
+  current_quantity: string;
+  average_price: string;
+  invested_value: string;
+  valor_atual_brl: string | null;
+  lucro_prejuizo_brl: string | null;
+  lucro_prejuizo_pct: string | null;
+  alocacao_pct: string | null;
+  is_stale: boolean;
+  current_price_brl: string | null;
+}
+
 function prismaToCoreTx(tx: {
   type: TransactionType;
   date: Date;
-  unit_price: any;
-  quantity: any;
-  fees: any;
+  unit_price: Prisma.Decimal;
+  quantity: Prisma.Decimal;
+  fees: Prisma.Decimal;
 }): CoreTransaction {
   return {
     type: tx.type as 'BUY' | 'SELL',
@@ -38,33 +52,38 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  const positions: any[] = [];
+  const assetsWithTxs = assets.filter((asset) => {
+    const coreTxs = asset.transactions.filter(
+      (tx) => tx.type === 'BUY' || tx.type === 'SELL',
+    );
+    return coreTxs.length > 0;
+  });
+
+  const quoteResults = await Promise.all(
+    assetsWithTxs.map((asset) =>
+      quoteService.getQuote(asset.ticker, asset.asset_class, asset.currency),
+    ),
+  );
+
+  const positions: PositionItem[] = [];
   let totalBrl = new Decimal(0);
 
-  for (const asset of assets) {
+  for (let i = 0; i < assetsWithTxs.length; i++) {
+    const asset = assetsWithTxs[i];
+    const quoteResult = quoteResults[i];
+
     const coreTxs = asset.transactions
       .filter((tx) => tx.type === 'BUY' || tx.type === 'SELL')
       .map(prismaToCoreTx);
-    if (coreTxs.length === 0) continue;
-
-    const quoteResult = await quoteService.getQuote(
-      asset.ticker,
-      asset.asset_class,
-      asset.currency
-    );
 
     const quotePrice = quoteResult?.priceBrl ?? new Decimal(0);
     const position = calculatePosition(coreTxs, quotePrice);
 
     if (position.current_quantity.isZero()) continue;
 
-    const valorAtualBrl = quoteResult
-      ? position.current_value.toString()
-      : null;
+    const valorAtualBrl = quoteResult ? position.current_value.toString() : null;
     const lucroBrl = quoteResult ? position.profit_loss.toString() : null;
-    const lucroPct = quoteResult
-      ? position.profit_loss_pct.toString()
-      : null;
+    const lucroPct = quoteResult ? position.profit_loss_pct.toString() : null;
 
     if (quoteResult) {
       totalBrl = totalBrl.plus(position.current_value);
@@ -85,7 +104,6 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Calculate alocacao_pct after accumulating total
   if (totalBrl.greaterThan(0)) {
     for (const pos of positions) {
       if (pos.valor_atual_brl !== null) {
@@ -102,6 +120,6 @@ export async function GET(request: NextRequest) {
       positions,
       patrimonio_total_brl: totalBrl.toString(),
     },
-    { status: 200 }
+    { status: 200 },
   );
 }

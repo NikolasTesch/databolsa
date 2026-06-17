@@ -10,6 +10,7 @@ import {
   calculateAveragePrice,
   calculateCurrentQuantity,
   calculatePosition,
+  calculateRealizedGain,
 } from '../position';
 import type { Transaction } from '../types';
 
@@ -39,6 +40,20 @@ function sell(
 ): Transaction {
   return {
     type: 'SELL',
+    date,
+    quantity: new Decimal(quantity),
+    unit_price: new Decimal(unit_price),
+    fees: new Decimal(0),
+  };
+}
+
+function dividend(
+  date: string,
+  quantity: string | number,
+  unit_price: string | number,
+): Transaction {
+  return {
+    type: 'DIVIDEND',
     date,
     quantity: new Decimal(quantity),
     unit_price: new Decimal(unit_price),
@@ -373,5 +388,217 @@ describe('Edge cases adicionais', () => {
     expect(result.current_value.toString()).toBe('1800');
     // profit_loss = 1800 - 1352.94... ≈ 447.06...
     expect(result.profit_loss.toDecimalPlaces(4).toString()).toBe('447.0588');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TC-08 — dividendos: total_dividends e retorno total (total_return)
+// ---------------------------------------------------------------------------
+
+describe('TC-08: calculatePosition — dividendos e retorno total', () => {
+  it('total_dividends acumula proventos corretamente', () => {
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 100, '10.00'),
+      dividend('2024-06-01', 100, '0.50'),  // R$50
+      dividend('2024-12-01', 100, '0.75'),  // R$75
+    ];
+
+    const result = calculatePosition(transactions, new Decimal('12.00'));
+
+    expect(result.total_dividends.toString()).toBe('125');
+  });
+
+  it('total_return = profit_loss + total_dividends', () => {
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 100, '10.00'),
+      dividend('2024-06-01', 100, '1.00'),  // R$100
+    ];
+
+    const result = calculatePosition(transactions, new Decimal('12.00'));
+
+    // profit_loss = (12 - 10) * 100 = 200; total_dividends = 100
+    expect(result.profit_loss.toString()).toBe('200');
+    expect(result.total_dividends.toString()).toBe('100');
+    expect(result.total_return.toString()).toBe('300');
+  });
+
+  it('total_return_pct = total_return / invested_value * 100', () => {
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 100, '10.00'),
+      dividend('2024-06-01', 100, '1.00'),  // R$100
+    ];
+
+    // invested_value = 100 * 10 = 1000
+    // total_return = 300; total_return_pct = 300 / 1000 * 100 = 30
+    const result = calculatePosition(transactions, new Decimal('12.00'));
+    expect(result.total_return_pct.toString()).toBe('30');
+  });
+
+  it('yield_on_cost_pct = total_dividends / invested_value * 100', () => {
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 100, '10.00'),
+      dividend('2024-06-01', 100, '1.00'),  // R$100
+    ];
+
+    // invested_value = 1000; yield_on_cost = 100 / 1000 * 100 = 10
+    const result = calculatePosition(transactions, new Decimal('12.00'));
+    expect(result.yield_on_cost_pct.toString()).toBe('10');
+  });
+
+  it('dividendos não alteram quantidade nem preço médio', () => {
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 100, '10.00'),
+      dividend('2024-06-01', 100, '1.00'),
+    ];
+
+    const result = calculatePosition(transactions, new Decimal('10.00'));
+    expect(result.current_quantity.toString()).toBe('100');
+    expect(result.average_price.toString()).toBe('10');
+  });
+
+  it('zeros de dividendos quando não há transações DIVIDEND', () => {
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 10, '10.00'),
+    ];
+
+    const result = calculatePosition(transactions, new Decimal('12.00'));
+    expect(result.total_dividends.isZero()).toBe(true);
+    expect(result.total_return.toString()).toBe(result.profit_loss.toString());
+    expect(result.yield_on_cost_pct.isZero()).toBe(true);
+  });
+
+  it('total_return_pct e yield_on_cost_pct são zero quando posição zerada', () => {
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 10, '10.00'),
+      sell('2024-02-01', 10, '12.00'),
+      dividend('2024-03-01', 10, '1.00'),
+    ];
+
+    const result = calculatePosition(transactions, new Decimal('12.00'));
+    expect(result.total_return_pct.isZero()).toBe(true);
+    expect(result.yield_on_cost_pct.isZero()).toBe(true);
+  });
+
+  it('todos os novos campos retornam instâncias de Decimal (REQ-04)', () => {
+    const result = calculatePosition(
+      [buy('2024-01-01', 10, '10')],
+      new Decimal('12'),
+    );
+    expect(result.total_dividends).toBeInstanceOf(Decimal);
+    expect(result.total_return).toBeInstanceOf(Decimal);
+    expect(result.total_return_pct).toBeInstanceOf(Decimal);
+    expect(result.yield_on_cost_pct).toBeInstanceOf(Decimal);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TC-09 — calculateRealizedGain: lucro realizado nas vendas
+// ---------------------------------------------------------------------------
+
+describe('TC-09: calculateRealizedGain — lucro realizado em vendas', () => {
+  it('retorna zero sem transações', () => {
+    expect(calculateRealizedGain([]).isZero()).toBe(true);
+  });
+
+  it('retorna zero sem vendas', () => {
+    const result = calculateRealizedGain([buy('2024-01-01', 100, '10')]);
+    expect(result.isZero()).toBe(true);
+  });
+
+  it('lucro simples: venda acima do preço médio', () => {
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 100, '10.00'),
+      sell('2024-02-01', 50, '15.00'),
+    ];
+    // ganho = 50 * (15 - 10) = 250
+    const gain = calculateRealizedGain(transactions);
+    expect(gain.toString()).toBe('250');
+  });
+
+  it('prejuízo: venda abaixo do preço médio', () => {
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 100, '10.00'),
+      sell('2024-02-01', 50, '8.00'),
+    ];
+    // ganho = 50 * (8 - 10) = -100
+    const gain = calculateRealizedGain(transactions);
+    expect(gain.toString()).toBe('-100');
+  });
+
+  it('venda total: ganho sobre toda a posição', () => {
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 50, '10.00'),
+      sell('2024-02-01', 50, '12.00'),
+    ];
+    // ganho = 50 * (12 - 10) = 100
+    expect(calculateRealizedGain(transactions).toString()).toBe('100');
+  });
+
+  it('usa custo médio corrido — compra entre duas vendas atualiza avgPrice', () => {
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 100, '10.00'),  // avgPrice = 10, qty = 100
+      sell('2024-02-01', 50, '15.00'),  // ganho = 50 * (15-10) = 250; qty = 50
+      buy('2024-03-01', 50, '20.00'),   // avgPrice = (50*10 + 50*20) / 100 = 15; qty = 100
+      sell('2024-04-01', 100, '18.00'), // ganho = 100 * (18-15) = 300; qty = 0
+    ];
+    // total = 250 + 300 = 550
+    expect(calculateRealizedGain(transactions).toString()).toBe('550');
+  });
+
+  it('dividendos são ignorados no cálculo do ganho realizado', () => {
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 100, '10.00'),
+      dividend('2024-06-01', 100, '1.00'),
+      sell('2024-12-01', 50, '15.00'),
+    ];
+    // ganho = 50 * (15 - 10) = 250 (dividendo não afeta)
+    expect(calculateRealizedGain(transactions).toString()).toBe('250');
+  });
+
+  it('retorna instância de Decimal', () => {
+    expect(calculateRealizedGain([])).toBeInstanceOf(Decimal);
+  });
+
+  it('compra com quantidade zero não altera avgPrice (branch defensivo)', () => {
+    // Cobre o branch newQty.isZero() no calculateRealizedGain
+    const transactions: Transaction[] = [
+      {
+        type: 'BUY',
+        date: '2024-01-01',
+        quantity: new Decimal(0),
+        unit_price: new Decimal('10.00'),
+        fees: new Decimal(0),
+      },
+      sell('2024-01-02', 0, '15.00'),
+    ];
+    // Ambas as quantidades são zero — ganho realizado = 0
+    expect(calculateRealizedGain(transactions).isZero()).toBe(true);
+  });
+
+  it('duas transações na mesma data (branch sort equal dates)', () => {
+    // Cobre o branch `0` do comparador de ordenação (a.date === b.date)
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 50, '10.00'),
+      buy('2024-01-01', 50, '10.00'), // mesma data
+      sell('2024-02-01', 100, '15.00'),
+    ];
+    // avgPrice = 10; ganho = 100 * (15 - 10) = 500
+    expect(calculateRealizedGain(transactions).toString()).toBe('500');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Branch coverage: sort comparator equal-date em calculateCurrentQuantity
+// ---------------------------------------------------------------------------
+
+describe('Branch coverage: sort comparator com datas iguais', () => {
+  it('calculateCurrentQuantity: duas compras na mesma data são processadas', () => {
+    // Cobre o branch `0` do comparador em calculateCurrentQuantity
+    const transactions: Transaction[] = [
+      buy('2024-01-01', 30, '10.00'),
+      buy('2024-01-01', 20, '10.00'), // mesma data
+    ];
+    const qty = calculateCurrentQuantity(transactions);
+    expect(qty.toString()).toBe('50');
   });
 });

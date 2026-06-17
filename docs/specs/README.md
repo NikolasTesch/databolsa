@@ -103,6 +103,7 @@ e idealmente um check de CI.
 | SPEC-0017 | Seção de ferramentas financeiras na home pública e cabeçalho      | implemented |
 | SPEC-0018 | Seção de cursos gratuitos da B3                                    | implemented |
 | SPEC-0019 | Expandir moedas fiat e cripto no conversor          | verified |
+| SPEC-0020 | Market hardening — fetchers centralizados, rate limit e CDI real | verified |
 
 ### Em andamento (`em-andamento/`)
 

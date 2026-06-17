@@ -1,5 +1,6 @@
 import { createMemoryCache } from '@/lib/cache/memory-cache';
 import { NEWS_FALLBACK } from './news-fallback';
+import { fetchInvestNewsArticles } from './investnews-scraper';
 
 export interface NewsArticle {
   id: string;
@@ -45,41 +46,66 @@ function normalizeArticle(item: FinnhubArticle): NewsArticle {
 }
 
 /**
- * Fetch general market news from Finnhub.
- * On any error, falls back to the static curated list.
+ * Interleaves two arrays so they alternate sources.
+ * e.g. [A1, A2, A3] + [B1, B2] => [A1, B1, A2, B2, A3]
+ */
+function interleave<T>(primary: T[], secondary: T[]): T[] {
+  const result: T[] = [];
+  const len = Math.max(primary.length, secondary.length);
+  for (let i = 0; i < len; i++) {
+    if (i < primary.length) result.push(primary[i]);
+    if (i < secondary.length) result.push(secondary[i]);
+  }
+  return result;
+}
+
+/**
+ * Fetch general market news from Finnhub + InvestNews (investimentos/).
+ * Both sources are fetched in parallel and interleaved so each source
+ * appears evenly throughout the list.
+ * Falls back to the static curated list only if both sources fail.
  */
 export async function fetchGeneralNews(): Promise<{ articles: NewsArticle[]; cached: boolean }> {
   const cacheKey = 'news:general';
 
   const hit = newsCache.get(cacheKey);
   if (hit) {
-    console.log(`[news.service] cache hit for key=${cacheKey}`);
     return { articles: hit, cached: true };
   }
 
-  console.log(`[news.service] cache miss for key=${cacheKey}`);
+  // Fetch both sources concurrently
+  const [finnhubResult, investNewsArticles] = await Promise.allSettled([
+    (async (): Promise<NewsArticle[]> => {
+      const token = getToken();
+      const url = `https://finnhub.io/api/v1/news?category=general&token=${token}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) throw new Error(`Finnhub returned ${res.status}`);
+      const raw: FinnhubArticle[] = await res.json();
+      return (Array.isArray(raw) ? raw : []).map(normalizeArticle);
+    })(),
+    fetchInvestNewsArticles(),
+  ]);
 
-  try {
-    const token = getToken();
-    const url = `https://finnhub.io/api/v1/news?category=general&token=${token}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  const finnhubArticles =
+    finnhubResult.status === 'fulfilled' ? finnhubResult.value : [];
+  const investNews =
+    investNewsArticles.status === 'fulfilled' ? investNewsArticles.value : [];
 
-    if (!res.ok) {
-      throw new Error(`Finnhub returned ${res.status}`);
-    }
+  if (finnhubResult.status === 'rejected') {
+    console.warn(
+      `[news.service] Finnhub error: ${String(finnhubResult.reason)}`,
+    );
+  }
 
-    const raw: FinnhubArticle[] = await res.json();
-    const articles = (Array.isArray(raw) ? raw : []).map(normalizeArticle);
+  const merged = interleave(finnhubArticles, investNews);
 
-    if (articles.length > 0) {
-      newsCache.set(cacheKey, articles);
-    }
-
-    return { articles, cached: false };
-  } catch (err) {
-    console.error(`[news.service] error fetching from Finnhub: ${String(err)}. Servindo fallback.`);
+  if (merged.length === 0) {
+    console.warn('[news.service] Both sources empty — using static fallback.');
     return { articles: NEWS_FALLBACK, cached: false };
   }
+
+  newsCache.set(cacheKey, merged);
+  return { articles: merged, cached: false };
 }
 
 /**
@@ -92,11 +118,8 @@ export async function fetchTickerNews(ticker: string): Promise<{ articles: NewsA
 
   const hit = newsCache.get(cacheKey);
   if (hit) {
-    console.log(`[news.service] cache hit for key=${cacheKey}`);
     return { articles: hit, cached: true };
   }
-
-  console.log(`[news.service] cache miss for key=${cacheKey}`);
 
   try {
     const token = getToken();

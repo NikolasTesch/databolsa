@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchGeneralNews, fetchTickerNews } from '@/lib/news/news.service';
+import { isValidTicker } from '@/lib/market/ticker-validation';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 30;
@@ -17,11 +19,22 @@ const MAX_LIMIT = 30;
  * Always returns 200. On Finnhub failure, serves the static fallback (RN-10).
  */
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rateLimit = checkRateLimit(`market:news:${ip}`, { limit: 30, windowMs: 60 * 1000 });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { message: 'Muitas requisições. Tente novamente em instantes.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(rateLimit.retryAfterSec) },
+      },
+    );
+  }
+
   const searchParams = request.nextUrl.searchParams;
   const q = searchParams.get('q') ?? undefined;
   const limitRaw = searchParams.get('limit');
 
-  // Validate limit param
   if (limitRaw !== null) {
     const parsed = parseInt(limitRaw, 10);
     if (Number.isNaN(parsed) || parsed <= 0 || parsed > MAX_LIMIT) {
@@ -30,6 +43,13 @@ export async function GET(request: NextRequest) {
         { status: 400 },
       );
     }
+  }
+
+  if (q && q.trim().length > 0 && !isValidTicker(q.trim())) {
+    return NextResponse.json(
+      { message: `Parâmetro 'q' inválido. Use um ticker válido (ex: PETR4, AAPL, BTC).` },
+      { status: 400 },
+    );
   }
 
   const limit = limitRaw !== null ? Math.min(parseInt(limitRaw, 10), MAX_LIMIT) : DEFAULT_LIMIT;

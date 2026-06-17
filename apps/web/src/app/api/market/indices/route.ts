@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { Decimal } from 'decimal.js';
 import { DataSource } from '@prisma/client';
 import { fetchCachedMarketValue } from '@/lib/market/market-cache';
+import { fetchBrapiQuote, fetchCoinGeckoMulti, fetchUsdBrlRate } from '@/lib/market/market-fetchers';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 interface IndexData {
   id: string;
@@ -11,64 +13,57 @@ interface IndexData {
   stale: boolean;
 }
 
-async function fetchBrapiIndex(symbol: string): Promise<{ price: Decimal; changePercent: string | null; currency: string }> {
-  const token = process.env.BRAPI_TOKEN;
-  const url = `https://brapi.dev/api/quote/${symbol}?token=${token ?? ''}`;
-  const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
-  if (!response.ok) throw new Error(`brapi returned ${response.status} for ${symbol}`);
-  const data = await response.json();
-  const quote = data?.results?.[0];
-  if (!quote?.regularMarketPrice) throw new Error(`No price for ${symbol}`);
-  return {
-    price: new Decimal(String(quote.regularMarketPrice)),
-    changePercent: quote.regularMarketChangePercent != null
-      ? String(quote.regularMarketChangePercent)
-      : null,
-    currency: 'BRL',
-  };
+async function fetchCdiRate(): Promise<string> {
+  try {
+    const cached = await fetchCachedMarketValue(
+      'CDI',
+      DataSource.BRAPI,
+      24 * 60 * 60 * 1000,
+      async () => {
+        const response = await fetch(
+          'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json',
+          { signal: AbortSignal.timeout(5000) },
+        );
+        if (!response.ok) throw new Error(`BCB returned ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data) || data.length === 0) throw new Error('Empty BCB response');
+        const daily = new Decimal(String(data[0].valor));
+        const annual = daily.div(100).plus(1).pow(252).minus(1).times(100);
+        const formatted = annual.toFixed(2).replace('.', ',') + '%';
+        return {
+          price: annual,
+          currency: 'BRL',
+          name: formatted,
+          changePercent: null,
+          changeValue: null,
+        };
+      },
+    );
+    if (cached?.name && cached.name !== 'CDI') return cached.name;
+    return '10,65%';
+  } catch {
+    return '10,65%';
+  }
 }
 
-async function fetchUsdBrl(): Promise<{ price: Decimal; changePercent: string | null; currency: string }> {
-  const url = 'https://economia.awesomeapi.com.br/last/USD-BRL';
-  const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
-  if (!response.ok) throw new Error(`AwesomeAPI returned ${response.status}`);
-  const data = await response.json();
-  const rate = data?.USDBRL?.bid;
-  const pctChange = data?.USDBRL?.pctChange;
-  if (!rate) throw new Error('No USD/BRL rate available');
-  return {
-    price: new Decimal(String(rate)),
-    changePercent: pctChange != null ? String(pctChange) : null,
-    currency: 'BRL',
-  };
-}
+export async function GET(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rateLimit = checkRateLimit(`market:indices:${ip}`, { limit: 30, windowMs: 60 * 1000 });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { message: 'Muitas requisições. Tente novamente em instantes.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(rateLimit.retryAfterSec) },
+      },
+    );
+  }
 
-async function fetchBtcBrl(): Promise<{ price: Decimal; changePercent: string | null; currency: string }> {
-  const url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=brl&include_24hr_change=true';
-  const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
-  if (!response.ok) throw new Error(`CoinGecko returned ${response.status}`);
-  const data = await response.json();
-  const price = data?.bitcoin?.brl;
-  const change = data?.bitcoin?.brl_24h_change;
-  if (!price) throw new Error('No BTC price available');
-  return {
-    price: new Decimal(String(price)),
-    changePercent: change != null ? String(change) : null,
-    currency: 'BRL',
-  };
-}
-
-export async function GET() {
   const now = new Date().toISOString();
 
-  let ibovChangePercent: string | null = null;
-  let ifixChangePercent: string | null = null;
-  let usdBrlChangePercent: string | null = null;
-  let btcChangePercent: string | null = null;
-
-  const [ibovResult, ifixResult, usdBrlResult, btcResult] = await Promise.all([
+  const [ibovResult, ifixResult, usdBrlResult, btcResult, cdiValue] = await Promise.all([
     fetchCachedMarketValue('IBOVESPA', DataSource.BRAPI, 5 * 60 * 1000, async () => {
-      const r = await fetchBrapiIndex('^BVSP');
+      const r = await fetchBrapiQuote('^BVSP');
       return {
         price: r.price,
         currency: r.currency,
@@ -78,7 +73,7 @@ export async function GET() {
       };
     }),
     fetchCachedMarketValue('IFIX', DataSource.BRAPI, 5 * 60 * 1000, async () => {
-      const r = await fetchBrapiIndex('IFIX');
+      const r = await fetchBrapiQuote('IFIX');
       return {
         price: r.price,
         currency: r.currency,
@@ -88,17 +83,19 @@ export async function GET() {
       };
     }),
     fetchCachedMarketValue('USDBRL', DataSource.BRAPI, 5 * 60 * 1000, async () => {
-      const r = await fetchUsdBrl();
+      const r = await fetchUsdBrlRate();
       return {
         price: r.price,
-        currency: r.currency,
+        currency: 'BRL' as const,
         name: 'USD/BRL',
         changePercent: r.changePercent,
         changeValue: null,
       };
     }),
     fetchCachedMarketValue('BTC', DataSource.COINGECKO, 5 * 60 * 1000, async () => {
-      const r = await fetchBtcBrl();
+      const results = await fetchCoinGeckoMulti(['bitcoin']);
+      const r = results['bitcoin'];
+      if (!r) throw new Error('No BTC data from CoinGecko');
       return {
         price: r.price,
         currency: r.currency,
@@ -107,12 +104,8 @@ export async function GET() {
         changeValue: null,
       };
     }),
+    fetchCdiRate(),
   ]);
-
-  ibovChangePercent = ibovResult?.changePercent ?? null;
-  ifixChangePercent = ifixResult?.changePercent ?? null;
-  usdBrlChangePercent = usdBrlResult?.changePercent ?? null;
-  btcChangePercent = btcResult?.changePercent ?? null;
 
   if (!ibovResult && !ifixResult && !usdBrlResult && !btcResult) {
     return NextResponse.json(
@@ -126,34 +119,34 @@ export async function GET() {
       id: 'IBOV',
       label: 'IBOV',
       value: ibovResult ? formatNumber(ibovResult.price.toFixed(0)) : '—',
-      changePercent: ibovResult?.isStale ? null : ibovChangePercent,
+      changePercent: ibovResult?.isStale ? null : (ibovResult?.changePercent ?? null),
       stale: ibovResult?.isStale ?? false,
     },
     {
       id: 'IFIX',
       label: 'IFIX',
       value: ifixResult ? formatNumber(ifixResult.price.toFixed(0)) : '—',
-      changePercent: ifixResult?.isStale ? null : ifixChangePercent,
+      changePercent: ifixResult?.isStale ? null : (ifixResult?.changePercent ?? null),
       stale: ifixResult?.isStale ?? false,
     },
     {
       id: 'USDBRL',
       label: 'USD/BRL',
       value: usdBrlResult ? `R$ ${usdBrlResult.price.toFixed(2)}` : '—',
-      changePercent: usdBrlResult?.isStale ? null : usdBrlChangePercent,
+      changePercent: usdBrlResult?.isStale ? null : (usdBrlResult?.changePercent ?? null),
       stale: usdBrlResult?.isStale ?? false,
     },
     {
       id: 'BTC',
       label: 'BTC/BRL',
       value: btcResult ? `R$ ${formatNumber(btcResult.price.toFixed(0))}` : '—',
-      changePercent: btcResult?.isStale ? null : btcChangePercent,
+      changePercent: btcResult?.isStale ? null : (btcResult?.changePercent ?? null),
       stale: btcResult?.isStale ?? false,
     },
     {
       id: 'CDI',
       label: 'CDI a.a.',
-      value: '10,65%',
+      value: cdiValue,
       changePercent: null,
       stale: false,
     },

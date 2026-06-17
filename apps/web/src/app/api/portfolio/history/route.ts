@@ -16,29 +16,45 @@ export async function GET(request: NextRequest) {
         type: { in: ['BUY', 'SELL'] },
       },
       orderBy: { date: 'asc' },
-      select: { type: true, date: true, unit_price: true, quantity: true, fees: true },
+      select: { type: true, date: true, unit_price: true, quantity: true, fees: true, asset_id: true },
     });
 
-    let cumulative = new Decimal(0);
+    // Estado corrido por ativo: custo médio ponderado (RN-01, RN-03)
+    const assetState = new Map<string, { qty: Decimal; avgPrice: Decimal }>();
+    // Total investido corrente = Σ (qty_i × avgPrice_i) para todos os ativos
+    let totalInvested = new Decimal(0);
+
     const dataPoints: { date: string; cumulative_invested_brl: string }[] = [];
 
     for (const tx of transactions) {
+      const assetId = tx.asset_id;
+      const state = assetState.get(assetId) ?? { qty: new Decimal(0), avgPrice: new Decimal(0) };
       const qty = new Decimal(tx.quantity.toString());
       const price = new Decimal(tx.unit_price.toString());
       const fees = new Decimal(tx.fees?.toString() ?? '0');
-      const value = qty.times(price);
+
+      // Valor investido atual deste ativo antes da transação
+      const prevAssetInvested = state.qty.mul(state.avgPrice);
 
       if (tx.type === 'BUY') {
-        cumulative = cumulative.plus(value).plus(fees);
+        const newQty = state.qty.add(qty);
+        const newAvgPrice = newQty.isZero()
+          ? new Decimal(0)
+          : state.qty.mul(state.avgPrice).add(qty.mul(price)).add(fees).div(newQty);
+        assetState.set(assetId, { qty: newQty, avgPrice: newAvgPrice });
+        totalInvested = totalInvested.sub(prevAssetInvested).add(newQty.mul(newAvgPrice));
       } else {
-        cumulative = Decimal.max(new Decimal(0), cumulative.minus(value));
+        // SELL: quantidade diminui, avgPrice inalterado (RN-03)
+        const newQty = Decimal.max(new Decimal(0), state.qty.sub(qty));
+        assetState.set(assetId, { qty: newQty, avgPrice: state.avgPrice });
+        totalInvested = totalInvested.sub(prevAssetInvested).add(newQty.mul(state.avgPrice));
       }
 
       const dateStr = tx.date.toISOString().slice(0, 10);
       if (dataPoints.length > 0 && dataPoints[dataPoints.length - 1].date === dateStr) {
-        dataPoints[dataPoints.length - 1].cumulative_invested_brl = cumulative.toString();
+        dataPoints[dataPoints.length - 1].cumulative_invested_brl = totalInvested.toString();
       } else {
-        dataPoints.push({ date: dateStr, cumulative_invested_brl: cumulative.toString() });
+        dataPoints.push({ date: dateStr, cumulative_invested_brl: totalInvested.toString() });
       }
     }
 

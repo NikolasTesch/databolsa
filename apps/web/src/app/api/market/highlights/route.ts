@@ -4,6 +4,8 @@ import { DataSource } from '@prisma/client';
 import type { AssetClass } from '@/types/api';
 import { fetchCachedMarketValue } from '@/lib/market/market-cache';
 import { CURATED_LISTS, CRYPTO_ID_TO_TICKER, CRYPTO_ID_TO_NAME } from '@/lib/market/curated-lists';
+import { fetchBrapiQuote, fetchCoinGeckoMulti, fetchFinnhubQuote } from '@/lib/market/market-fetchers';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 const VALID_TYPES = new Set<string>(['STOCK_BR', 'FII', 'ETF', 'BDR', 'CRYPTO', 'STOCK_US']);
 const MAX_LIMIT = 6;
@@ -15,63 +17,6 @@ interface HighlightItem {
   price: string;
   changePercent: string;
   stale: boolean;
-}
-
-interface BrapiQuoteResult {
-  price: Decimal;
-  changePercent: string | null;
-  name: string;
-  currency: string;
-}
-
-async function fetchBrapiQuote(symbol: string): Promise<BrapiQuoteResult> {
-  const token = process.env.BRAPI_TOKEN;
-  const url = `https://brapi.dev/api/quote/${symbol}?token=${token ?? ''}`;
-  const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
-  if (!response.ok) throw new Error(`brapi returned ${response.status} for ${symbol}`);
-  const data = await response.json();
-  const quote = data?.results?.[0];
-  if (!quote?.regularMarketPrice) throw new Error(`No price for ${symbol}`);
-  return {
-    price: new Decimal(String(quote.regularMarketPrice)),
-    changePercent: quote.regularMarketChangePercent != null
-      ? String(quote.regularMarketChangePercent)
-      : null,
-    name: quote.longName ?? quote.shortName ?? symbol,
-    currency: 'BRL',
-  };
-}
-
-async function fetchCoinGeckoMulti(
-  coinIds: string[],
-): Promise<Record<string, { price: Decimal; change: string | null; currency: string }>> {
-  const ids = coinIds.join(',');
-  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=brl&include_24hr_change=true`;
-  const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
-  if (!response.ok) throw new Error(`CoinGecko returned ${response.status}`);
-  const data = await response.json();
-  const result: Record<string, { price: Decimal; change: string | null; currency: string }> = {};
-  for (const id of coinIds) {
-    if (data[id]?.brl) {
-      result[id] = {
-        price: new Decimal(String(data[id].brl)),
-        change: data[id].brl_24h_change != null ? String(data[id].brl_24h_change) : null,
-        currency: 'BRL',
-      };
-    }
-  }
-  return result;
-}
-
-async function fetchFinnhubQuote(symbol: string): Promise<{ price: Decimal; changePercent: string | null; currency: string }> {
-  const token = process.env.FINNHUB_TOKEN;
-  const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${token ?? ''}`;
-  const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
-  if (!response.ok) throw new Error(`Finnhub returned ${response.status} for ${symbol}`);
-  const data = await response.json();
-  if (!data?.c) throw new Error(`No price for ${symbol}`);
-  const change = data.dp != null ? String(data.dp) : null;
-  return { price: new Decimal(String(data.c)), changePercent: change, currency: 'USD' };
 }
 
 async function getHighlightsForB3(
@@ -133,7 +78,7 @@ async function getHighlightsForCrypto(coinIds: string[]): Promise<HighlightItem[
             price: d.price,
             currency: d.currency,
             name: CRYPTO_ID_TO_NAME[coinId] ?? ticker,
-            changePercent: d.change,
+            changePercent: d.changePercent,
             changeValue: null,
           };
         },
@@ -170,9 +115,9 @@ async function getHighlightsForUS(tickers: string[]): Promise<HighlightItem[]> {
           return {
             price: r.price,
             currency: r.currency,
-            name: ticker,
+            name: r.name,
             changePercent: r.changePercent,
-            changeValue: null,
+            changeValue: r.changeValue,
           };
         },
       );
@@ -206,6 +151,18 @@ function splitGainersLosers(items: HighlightItem[], limit: number) {
 }
 
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rateLimit = checkRateLimit(`market:highlights:${ip}`, { limit: 30, windowMs: 60 * 1000 });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { message: 'Muitas requisições. Tente novamente em instantes.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(rateLimit.retryAfterSec) },
+      },
+    );
+  }
+
   const typeParam = request.nextUrl.searchParams.get('type') ?? 'STOCK_BR';
   const limitParam = parseInt(request.nextUrl.searchParams.get('limit') ?? '6', 10);
   const limit = Math.min(limitParam, MAX_LIMIT);

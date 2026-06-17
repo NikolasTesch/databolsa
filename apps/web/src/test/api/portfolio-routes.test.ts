@@ -47,6 +47,7 @@ describe('TC-05: GET /api/portfolio/history', () => {
         unit_price: '30.00',
         quantity: '10',
         fees: '5.00',
+        asset_id: 'asset-1',
       },
       {
         type: 'BUY',
@@ -54,6 +55,7 @@ describe('TC-05: GET /api/portfolio/history', () => {
         unit_price: '35.00',
         quantity: '5',
         fees: '0',
+        asset_id: 'asset-1',
       },
       {
         type: 'SELL',
@@ -61,6 +63,7 @@ describe('TC-05: GET /api/portfolio/history', () => {
         unit_price: '40.00',
         quantity: '3',
         fees: '0',
+        asset_id: 'asset-1',
       },
     ]);
 
@@ -74,12 +77,12 @@ describe('TC-05: GET /api/portfolio/history', () => {
     expect(Array.isArray(body.data_points)).toBe(true);
     // 3 transações em datas distintas => 3 pontos
     expect(body.data_points).toHaveLength(3);
-    // Primeiro ponto: BUY 10 x 30 + fees 5 = 305
+    // Primeiro ponto: BUY 10 x 30 + fees 5 = 305; avgPrice = 30.5
     expect(body.data_points[0].cumulative_invested_brl).toBe('305');
-    // Segundo ponto: 305 + (5 x 35 + 0) = 480
+    // Segundo ponto: avgPrice = (10×30.5 + 5×35) / 15 = 32; invested = 15×32 = 480
     expect(body.data_points[1].cumulative_invested_brl).toBe('480');
-    // Terceiro ponto: SELL => 480 - (3 x 40) = 360
-    expect(body.data_points[2].cumulative_invested_brl).toBe('360');
+    // Terceiro ponto: SELL 3 → qty = 12; invested = 12×32 = 384 (custo médio, não preço de venda)
+    expect(body.data_points[2].cumulative_invested_brl).toBe('384');
   });
 
   it('agrupa transações do mesmo dia num único data_point', async () => {
@@ -92,6 +95,7 @@ describe('TC-05: GET /api/portfolio/history', () => {
         unit_price: '10.00',
         quantity: '10',
         fees: '0',
+        asset_id: 'asset-1',
       },
       {
         type: 'BUY',
@@ -99,6 +103,7 @@ describe('TC-05: GET /api/portfolio/history', () => {
         unit_price: '20.00',
         quantity: '5',
         fees: '0',
+        asset_id: 'asset-1',
       },
     ]);
 
@@ -184,5 +189,54 @@ describe('TC-06: GET /api/portfolio/monthly-activity', () => {
     expect(body.total_sold_brl).toBe('0');
     expect(body.total_dividends_brl).toBe('0');
     expect(body.transaction_count).toBe(0);
+  });
+
+  it('calcula estimated_realized_gain_brl usando custo médio corrido', async () => {
+    const now = new Date();
+    const token = await signAccessToken({ sub: 'user-1', email: 'test@example.com' });
+
+    // Primeira chamada: transações do mês atual (inclui SELL)
+    // Segunda chamada: histórico completo do ativo para calcular avgPrice
+    (prisma.transaction.findMany as any)
+      .mockResolvedValueOnce([
+        // transações do mês corrente
+        {
+          type: 'SELL',
+          unit_price: '50.00',
+          quantity: '5',
+          fees: '0',
+          asset_id: 'asset-x',
+        },
+      ])
+      .mockResolvedValueOnce([
+        // histórico completo: compra anterior + venda do mês
+        {
+          type: 'BUY',
+          date: new Date(now.getFullYear(), now.getMonth() - 1, 10), // mês anterior
+          unit_price: '40.00',
+          quantity: '10',
+          fees: '0',
+          asset_id: 'asset-x',
+        },
+        {
+          type: 'SELL',
+          date: new Date(now.getFullYear(), now.getMonth(), 5), // este mês
+          unit_price: '50.00',
+          quantity: '5',
+          fees: '0',
+          asset_id: 'asset-x',
+        },
+      ]);
+
+    const req = new NextRequest('http://localhost:3000/api/portfolio/monthly-activity', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const res = await monthlyActivityGet(req);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+
+    // avgPrice = 40; venda 5 a 50 → ganho = 5 * (50 - 40) = 50
+    expect(body.estimated_realized_gain_brl).toBe('50');
+    expect(body.total_sold_brl).toBe('250');
   });
 });

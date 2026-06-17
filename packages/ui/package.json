@@ -24,15 +24,29 @@
     "tokens:dart": "node scripts/generate-theme-dart.mjs",
     "tokens:dart:check": "node scripts/generate-theme-dart.mjs --check"
   },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.4.0"
+  },
   "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
     "tailwindcss": ">=3.4.0"
   },
   "peerDependenciesMeta": {
+    "react": {
+      "optional": false
+    },
+    "react-dom": {
+      "optional": true
+    },
     "tailwindcss": {
       "optional": true
     }
   },
   "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
     "@vitest/coverage-v8": "^4.1.8",
     "tsx": "^4.22.4",
     "vitest": "^4.1.8"

@@ -1,7 +1,7 @@
 import { Decimal } from 'decimal.js';
 
 /** Tipos de transação suportados. */
-export type TransactionType = 'BUY' | 'SELL';
+export type TransactionType = 'BUY' | 'SELL' | 'DIVIDEND';
 
 /**
  * Representa uma transação de compra ou venda de um ativo.
@@ -56,4 +56,12 @@ export interface PositionResult {
    * Zero quando invested_value = 0 (posição zerada), para evitar divisão por zero.
    */
   profit_loss_pct: Decimal;
+  /** Soma dos dividendos/proventos recebidos: Σ (quantidade × unit_price) das transações DIVIDEND. */
+  total_dividends: Decimal;
+  /** Retorno total: profit_loss + total_dividends. */
+  total_return: Decimal;
+  /** Retorno total percentual: (total_return / invested_value) × 100. Zero quando invested_value = 0. */
+  total_return_pct: Decimal;
+  /** Yield on Cost: (total_dividends / invested_value) × 100. Zero quando invested_value = 0. */
+  yield_on_cost_pct: Decimal;
 }

@@ -8,6 +8,7 @@ import { ToolsSection } from '@/components/market/ToolsSection';
 import { B3CoursesSection } from '@/components/market/B3CoursesSection';
 import { Spinner } from '@/components/ui/Spinner';
 import { GET as getIndices } from '@/app/api/market/indices/route';
+import { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,8 @@ const QUICK_CHIPS = [
 
 async function fetchIndices() {
   try {
-    const res = await getIndices();
+    const req = new NextRequest('http://localhost/api/market/indices');
+    const res = await getIndices(req);
     if (!res.ok) return null;
     return res.json();
   } catch (err) {

@@ -8,6 +8,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "noEmit": true,
+    "jsx": "react-jsx",
     "types": ["vitest/globals"]
   },
   "include": ["src/**/*"]

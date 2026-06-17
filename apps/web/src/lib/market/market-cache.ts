@@ -32,7 +32,6 @@ export async function fetchCachedMarketValue(
   const isExpired = (fetchedAt: Date) => Date.now() - fetchedAt.getTime() > ttlMs;
 
   if (cached && !isExpired(cached.fetched_at)) {
-    console.log(`[market] cache hit symbol=${symbol} source=${source}`);
     return {
       price: new Decimal(cached.price.toString()),
       currency: cached.currency,
@@ -65,7 +64,6 @@ export async function fetchCachedMarketValue(
         changeValue: result.changeValue ? new Decimal(result.changeValue) : null,
       },
     });
-    console.log(`[market] cache miss (refreshed) symbol=${symbol} source=${source}`);
     return {
       price: result.price,
       currency: result.currency,
@@ -77,7 +75,6 @@ export async function fetchCachedMarketValue(
   } catch (err) {
     console.warn(`[market] adapter error symbol=${symbol} source=${source}: ${String(err)}`);
     if (cached) {
-      console.log(`[market] cache stale symbol=${symbol} source=${source}`);
       return {
         price: new Decimal(cached.price.toString()),
         currency: cached.currency,
