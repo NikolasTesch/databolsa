@@ -1,0 +1,204 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0036",
+  "title": "Gaps de produto — paginação de assets",
+  "status": "implemented",
+  "type": "feature",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["implementador"],
+  "summary": "Adiciona suporte a paginação server-side no endpoint GET /api/assets, retornando um envelope com data, page, limit, total e totalPages em vez de um array simples. Permite que carteiras grandes sejam carregadas de forma eficiente e controlada.",
+  "motivation": "Carteiras com muitos ativos causam payloads grandes e tempo de resposta alto. A paginação protege o servidor e melhora a experiência do usuário.",
+  "related": {
+    "prd": ["PRD §5"],
+    "spec_doc": ["SPEC §5"],
+    "business_rules": ["RN-11"],
+    "adrs": ["ADR-0004"],
+    "depends_on": ["SPEC-0033"]
+  },
+  "scope": {
+    "in_scope": [
+      "Query params ?page e ?limit no GET /api/assets",
+      "Envelope de resposta { data, page, limit, total, totalPages }",
+      "Validação dos parâmetros de paginação com jsonError padronizado",
+      "Ordenação por ticker (asc) e include de transactions"
+    ],
+    "out_of_scope": [
+      "Paginação em outros endpoints (transactions, portfolio, market)",
+      "Cursor-based pagination",
+      "Alteração do handler POST da mesma rota",
+      "Alteração do schema Prisma",
+      "Push ou e-mail de alertas (G-1)",
+      "Testes automatizados (serão cobertos pela SPEC-0034)"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "GET /api/assets aceita query param ?page (inteiro ≥ 1, default 1) e ?limit (inteiro entre 1 e 100, default 50).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Valores inválidos de ?page ou ?limit retornam 400 com código INVALID_PAGINATION.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "A resposta tem o envelope { data, page, limit, total, totalPages }.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "A query ao banco usa skip/(page-1)*limit e take/limit, ordenada por ticker asc, com include de transactions.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "A filtragem por user_id é mantida para garantir isolamento por usuário.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "Asset",
+      "change": "none",
+      "fields": [],
+      "notes": "Sem alteração de schema. Paginação é implementada apenas na camada de query."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/assets",
+      "auth": true,
+      "request": "?page=1&limit=50 (ambos opcionais)",
+      "response": "{ data: Asset[], page: number, limit: number, total: number, totalPages: number }",
+      "errors": [
+        "401 Não autorizado — JWT ausente ou inválido",
+        "400 INVALID_PAGINATION — page < 1, limit > 100 ou valor não-numérico"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuário autenticado com 120 assets",
+      "when": "GET /api/assets sem parâmetros",
+      "then": "retorna 200 com data contendo 50 assets, page=1, limit=50, total=120, totalPages=3"
+    },
+    {
+      "id": "AC-02",
+      "given": "usuário autenticado com 120 assets",
+      "when": "GET /api/assets?page=2&limit=50",
+      "then": "retorna 200 com os próximos 50 assets e page=2"
+    },
+    {
+      "id": "AC-03",
+      "given": "usuário autenticado",
+      "when": "GET /api/assets?page=0",
+      "then": "retorna 400 com { message: 'Parâmetros de paginação inválidos', error: { code: 'INVALID_PAGINATION' } }"
+    },
+    {
+      "id": "AC-04",
+      "given": "usuário autenticado",
+      "when": "GET /api/assets?limit=200",
+      "then": "retorna 400 com código INVALID_PAGINATION"
+    },
+    {
+      "id": "AC-05",
+      "given": "usuário autenticado",
+      "when": "GET /api/assets?page=abc",
+      "then": "retorna 400 com código INVALID_PAGINATION"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "GET sem parâmetros retorna envelope com defaults page=1, limit=50.",
+      "kind": "integration",
+      "covers": ["REQ-01", "REQ-03", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "GET com ?page=2&limit=10 aplica skip=10 e take=10 corretamente.",
+      "kind": "integration",
+      "covers": ["REQ-04", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "GET com ?page=0 retorna 400 INVALID_PAGINATION.",
+      "kind": "integration",
+      "covers": ["REQ-02", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "GET com ?limit=101 retorna 400 INVALID_PAGINATION.",
+      "kind": "integration",
+      "covers": ["REQ-02", "AC-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "GET com ?page=abc retorna 400 INVALID_PAGINATION.",
+      "kind": "integration",
+      "covers": ["REQ-02", "AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-06",
+      "description": "Isolamento por user_id: assets de outro usuário não aparecem no total nem no data.",
+      "kind": "integration",
+      "covers": ["REQ-05"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar spec JSON em docs/specs/pendentes/0036-asset-pagination.json.",
+      "target": "docs/specs/pendentes",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Implementar parsing e validação de ?page e ?limit em GET /api/assets.",
+      "target": "apps/web/src/app/api/assets/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Substituir findMany simples por count + findMany paginado com skip/take/orderBy.",
+      "target": "apps/web/src/app/api/assets/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Retornar envelope { data, page, limit, total, totalPages } em vez do array direto.",
+      "target": "apps/web/src/app/api/assets/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Atualizar status da spec para implemented e adicionar linha no README.",
+      "target": "docs/specs",
+      "done": true
+    }
+  ],
+  "risks": [
+    {
+      "description": "Breaking change: clientes que consumiam o array direto precisam ser atualizados para ler response.data.",
+      "mitigation": "Mudança aceita conforme plano do arquiteto; clientes internos (dashboard) serão ajustados na mesma iteração se necessário."
+    }
+  ],
+  "observability": [],
+  "rollback": "Reverter o commit que altera route.ts. Não há migration de banco envolvida."
+}

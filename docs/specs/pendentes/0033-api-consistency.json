@@ -1,0 +1,210 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0033",
+  "title": "Consistência de API — envelope de erro e PATCHes faltantes",
+  "status": "implemented",
+  "type": "feature",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["implementador"],
+  "summary": "Padroniza o envelope de resposta de erro da API com o formato { message, error: { code } }, adiciona handlers PATCH ausentes em /api/alerts/[id] e /api/assets/[id], e elimina o uso de `any` em rotas de transação.",
+  "motivation": "As rotas existentes retornam erros inconsistentes (alguns só message, sem código de máquina). PATCH em alertas e assets nunca foi implementado, forçando DELETE + POST para edições simples. A presença de `body: any` prejudica segurança de tipos.",
+  "related": {
+    "prd": ["PRD §5"],
+    "spec_doc": ["SPEC §5"],
+    "business_rules": ["RN-11"],
+    "adrs": ["ADR-0013"],
+    "depends_on": ["SPEC-0030", "SPEC-0025"]
+  },
+  "scope": {
+    "in_scope": [
+      "Helper jsonError em lib/http/errors.ts",
+      "PATCH /api/alerts/[id] — editar target_price, condition, reativar alerta",
+      "PATCH /api/assets/[id] — editar name, sector, data_source (não ticker/currency)",
+      "Tipagem explícita substituindo body: any em transactions/[id]/route.ts",
+      "ADR-0013 documentando o formato de envelope de erro"
+    ],
+    "out_of_scope": [
+      "Migração em massa das rotas existentes para o novo envelope (será refactor futuro)",
+      "Push/email de alertas disparados",
+      "Mudanças no schema Prisma",
+      "Testes automatizados (cobertos pela SPEC-0034)"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Existir função jsonError(code, message, status) exportada de lib/http/errors.ts que retorna Response com { message, error: { code } }.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "PATCH /api/alerts/[id] deve permitir editar target_price (> 0), condition (ABOVE|BELOW) e reativar alerta via is_active: true (limpa triggered_at). Deve retornar 404 se alerta não pertencer ao usuário autenticado (RN-11).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "PATCH /api/assets/[id] deve permitir editar name, sector e data_source. Deve rejeitar tentativa de editar ticker ou currency com 422. Deve retornar 404 se asset não pertencer ao usuário autenticado (RN-11).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "O arquivo transactions/[id]/route.ts não deve usar `any` — deve definir interfaces PatchTransactionBody e UpdateData explícitas.",
+      "priority": "should"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "PriceAlert",
+      "change": "none",
+      "fields": [],
+      "notes": "Nenhuma alteração de schema; target_price continua decimal/numeric."
+    },
+    {
+      "entity": "Asset",
+      "change": "none",
+      "fields": [],
+      "notes": "Nenhuma alteração de schema."
+    }
+  ],
+  "api": [
+    {
+      "method": "PATCH",
+      "path": "/api/alerts/:id",
+      "auth": true,
+      "request": "{ target_price?: string, condition?: 'ABOVE'|'BELOW', is_active?: true }",
+      "response": "PriceAlert atualizado (200)",
+      "errors": ["401 Não autorizado", "404 Alerta não encontrado", "400 Payload inválido", "400 target_price deve ser maior que zero"]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/assets/:id",
+      "auth": true,
+      "request": "{ name?: string, sector?: string, data_source?: 'BRAPI'|'COINGECKO'|'FINNHUB' }",
+      "response": "Asset atualizado (200)",
+      "errors": ["401 Não autorizado", "404 Ativo não encontrado", "400 Payload inválido", "422 ticker e currency não podem ser alterados", "422 Nome não pode ser vazio", "400 Fonte de dados inválida"]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "lib/http/errors.ts existe",
+      "when": "jsonError('NOT_FOUND', 'Não encontrado', 404) é chamado",
+      "then": "retorna Response com status 404 e body { message: 'Não encontrado', error: { code: 'NOT_FOUND' } }"
+    },
+    {
+      "id": "AC-02",
+      "given": "usuário autenticado, alerta existente com is_active=false e triggered_at preenchido",
+      "when": "PATCH /api/alerts/:id com { is_active: true }",
+      "then": "alerta retorna com is_active=true e triggered_at=null"
+    },
+    {
+      "id": "AC-03",
+      "given": "usuário autenticado e alerta pertencente a outro usuário",
+      "when": "PATCH /api/alerts/:id",
+      "then": "retorna 404"
+    },
+    {
+      "id": "AC-04",
+      "given": "usuário autenticado e asset existente",
+      "when": "PATCH /api/assets/:id com { name: 'Novo Nome' }",
+      "then": "asset retorna com name='Novo Nome'"
+    },
+    {
+      "id": "AC-05",
+      "given": "usuário autenticado e asset existente",
+      "when": "PATCH /api/assets/:id com { ticker: 'PETR4' }",
+      "then": "retorna 422 informando que ticker não pode ser alterado"
+    },
+    {
+      "id": "AC-06",
+      "given": "arquivo transactions/[id]/route.ts",
+      "when": "TypeScript compila sem erros",
+      "then": "nenhum uso de `any` explícito nas interfaces de body e data"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "PATCH alert com target_price válido retorna alerta atualizado",
+      "kind": "integration",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "PATCH alert de outro usuário retorna 404",
+      "kind": "integration",
+      "covers": ["REQ-02", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "PATCH asset com name válido retorna asset atualizado",
+      "kind": "integration",
+      "covers": ["REQ-03", "AC-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "PATCH asset com ticker no body retorna 422",
+      "kind": "integration",
+      "covers": ["REQ-03", "AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "TypeScript compila sem erros após remoção dos any em transactions/[id]/route.ts",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-06"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar apps/web/src/lib/http/errors.ts com função jsonError",
+      "target": "apps/web/src/lib/http/errors.ts",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Adicionar handler PATCH em apps/web/src/app/api/alerts/[id]/route.ts",
+      "target": "apps/web/src/app/api/alerts/[id]/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Adicionar handler PATCH em apps/web/src/app/api/assets/[id]/route.ts",
+      "target": "apps/web/src/app/api/assets/[id]/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Substituir any por interfaces explícitas em apps/web/src/app/api/transactions/[id]/route.ts",
+      "target": "apps/web/src/app/api/transactions/[id]/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Criar docs/adr/0013-api-error-envelope.md",
+      "target": "docs/adr/0013-api-error-envelope.md",
+      "done": true
+    },
+    {
+      "id": "T-06",
+      "description": "Atualizar spec para implemented e adicionar linha no README",
+      "target": "docs/specs/README.md",
+      "done": true
+    }
+  ],
+  "risks": [
+    {
+      "description": "Rotas existentes com apenas { message } continuam funcionando — compatibilidade mantida."
+    }
+  ],
+  "observability": [],
+  "rollback": "Reverter os arquivos de rota para o estado anterior via git revert. Sem migration de banco, rollback é seguro."
+}

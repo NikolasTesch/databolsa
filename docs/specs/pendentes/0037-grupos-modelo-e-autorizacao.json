@@ -1,0 +1,305 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0037",
+  "title": "Grupos de investimento — modelo de dados, autorização cross-user e papel admin (fase 1/3)",
+  "status": "implemented",
+  "type": "feature",
+  "created": "2026-06-17",
+  "updated": "2026-06-17T19:27:00",
+  "authors": ["Nikolas"],
+  "summary": "Modelo de grupos de investimento, autorização cross-user e papel admin. Cria as entidades Group, GroupMembership e GroupInvite no banco, adiciona a coluna `role` global em User, e implementa `assertCanViewPortfolio` — a única porta de entrada para leitura cross-user, cumprindo o princípio de isolamento de RN-11 com compartilhamento explícito e controlado.",
+  "motivation": "RN-11 garante isolamento absoluto de dados por usuário. Para suportar grupos de investimento onde um líder pode ver a carteira dos membros, é necessário introduzir um mecanismo de autorização cross-user explícito, auditável e mínimo — sem expor metas de renda nem alertas de preço, que permanecem estritamente privados.",
+  "related": {
+    "prd": ["PRD §7 (regras de negócio)"],
+    "spec_doc": ["SPEC §5 (endpoints)", "SPEC §7 (cálculos)"],
+    "business_rules": ["RN-11"],
+    "adrs": ["ADR-0013"],
+    "depends_on": ["SPEC-0005", "SPEC-0006", "SPEC-0011"]
+  },
+  "scope": {
+    "in_scope": [
+      "Enums Prisma: `Role` (USER|ADMIN) e `GroupMemberRole` (LEADER|MEMBER)",
+      "Campo `role Role @default(USER)` adicionado ao model User",
+      "Relation `memberships GroupMembership[]` adicionada ao model User",
+      "Novos models: Group, GroupMembership, GroupInvite",
+      "Migration SQL: 20260617000004_add_groups_and_roles",
+      "Função `assertCanViewPortfolio(viewerId, targetUserId)` em `apps/web/src/lib/auth/groups.ts`",
+      "Guard `assertIsAdmin(userId)` em `apps/web/src/lib/auth/admin.ts`",
+      "Campo `role` incluído no tipo retornado por `getAuthUser()`",
+      "Testes unitários com Vitest (Prisma mockado) para ambas as funções de autorização"
+    ],
+    "out_of_scope": [
+      "Endpoints REST de grupos e convites (SPEC-0038)",
+      "Páginas de UI de grupos (SPEC-0039)",
+      "Alteração dos handlers de portfolio existentes para aceitar `targetUserId`",
+      "Lógica de geração e validação de código de convite",
+      "Notificações de convite por email",
+      "Leitura de portfolio de membro por líder (depende de SPEC-0038)"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "O schema Prisma deve conter os enums `Role` (USER|ADMIN) e `GroupMemberRole` (LEADER|MEMBER).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "O model User deve ter coluna `role Role @default(USER)` e relação `memberships GroupMembership[]`.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Os models Group, GroupMembership e GroupInvite devem existir com todas as constraints definidas no plano arquitetural.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "A migration SQL deve criar os tipos enum, adicionar a coluna em `users` e criar as três tabelas novas sem alterar dados existentes.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "`assertCanViewPortfolio(viewerId, targetUserId)`: se viewerId === targetUserId, retorna sem query. Se viewerId é LEADER em ao menos um grupo do qual targetUserId é membro, retorna. Caso contrário, lança Error('FORBIDDEN').",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "`assertIsAdmin(userId)`: se o usuário tem role=ADMIN, retorna. Caso contrário (USER ou não encontrado), lança Error('FORBIDDEN').",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-07",
+      "description": "`getAuthUser()` deve incluir o campo `role` do usuário no objeto retornado para evitar query extra nos guards de admin.",
+      "rule_ref": "RN-11",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-08",
+      "description": "Nenhum valor monetário novo deve usar float. Não há campos financeiros novos nesta spec.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "User",
+      "change": "alter",
+      "fields": ["role Role @default(USER)", "memberships GroupMembership[]"],
+      "notes": "Campo role é enum global, separado do papel por-grupo."
+    },
+    {
+      "entity": "Group",
+      "change": "create",
+      "fields": ["id UUID PK", "name String", "description String?", "created_by String", "created_at DateTime"],
+      "notes": "Entidade raiz de um grupo de investimento."
+    },
+    {
+      "entity": "GroupMembership",
+      "change": "create",
+      "fields": ["id UUID PK", "group_id FK→Group", "user_id FK→User", "role GroupMemberRole @default(MEMBER)", "joined_at DateTime"],
+      "notes": "Unique (group_id, user_id). Index em user_id. Cascade delete."
+    },
+    {
+      "entity": "GroupInvite",
+      "change": "create",
+      "fields": ["id UUID PK", "group_id FK→Group", "code String UNIQUE", "role GroupMemberRole @default(MEMBER)", "created_by String", "expires_at DateTime?", "max_uses Int?", "uses Int @default(0)", "revoked Boolean @default(false)", "created_at DateTime"],
+      "notes": "Código opaco e único por convite. Sem campos financeiros."
+    }
+  ],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "Um usuário tenta ver seu próprio portfolio",
+      "when": "assertCanViewPortfolio(userId, userId) é chamado",
+      "then": "Retorna sem nenhuma consulta ao banco"
+    },
+    {
+      "id": "AC-02",
+      "given": "Um viewer é LEADER do grupo X e target é MEMBER do grupo X",
+      "when": "assertCanViewPortfolio(viewer, target) é chamado",
+      "then": "Retorna sem lançar erro"
+    },
+    {
+      "id": "AC-03",
+      "given": "Um viewer é LEADER do grupo X mas target não é membro de nenhum grupo em comum",
+      "when": "assertCanViewPortfolio(viewer, target) é chamado",
+      "then": "Lança Error('FORBIDDEN')"
+    },
+    {
+      "id": "AC-04",
+      "given": "Um viewer é MEMBER (não LEADER) do grupo X e target também é MEMBER do grupo X",
+      "when": "assertCanViewPortfolio(viewer, target) é chamado",
+      "then": "Lança Error('FORBIDDEN') — apenas LEADER tem acesso cross-user"
+    },
+    {
+      "id": "AC-05",
+      "given": "Um userId com role=ADMIN",
+      "when": "assertIsAdmin(userId) é chamado",
+      "then": "Retorna sem erro"
+    },
+    {
+      "id": "AC-06",
+      "given": "Um userId com role=USER ou userId inexistente",
+      "when": "assertIsAdmin(userId) é chamado",
+      "then": "Lança Error('FORBIDDEN')"
+    },
+    {
+      "id": "AC-07",
+      "given": "O schema Prisma foi atualizado e a migration aplicada",
+      "when": "As queries de GroupMembership e User.role são executadas",
+      "then": "O Prisma Client gera os tipos corretos e as queries funcionam"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "assertCanViewPortfolio: viewerId === targetUserId → resolve sem chamar Prisma",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "assertCanViewPortfolio: viewer é LEADER do grupo X, target é MEMBER do grupo X → resolve",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "assertCanViewPortfolio: viewer é LEADER do grupo X, target NÃO está no grupo X → rejeita FORBIDDEN",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "assertCanViewPortfolio: viewer é MEMBER (não LEADER) do grupo X, target é membro → rejeita FORBIDDEN",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "assertCanViewPortfolio: viewer sem nenhum grupo → rejeita FORBIDDEN",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-06",
+      "description": "assertCanViewPortfolio: viewer é LEADER de grupo X e grupo Y, target está só no grupo Y → resolve via grupo Y",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-07",
+      "description": "assertIsAdmin: userId com role=ADMIN → resolve",
+      "kind": "unit",
+      "covers": ["REQ-06", "AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-08",
+      "description": "assertIsAdmin: userId com role=USER → rejeita FORBIDDEN",
+      "kind": "unit",
+      "covers": ["REQ-06", "AC-06"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-09",
+      "description": "assertIsAdmin: userId inexistente → rejeita FORBIDDEN",
+      "kind": "unit",
+      "covers": ["REQ-06", "AC-06"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-10",
+      "description": "assertCanViewPortfolio: viewer é LEADER de X e Y mas target não está em nenhum dos dois → rejeita FORBIDDEN (complemento multi-grupo do TC-06)",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-11",
+      "description": "assertCanViewPortfolio: erro de DB em findMany propaga fail-closed — rejeita sem vazar acesso",
+      "kind": "unit",
+      "covers": ["REQ-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-12",
+      "description": "assertIsAdmin: erro de DB em findUnique propaga fail-closed — rejeita sem conceder acesso",
+      "kind": "unit",
+      "covers": ["REQ-06"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar spec JSON 0037 e ADR-0013",
+      "target": "docs/",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Adicionar enums Role e GroupMemberRole ao schema.prisma e atualizar model User",
+      "target": "apps/web/prisma/schema.prisma",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Adicionar models Group, GroupMembership, GroupInvite ao schema.prisma",
+      "target": "apps/web/prisma/schema.prisma",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Criar migration SQL 20260617000004_add_groups_and_roles",
+      "target": "apps/web/prisma/migrations/",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Criar apps/web/src/lib/auth/groups.ts com assertCanViewPortfolio",
+      "target": "apps/web/src/lib/auth/groups.ts",
+      "done": true
+    },
+    {
+      "id": "T-06",
+      "description": "Criar apps/web/src/lib/auth/admin.ts com assertIsAdmin",
+      "target": "apps/web/src/lib/auth/admin.ts",
+      "done": true
+    },
+    {
+      "id": "T-07",
+      "description": "Atualizar getAuthUser para incluir role no retorno",
+      "target": "apps/web/src/lib/auth/get-user.ts",
+      "done": true
+    },
+    {
+      "id": "T-08",
+      "description": "Escrever testes unitários para assertCanViewPortfolio e assertIsAdmin",
+      "target": "apps/web/src/test/api/groups-auth.test.ts",
+      "done": true
+    }
+  ],
+  "risks": [
+    {
+      "description": "O Prisma Client gerado em ambiente de dev pode não incluir os novos tipos até `prisma generate` ser executado. Os testes mockam o Prisma, portanto não são bloqueados.",
+      "mitigation": "Documentar que `pnpm prisma generate` deve ser executado após aplicar a migration."
+    }
+  ],
+  "observability": [],
+  "rollback": "Reverter o schema.prisma ao commit anterior e droppar as tabelas `groups`, `group_memberships`, `group_invites` e a coluna `role` em `users` via migration de rollback. Os dados de usuário existentes não são afetados pois a coluna `role` tem default USER."
+}

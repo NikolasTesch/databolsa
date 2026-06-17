@@ -1,0 +1,185 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0032",
+  "title": "Hardening de importação CSV — limite de tamanho e PATCH de asset",
+  "status": "implemented",
+  "type": "enhancement",
+  "created": "2026-06-17",
+  "updated": "2026-06-17T18:00:00Z",
+  "authors": ["implementador"],
+  "summary": "Adiciona proteções de tamanho ao endpoint POST /api/portfolio/import: rejeita payloads maiores que 1 MB e mais de 1000 linhas antes de qualquer processamento pesado. O bug B-3 (asset criado com name=ticker no import) é coberto pela SPEC-0033 via PATCH /api/assets/:id.",
+  "motivation": "Sem verificação de tamanho o endpoint aceita arquivos arbitrariamente grandes, expondo o servidor a ataques de negação de serviço por consumo de memória e CPU. Além disso, arquivos com milhares de linhas causam timeouts de banco de dados dentro da transação Prisma.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §5"],
+    "business_rules": ["RN-11"],
+    "adrs": ["ADR-0004"],
+    "depends_on": ["SPEC-0026", "SPEC-0029", "SPEC-0033"]
+  },
+  "scope": {
+    "in_scope": [
+      "Verificação de Content-Length > 1 MB antes de ler o body (S-4)",
+      "Verificação de csvContent.length > 1 MB após leitura (proteção sem Content-Length)",
+      "Verificação de rows.length > 1000 após parse",
+      "Erros padronizados via jsonError() de @/lib/http/errors"
+    ],
+    "out_of_scope": [
+      "Alteração do parser CSV (coberto por SPEC-0029)",
+      "Enriquecimento do campo name via QuoteService (serviço não retorna name)",
+      "Testes automatizados (cobertos por SPEC-0034)",
+      "Streaming de upload ou processamento em background",
+      "Mudança de schema Prisma"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Se Content-Length presente e > 1_048_576, retornar 413 com código FILE_TOO_LARGE antes de ler o body.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Após ler o body (qualquer caminho: multipart, JSON, text), se csvContent.length > 1_048_576, retornar 413 com código FILE_TOO_LARGE.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Após parse do CSV, se result.rows.length > 1000, retornar 422 com código IMPORT_TOO_MANY_ROWS.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "As mensagens de erro devem usar jsonError() importado de @/lib/http/errors, mantendo o envelope padrão { message, error: { code } }.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "O bug B-3 (name=ticker ao criar asset via import) é resolvido por SPEC-0033 (PATCH /api/assets/:id). Documentar a dependência na spec. QuoteService.getQuote não retorna name, portanto enriquecimento inline não é viável.",
+      "rule_ref": "RN-11",
+      "priority": "should"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "N/A",
+      "change": "none",
+      "fields": [],
+      "notes": "Sem alteração de schema."
+    }
+  ],
+  "api": [
+    {
+      "method": "POST",
+      "path": "/api/portfolio/import",
+      "auth": true,
+      "request": "CSV via multipart/form-data (campo file), application/json ({ csv: string }) ou text/plain",
+      "response": "preview ou commit conforme ?mode=",
+      "errors": [
+        "413 FILE_TOO_LARGE — Content-Length > 1 MB ou csvContent.length > 1 MB",
+        "422 IMPORT_TOO_MANY_ROWS — mais de 1000 linhas após parse"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "requisição com header Content-Length: 1048577",
+      "when": "POST /api/portfolio/import",
+      "then": "resposta 413 com { error: { code: 'FILE_TOO_LARGE' } } antes de ler o body"
+    },
+    {
+      "id": "AC-02",
+      "given": "body CSV com 1_048_577 bytes sem Content-Length",
+      "when": "POST /api/portfolio/import",
+      "then": "resposta 413 com código FILE_TOO_LARGE após leitura"
+    },
+    {
+      "id": "AC-03",
+      "given": "CSV com 1001 linhas válidas",
+      "when": "POST /api/portfolio/import",
+      "then": "resposta 422 com código IMPORT_TOO_MANY_ROWS"
+    },
+    {
+      "id": "AC-04",
+      "given": "CSV com <= 1000 linhas e <= 1 MB",
+      "when": "POST /api/portfolio/import",
+      "then": "fluxo normal de preview/commit sem erros de tamanho"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Content-Length > 1 MB → 413 antes de ler body",
+      "kind": "integration",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "CSV string > 1 MB sem Content-Length → 413",
+      "kind": "integration",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "CSV com 1001 linhas → 422 IMPORT_TOO_MANY_ROWS",
+      "kind": "integration",
+      "covers": ["REQ-03", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "CSV válido com 1 linha → fluxo normal sem erro de tamanho",
+      "kind": "integration",
+      "covers": ["REQ-04", "AC-04"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar spec 0032-import-hardening.json",
+      "target": "docs/specs/pendentes/",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Adicionar verificação de Content-Length no handler POST de import",
+      "target": "apps/web/src/app/api/portfolio/import/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Adicionar verificação de csvContent.length após leitura do body",
+      "target": "apps/web/src/app/api/portfolio/import/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Adicionar verificação de rows.length após parse",
+      "target": "apps/web/src/app/api/portfolio/import/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Atualizar spec para implemented e atualizar README.md",
+      "target": "docs/specs/README.md",
+      "done": true
+    }
+  ],
+  "risks": [
+    {
+      "description": "Clientes que não enviam Content-Length (comum em body text/plain) não serão barrados pela verificação de header — a segunda verificação (csvContent.length) cobre esse caso.",
+      "mitigation": "Dupla verificação: header + string length após leitura."
+    }
+  ],
+  "observability": [
+    "Log warn quando rejeitar por tamanho (FILE_TOO_LARGE ou IMPORT_TOO_MANY_ROWS) para monitorar tentativas abusivas."
+  ],
+  "rollback": "Reverter o commit que adicionou as verificações de tamanho em route.ts. Nenhuma migração de banco envolvida."
+}

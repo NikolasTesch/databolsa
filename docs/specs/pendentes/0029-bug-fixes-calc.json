@@ -1,0 +1,239 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0029",
+  "title": "Correção de bugs de cálculo e parsing (parseDate, CDI, PATCH RN-02)",
+  "status": "implemented",
+  "type": "bugfix",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["implementador"],
+  "summary": "Corrige três bugs: (B-1) lógica de parseDate no csv-parser que tornava o branch MM/DD/YYYY inalcançável; (B-2) normalização de CDI em benchmark-fetchers que era uma identidade (no-op); (S-3) PATCH de transação que não revalidava RN-02 ao editar quantidade de SELL, permitindo posição negativa.",
+  "motivation": "B-1: datas americanas no CSV eram processadas como DD/MM gerando meses inválidos. B-2: a série CDI retornada à UI estava correta apenas por acidente — a 'normalização' sub(100).add(100) é identidade e mascara a intenção real. S-3: editar a quantidade de uma SELL via PATCH podia criar posição negativa sem nenhuma validação, violando RN-02 e corrompendo silenciosamente o portfólio do usuário.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §7"],
+    "business_rules": ["RN-02"],
+    "adrs": ["ADR-0011", "ADR-0012"],
+    "depends_on": ["SPEC-0026"]
+  },
+  "scope": {
+    "in_scope": [
+      "Reescrever parseDate em apps/web/src/lib/import/csv-parser.ts com desambiguação DD/MM vs MM/DD",
+      "Corrigir normalização CDI em apps/web/src/lib/market/benchmark-fetchers.ts",
+      "Adicionar validação RN-02 ao PATCH em apps/web/src/app/api/transactions/[id]/route.ts usando prisma.$transaction",
+      "Criar ADR-0012 documentando a decisão de desambiguação de formato de data CSV"
+    ],
+    "out_of_scope": [
+      "Criação de testes (cobertos pela SPEC-0034)",
+      "Refatorar prismaToCoreTx para módulo centralizado (SPEC-0030)",
+      "Alterações no modelo de dados",
+      "Qualquer outro endpoint além de PATCH /transactions/:id"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "parseDate deve inferir DD/MM/YYYY por padrão (pt-BR). Detectar MM/DD apenas quando o primeiro componente for inequivocamente mês (> 12 implica que o primeiro campo é dia; se segundo > 12 implica primeiro é mês). Caso ambíguo: assumir DD/MM.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "parseDate deve validar que a data resultante é uma data de calendário válida (getTime() não NaN, mês e dia dentro dos limites); retornar null caso inválida.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "A normalização do CDI em benchmark-fetchers deve ser equivalente à do IPCA: value = p.price.toFixed(4) (o fator já está em base 100, não há transformação a fazer).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "O PATCH de transação deve, antes de persistir, recarregar todas as transações do asset, substituir a transação editada pela versão nova em memória, percorrer a timeline cronológica e rejeitar com HTTP 422 se em algum ponto a quantidade acumulada ficar negativa (RN-02).",
+      "rule_ref": "RN-02",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "A leitura + validação + escrita do PATCH deve ser atômica via prisma.$transaction para evitar race conditions.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "Transaction",
+      "change": "none",
+      "notes": "Nenhuma alteração de schema. A validação é feita em memória antes do UPDATE."
+    }
+  ],
+  "api": [
+    {
+      "method": "PATCH",
+      "path": "/api/transactions/:id",
+      "auth": true,
+      "request": "{ date?, unit_price?, quantity?, fees? }",
+      "response": "Transaction atualizada",
+      "errors": [
+        "400 data/preço/quantidade/taxas inválidos",
+        "401 não autorizado",
+        "404 transação não encontrada",
+        "422 quantidade de venda excede a posição disponível nesta data (RN-02)"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "CSV com data no formato 06/17/2025 (primeiro componente 06 <= 12, segundo 17 > 12)",
+      "when": "parseDate processa a string",
+      "then": "retorna 2025-06-17 (detectou MM/DD inequívoco pois o segundo componente > 12)"
+    },
+    {
+      "id": "AC-02",
+      "given": "CSV com data no formato 17/06/2025 (primeiro componente 17 > 12)",
+      "when": "parseDate processa a string",
+      "then": "retorna 2025-06-17 (detectou DD/MM inequívoco pois o primeiro componente > 12)"
+    },
+    {
+      "id": "AC-03",
+      "given": "CSV com data ambígua 06/07/2026",
+      "when": "parseDate processa a string",
+      "then": "retorna 2026-06-07 (assumiu DD/MM por padrão pt-BR)"
+    },
+    {
+      "id": "AC-04",
+      "given": "fetchCdiSeries retorna série acumulada de CDI",
+      "when": "a série é mapeada para BenchmarkPoint",
+      "then": "cada value é p.price.toFixed(4) sem transformação adicional, e return_pct é último_valor - 100"
+    },
+    {
+      "id": "AC-05",
+      "given": "usuário tem SELL de 100 unidades e edita a quantidade para 200, mas só comprou 150",
+      "when": "PATCH /api/transactions/:id é chamado",
+      "then": "retorna HTTP 422 com message 'Quantidade de venda excede a posição disponível nesta data' e a transação NÃO é persistida"
+    },
+    {
+      "id": "AC-06",
+      "given": "usuário edita SELL para quantidade que cabe na posição",
+      "when": "PATCH /api/transactions/:id é chamado",
+      "then": "retorna HTTP 200 com a transação atualizada"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "parseDate: formato DD/MM/YYYY inequívoco (primeiro > 12)",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "parseDate: formato MM/DD/YYYY inequívoco (segundo > 12)",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "parseDate: formato ambíguo → assume DD/MM",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-03"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "parseDate: formato ISO yyyy-MM-dd passa sem alteração",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-05",
+      "description": "parseDate: data inválida (30/02/2025) retorna null",
+      "kind": "unit",
+      "covers": ["REQ-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-06",
+      "description": "fetchCdiSeries: value de cada ponto é o fator bruto em base 100 (sem sub/add desnecessário)",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-07",
+      "description": "PATCH SELL com quantidade excedendo posição → 422",
+      "kind": "integration",
+      "covers": ["REQ-04", "AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-08",
+      "description": "PATCH SELL com quantidade válida → 200",
+      "kind": "integration",
+      "covers": ["REQ-04", "REQ-05", "AC-06"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-09",
+      "description": "PATCH BUY (tipo que não é SELL) não dispara validação RN-02",
+      "kind": "integration",
+      "covers": ["REQ-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-10",
+      "description": "PATCH SELL que excede posição em ponto intermediário da timeline → 422",
+      "kind": "edge_case",
+      "covers": ["REQ-04", "AC-05"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar spec SPEC-0029 em docs/specs/pendentes/0029-bug-fixes-calc.json",
+      "target": "docs/specs",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Corrigir parseDate em apps/web/src/lib/import/csv-parser.ts com lógica de desambiguação DD/MM vs MM/DD",
+      "target": "apps/web/src/lib/import",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Criar ADR-0012 em docs/adr/0012-csv-date-format-disambiguation.md",
+      "target": "docs/adr",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Corrigir normalização CDI em apps/web/src/lib/market/benchmark-fetchers.ts (remover sub(100).add(100))",
+      "target": "apps/web/src/lib/market",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Adicionar validação RN-02 ao PATCH em apps/web/src/app/api/transactions/[id]/route.ts via prisma.$transaction",
+      "target": "apps/web/src/app/api/transactions/[id]",
+      "done": true
+    },
+    {
+      "id": "T-06",
+      "description": "Atualizar docs/specs/README.md com linha da SPEC-0029",
+      "target": "docs/specs",
+      "done": true
+    }
+  ],
+  "risks": [
+    "Desambiguação de data pode quebrar CSVs de usuários que já usavam MM/DD/YYYY com ambiguidade — mitigado porque a regra pt-BR é o padrão e só muda em casos inequívocos.",
+    "prisma.$transaction pode aumentar tempo de resposta do PATCH — aceitável dado que a consistência é crítica."
+  ],
+  "observability": [
+    "PATCH 422 pode ser logado como warning com asset_id e tx_id para rastreabilidade futura."
+  ],
+  "rollback": "Reverter os três arquivos modificados ao estado anterior via git revert. Nenhuma migration de banco envolvida."
+}

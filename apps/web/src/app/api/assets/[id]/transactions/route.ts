@@ -1,26 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TransactionType } from '@prisma/client';
 import { calculateCurrentQuantity } from '@databolsa/core';
-import { Transaction as CoreTransaction } from '@databolsa/core';
 import { Decimal } from 'decimal.js';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth/get-user';
-
-function prismaToCoreTx(tx: {
-  type: TransactionType;
-  date: Date;
-  unit_price: any;
-  quantity: any;
-  fees: any;
-}): CoreTransaction {
-  return {
-    type: tx.type as 'BUY' | 'SELL',
-    date: tx.date.toISOString().slice(0, 10),
-    unit_price: new Decimal(tx.unit_price.toString()),
-    quantity: new Decimal(tx.quantity.toString()),
-    fees: new Decimal(tx.fees.toString()),
-  };
-}
+import { prismaToCoreTx } from '@/lib/portfolio/tx-mapper';
 
 export async function GET(
   request: NextRequest,
@@ -56,7 +40,13 @@ export async function POST(
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
   }
 
-  let body: any;
+  let body: {
+    type?: unknown;
+    date?: unknown;
+    unit_price?: unknown;
+    quantity?: unknown;
+    fees?: unknown;
+  };
   try {
     body = await request.json();
   } catch {
@@ -66,17 +56,17 @@ export async function POST(
   const { type, date, unit_price, quantity, fees } = body;
 
   // Validations
-  if (!type || !Object.values(TransactionType).includes(type)) {
+  if (!type || !Object.values(TransactionType).includes(type as TransactionType)) {
     return NextResponse.json({ message: 'Tipo de transação inválido' }, { status: 400 });
   }
-  if (!date || isNaN(Date.parse(date))) {
+  if (!date || isNaN(Date.parse(date as string))) {
     return NextResponse.json({ message: 'Data inválida' }, { status: 400 });
   }
   try {
-    if (new Decimal(unit_price).lessThanOrEqualTo(0)) {
+    if (new Decimal(unit_price as string).lessThanOrEqualTo(0)) {
       return NextResponse.json({ message: 'Preço unitário deve ser maior que zero' }, { status: 400 });
     }
-    if (new Decimal(quantity).lessThanOrEqualTo(0)) {
+    if (new Decimal(quantity as string).lessThanOrEqualTo(0)) {
       return NextResponse.json({ message: 'Quantidade deve ser maior que zero' }, { status: 400 });
     }
   } catch {
@@ -98,7 +88,7 @@ export async function POST(
       });
       const coreTxs = existingTxs.map(prismaToCoreTx);
       const currentQty = calculateCurrentQuantity(coreTxs);
-      const sellQty = new Decimal(quantity);
+      const sellQty = new Decimal(quantity as string);
 
       if (sellQty.greaterThan(currentQty)) {
         return NextResponse.json(
@@ -111,11 +101,11 @@ export async function POST(
     const transaction = await tx.transaction.create({
       data: {
         asset_id: params.id,
-        type,
-        date: new Date(date),
-        unit_price: new Decimal(unit_price).toString(),
-        quantity: new Decimal(quantity).toString(),
-        fees: fees ? new Decimal(fees).toString() : '0',
+        type: type as TransactionType,
+        date: new Date(date as string),
+        unit_price: new Decimal(unit_price as string).toString(),
+        quantity: new Decimal(quantity as string).toString(),
+        fees: fees ? new Decimal(fees as string).toString() : '0',
       },
     });
 

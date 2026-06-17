@@ -35,15 +35,75 @@ enum TransactionType {
   DIVIDEND
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
+enum GroupMemberRole {
+  LEADER
+  MEMBER
+}
+
 model User {
-  id                 String   @id @default(uuid())
-  email              String   @unique
-  password_hash      String
-  refresh_token_hash String?
-  created_at         DateTime @default(now()) @map("created_at")
-  assets             Asset[]
+  id                   String            @id @default(uuid())
+  email                String            @unique
+  password_hash        String
+  refresh_token_hash   String?
+  monthly_income_goal  Decimal?          @db.Decimal(18, 2)
+  role                 Role              @default(USER)
+  created_at           DateTime          @default(now()) @map("created_at")
+  assets               Asset[]
+  price_alerts         PriceAlert[]
+  memberships          GroupMembership[]
+  created_groups       Group[]           @relation("GroupCreator")
+  created_invites      GroupInvite[]     @relation("InviteCreator")
 
   @@map("users")
+}
+
+model Group {
+  id          String            @id @default(uuid())
+  name        String
+  description String?
+  created_by  String
+  created_at  DateTime          @default(now())
+  creator     User              @relation("GroupCreator", fields: [created_by], references: [id])
+  memberships GroupMembership[]
+  invites     GroupInvite[]
+
+  @@map("groups")
+}
+
+model GroupMembership {
+  id        String          @id @default(uuid())
+  group_id  String
+  user_id   String
+  role      GroupMemberRole @default(MEMBER)
+  joined_at DateTime        @default(now())
+  group     Group           @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([group_id, user_id])
+  @@index([user_id])
+  @@map("group_memberships")
+}
+
+model GroupInvite {
+  id         String          @id @default(uuid())
+  group_id   String
+  code       String          @unique
+  role       GroupMemberRole @default(MEMBER)
+  created_by String
+  expires_at DateTime?
+  max_uses   Int?
+  uses       Int             @default(0)
+  revoked    Boolean         @default(false)
+  created_at DateTime        @default(now())
+  group      Group           @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  creator    User            @relation("InviteCreator", fields: [created_by], references: [id])
+
+  @@map("group_invites")
 }
 
 model Asset {
@@ -54,10 +114,12 @@ model Asset {
   asset_class  AssetClass
   currency     Currency      @default(BRL)
   data_source  DataSource
+  sector       String?
   created_at   DateTime      @default(now()) @map("created_at")
   user         User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
   transactions Transaction[]
 
+  @@index([user_id, ticker])
   @@map("assets")
 }
 
@@ -75,6 +137,25 @@ model Transaction {
   @@map("transactions")
 }
 
+enum AlertCondition {
+  ABOVE
+  BELOW
+}
+
+model PriceAlert {
+  id           String         @id @default(uuid())
+  user_id      String
+  asset_ticker String
+  condition    AlertCondition
+  target_price Decimal        @db.Decimal(18, 8)
+  is_active    Boolean        @default(true)
+  triggered_at DateTime?
+  created_at   DateTime       @default(now()) @map("created_at")
+  user         User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("price_alerts")
+}
+
 model QuoteCache {
   id            String     @id @default(uuid())
   symbol        String
@@ -88,6 +169,17 @@ model QuoteCache {
 
   @@unique([symbol, source])
   @@map("quote_cache")
+}
+
+model BenchmarkSeriesCache {
+  id         String   @id @default(uuid())
+  series_key String
+  period     String
+  data       Json
+  fetched_at DateTime @default(now()) @map("fetched_at")
+
+  @@unique([series_key, period])
+  @@map("benchmark_series_cache")
 }
 
 model AssetFundamentalsCache {

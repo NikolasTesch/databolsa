@@ -15,6 +15,9 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 vi.mock('@/lib/prisma', () => ({
   default: {
+    user: {
+      findUnique: vi.fn(),
+    },
     transaction: {
       findMany: vi.fn(),
     },
@@ -27,6 +30,8 @@ vi.mock('@/lib/prisma', () => ({
 describe('TC-05: GET /api/portfolio/history', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // getAuthUser precisa de user.findUnique para carregar role (SPEC-0037)
+    (prisma.user.findUnique as any).mockResolvedValue({ role: 'USER' });
   });
 
   it('retorna 401 sem JWT (AC-08)', async () => {
@@ -123,6 +128,8 @@ describe('TC-05: GET /api/portfolio/history', () => {
 describe('TC-06: GET /api/portfolio/monthly-activity', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // getAuthUser precisa de user.findUnique para carregar role (SPEC-0037)
+    (prisma.user.findUnique as any).mockResolvedValue({ role: 'USER' });
   });
 
   it('retorna 401 sem JWT (AC-08)', async () => {

@@ -66,7 +66,7 @@ export class QuoteService {
     };
   }
 
-  private async getFxRate(): Promise<QuoteServiceResult | null> {
+  async getFxRate(): Promise<QuoteServiceResult | null> {
     return this.fetchWithCache(FX_SYMBOL, FX_SOURCE, this.awesomeApiAdapter);
   }
 
@@ -158,3 +158,12 @@ export class QuoteService {
     }
   }
 }
+
+/**
+ * Singleton compartilhado de QuoteService para uso nas rotas de API.
+ *
+ * Importar este singleton em vez de `new QuoteService()` nos arquivos de rota
+ * garante que o cache em memória (quando aplicável) e as configurações TTL
+ * são compartilhadas por toda a aplicação.
+ */
+export const quoteService = new QuoteService();

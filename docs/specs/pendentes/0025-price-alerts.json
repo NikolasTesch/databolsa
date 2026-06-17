@@ -1,0 +1,185 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0025",
+  "title": "Alertas de preço in-app",
+  "status": "implemented",
+  "type": "feature",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["Nikolas"],
+  "summary": "Usuário cria alertas de preço (ABOVE/BELOW) para qualquer ticker. Alertas são avaliados de forma lazy ao listar via GET /api/alerts, usando o cache de cotações existente. Quando acionado, o alerta é desativado e registra triggered_at.",
+  "motivation": "Permite acompanhar ativos fora da carteira e ser notificado de oportunidades de entrada/saída sem polling externo.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §7"],
+    "business_rules": ["RN-10", "RN-11"],
+    "adrs": ["ADR-0010"],
+    "depends_on": []
+  },
+  "scope": {
+    "in_scope": [
+      "Model PriceAlert com enum AlertCondition (ABOVE/BELOW)",
+      "CRUD: GET|POST /api/alerts, DELETE /api/alerts/:id",
+      "Avaliação lazy via evaluateAlerts() no GET (ADR-0010)",
+      "Alerta dispara uma vez: is_active=false + triggered_at",
+      "Cotação stale ainda avalia (RN-10)"
+    ],
+    "out_of_scope": [
+      "Email/push notifications",
+      "Cron/worker dedicado (Fase 2)",
+      "Websockets/realtime",
+      "Múltiplos disparos do mesmo alerta"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "PriceAlert: user_id, asset_ticker, condition, target_price Decimal(18,8), is_active, triggered_at?.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Avaliação lazy usa QuoteService (cache/stale) — sem fetch extra além do TTL (RN-10).",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Ao cruzar threshold: is_active=false, triggered_at=now. Não re-dispara.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "DELETE valida user_id — alerta de outro usuário retorna 404 (RN-11).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "PriceAlert",
+      "change": "create",
+      "fields": [
+        { "name": "id", "type": "String @id" },
+        { "name": "user_id", "type": "String FK→User" },
+        { "name": "asset_ticker", "type": "String" },
+        { "name": "condition", "type": "AlertCondition" },
+        { "name": "target_price", "type": "Decimal(18,8)" },
+        { "name": "is_active", "type": "Boolean default true" },
+        { "name": "triggered_at", "type": "DateTime?" },
+        { "name": "created_at", "type": "DateTime" }
+      ],
+      "notes": "Enum AlertCondition: ABOVE | BELOW"
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/alerts",
+      "auth": true,
+      "request": "nenhum",
+      "response": "{ alerts: PriceAlert[] }",
+      "errors": ["401"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/alerts",
+      "auth": true,
+      "request": "{ asset_ticker, condition: ABOVE|BELOW, target_price }",
+      "response": "PriceAlert criado (201)",
+      "errors": ["401", "422 INVALID_INPUT"]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/alerts/:id",
+      "auth": true,
+      "request": "nenhum",
+      "response": "204 No Content",
+      "errors": ["401", "404 não encontrado"]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "Alerta ABOVE com preço atual >= target",
+      "when": "GET /api/alerts",
+      "then": "Alerta aparece com is_active=false e triggered_at preenchido"
+    },
+    {
+      "id": "AC-02",
+      "given": "Ativo sem cotação disponível",
+      "when": "GET /api/alerts",
+      "then": "Alerta permanece is_active=true, sem erro"
+    },
+    {
+      "id": "AC-03",
+      "given": "DELETE /api/alerts/:id de outro usuário",
+      "when": "qualquer",
+      "then": "404"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "ABOVE dispara quando preço >= target",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "BELOW dispara quando preço <= target",
+      "kind": "unit",
+      "covers": ["REQ-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "Sem cotação: is_active permanece true, sem erro",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "Alerta já triggered não re-dispara",
+      "kind": "unit",
+      "covers": ["REQ-03"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-05",
+      "description": "DELETE de alerta de outro usuário → 404",
+      "kind": "integration",
+      "covers": ["REQ-04", "AC-03"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Adicionar PriceAlert e AlertCondition ao schema Prisma + migration",
+      "target": "apps/web/prisma",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Criar alert.service.ts com evaluateAlerts()",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Criar GET|POST /api/alerts e DELETE /api/alerts/:id",
+      "target": "apps/web",
+      "done": true
+    }
+  ],
+  "risks": [
+    "Alertas só disparam quando o usuário acessa o app (lazy). Documentado em ADR-0010."
+  ],
+  "observability": [],
+  "rollback": "DROP TABLE price_alerts; DROP TYPE AlertCondition. Remover alert.service.ts e routes."
+}

@@ -1,0 +1,219 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0027",
+  "title": "Simulador What-If de posição",
+  "status": "implemented",
+  "type": "feature",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["Nikolas"],
+  "summary": "Função pura no core que recebe a posição atual de um ativo e uma transação hipotética (BUY/SELL) e retorna os novos valores calculados sem persistir nada. Um endpoint stateless expõe o cálculo para a UI.",
+  "motivation": "Permite ao usuário simular o impacto de uma compra ou venda antes de registrar, respondendo 'e se eu comprar mais 100 MXRF11, como fica minha alocação?'",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §7"],
+    "business_rules": ["RN-01", "RN-02", "RN-03", "RN-09", "RN-10", "RN-11"],
+    "adrs": [],
+    "depends_on": []
+  },
+  "scope": {
+    "in_scope": [
+      "Função pura simulatePosition em packages/core",
+      "Endpoint stateless POST /api/portfolio/simulate",
+      "Recálculo de preço médio em BUY hipotético (RN-01)",
+      "SELL hipotético reduz quantidade sem alterar avg (RN-03)",
+      "Recálculo de alocação % no patrimônio simulado (RN-09)",
+      "Rejeição de SELL > posição com erro 422 (RN-02)"
+    ],
+    "out_of_scope": [
+      "Persistência de simulações",
+      "Simulação multi-ativo simultânea",
+      "Projeção temporal ou futura de preço",
+      "Simulação de DIVIDEND"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "BUY hipotético recalcula preço médio ponderado incluindo taxas (RN-01).",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "SELL hipotético reduz quantidade mas não altera preço médio (RN-03).",
+      "rule_ref": "RN-03",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "SELL maior que qtd_atual lança erro SELL_EXCEEDS_POSITION → 422 no handler (RN-02).",
+      "rule_ref": "RN-02",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Retorna nova alocação % ajustando o patrimônio total pelo delta da posição. Patrimônio zero → null (RN-09).",
+      "rule_ref": "RN-09",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Cotação null → new_current_value_brl e allocation retornam null, sem erro (RN-10).",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Route Handler requer JWT e usa user_id do token para buscar posição (RN-11).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "N/A",
+      "change": "none",
+      "fields": [],
+      "notes": "Sem migration — função stateless, nenhuma entidade nova."
+    }
+  ],
+  "api": [
+    {
+      "method": "POST",
+      "path": "/api/portfolio/simulate",
+      "auth": true,
+      "request": "{ ticker: string, quantity: string, price: string, type: 'BUY'|'SELL', fees?: string }",
+      "response": "{ ticker: string, simulation: SimulationResult } com campos Decimal serializados como string",
+      "errors": ["401 não autorizado", "404 ativo não encontrado", "422 SELL_EXCEEDS_POSITION | POSITION_NOT_FOUND | INVALID_INPUT"]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "Posição de 100 unidades a R$10 avg",
+      "when": "BUY hipotético de 50 unidades a R$16",
+      "then": "novo avg = (100×10 + 50×16) / 150 = R$12"
+    },
+    {
+      "id": "AC-02",
+      "given": "Posição de 100 unidades a R$10 avg",
+      "when": "SELL hipotético de 30 unidades",
+      "then": "avg mantém R$10, nova qtd = 70 (RN-03)"
+    },
+    {
+      "id": "AC-03",
+      "given": "Posição de 50 unidades",
+      "when": "SELL hipotético de 60 unidades",
+      "then": "retorno de erro SELL_EXCEEDS_POSITION"
+    },
+    {
+      "id": "AC-04",
+      "given": "Ativo sem cotação disponível",
+      "when": "qualquer simulação",
+      "then": "new_current_value_brl e new_allocation_pct retornam null sem erro"
+    },
+    {
+      "id": "AC-05",
+      "given": "Patrimônio total = 0",
+      "when": "qualquer simulação com cotação",
+      "then": "new_allocation_pct retorna null (sem divisão por zero)"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "BUY adicional recalcula preço médio ponderado corretamente (RN-01)",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "BUY na posição zero: avg = preço da compra hipotética",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "SELL parcial mantém avg price, reduz quantidade (RN-03)",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "SELL total: qtd = 0, invested = 0, allocation = 0",
+      "kind": "unit",
+      "covers": ["REQ-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-05",
+      "description": "SELL > posição lança SELL_EXCEEDS_POSITION (RN-02)",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-03"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-06",
+      "description": "Ativo sem cotação (current_quote_brl = null): valores de mercado retornam null, sem erro",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-07",
+      "description": "Patrimônio zero: allocation retorna null (sem divisão por zero)",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-05"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-08",
+      "description": "BUY com taxas: taxas entram no cálculo do novo avg (RN-01)",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-09",
+      "description": "Todos os valores de entrada e saída usam Decimal — nenhum number nativo em cálculos financeiros",
+      "kind": "unit",
+      "covers": ["REQ-01", "REQ-02"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar packages/core/src/simulate.ts com simulatePosition",
+      "target": "packages/core",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Criar packages/core/src/__tests__/simulate.test.ts com os 9 edge cases",
+      "target": "packages/core",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Exportar simulatePosition e tipos em packages/core/src/index.ts",
+      "target": "packages/core",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Criar apps/web/src/app/api/portfolio/simulate/route.ts",
+      "target": "apps/web",
+      "done": true
+    }
+  ],
+  "risks": [
+    "Cálculo de alocação assume que current_portfolio_value_brl já inclui o ativo simulado; handler deve montar corretamente"
+  ],
+  "observability": [],
+  "rollback": "Remover arquivos criados. Sem migration, rollback é trivial."
+}

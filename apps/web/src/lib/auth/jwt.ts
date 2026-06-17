@@ -1,8 +1,13 @@
 import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET ?? 'changeme');
+const rawSecret = process.env.JWT_SECRET;
+if (!rawSecret) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
+
+const JWT_SECRET = new TextEncoder().encode(rawSecret);
 const JWT_REFRESH_SECRET = new TextEncoder().encode(
-  process.env.JWT_REFRESH_SECRET ?? process.env.JWT_SECRET ?? 'changeme'
+  process.env.JWT_REFRESH_SECRET ?? rawSecret
 );
 
 export async function signAccessToken(payload: { sub: string; email: string }): Promise<string> {

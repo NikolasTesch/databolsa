@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcryptjs from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import { signAccessToken, signRefreshToken } from '@/lib/auth/jwt';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+
+const REGISTER_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -11,6 +14,18 @@ const COOKIE_OPTS = {
 };
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`auth:register:${ip}`, REGISTER_RATE_LIMIT);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { message: 'Muitas tentativas. Tente novamente em breve.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(rl.retryAfterSec) },
+      }
+    );
+  }
+
   let body: any;
   try {
     body = await request.json();

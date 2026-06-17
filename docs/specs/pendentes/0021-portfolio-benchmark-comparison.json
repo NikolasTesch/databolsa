@@ -1,0 +1,151 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0021",
+  "title": "Comparação do portfólio com benchmarks",
+  "status": "implemented",
+  "type": "feature",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["Nikolas"],
+  "summary": "Endpoint que compara o retorno % da carteira com IBOVESPA, CDI, IPCA e S&P500 em períodos (1M/3M/6M/1Y/ALL), retornando séries normalizadas base-100 e retorno % escalar de cada parte.",
+  "motivation": "A pergunta mais comum do investidor: 'estou batendo o CDI?' Kinvo, Status Invest e todos os concorrentes têm esse comparativo.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §7"],
+    "business_rules": ["RN-10", "RN-11"],
+    "adrs": ["ADR-0009"],
+    "depends_on": []
+  },
+  "scope": {
+    "in_scope": [
+      "GET /api/portfolio/benchmark?period=&benchmark=",
+      "Série normalizada base-100 do portfólio (2 pontos: início e fim do período)",
+      "Série histórica de IBOV (brapi), CDI (BCB série 12), IPCA (BCB série 433), SPY (Finnhub)",
+      "Cache de séries em BenchmarkSeriesCache com TTL diferenciado (15min vs 6h)",
+      "Degradação stale quando API externa falha (RN-10)"
+    ],
+    "out_of_scope": [
+      "TWR rigoroso com aportes ponderados por tempo (limitação documentada em ADR-0009)",
+      "Benchmarks além dos quatro listados",
+      "Série diária real do portfólio (requer snapshots históricos)"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Retorno da carteira: P&L% sobre custo médio (aproximação). Limitação documentada.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Séries de benchmark vêm do cache; TTL 15min para IBOV/SPY, 6h para CDI/IPCA.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Falha de fonte externa → degrada para stale com flag is_stale=true (RN-10).",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Isolamento por user_id no cálculo do portfólio (RN-11).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "BenchmarkSeriesCache",
+      "change": "create",
+      "fields": [
+        { "name": "series_key", "type": "String" },
+        { "name": "period", "type": "String" },
+        { "name": "data", "type": "Json" },
+        { "name": "fetched_at", "type": "DateTime" }
+      ],
+      "notes": "Unique: (series_key, period). Séries são públicas — compartilhadas entre usuários (não viola RN-11)."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/portfolio/benchmark",
+      "auth": true,
+      "request": "?period=1M|3M|6M|1Y|ALL &benchmark=IBOVESPA|CDI|IPCA|SP500",
+      "response": "{ period, benchmark, portfolio_return_pct, benchmark_return_pct, portfolio_series, benchmark_series, is_stale, note }",
+      "errors": ["401", "422 period ou benchmark inválido"]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "Portfólio com posições e benchmark IBOVESPA",
+      "when": "GET /api/portfolio/benchmark?period=1Y&benchmark=IBOVESPA",
+      "then": "Retorna portfolio_return_pct e benchmark_return_pct como strings numéricas"
+    },
+    {
+      "id": "AC-02",
+      "given": "Fonte IBOV indisponível e cache stale existente",
+      "when": "GET /api/portfolio/benchmark",
+      "then": "Retorna série stale com is_stale=true, sem erro 500"
+    },
+    {
+      "id": "AC-03",
+      "given": "Portfólio sem posições",
+      "when": "GET /api/portfolio/benchmark",
+      "then": "Retorna zeros com nota explicativa, sem erro"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Portfólio com posições retorna retorno % calculado",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "API externa falha → degrada para stale",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "Sem posições → zeros sem erro",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-03"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar BenchmarkSeriesCache no schema + migration",
+      "target": "apps/web/prisma",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Criar benchmark-cache.ts e benchmark-fetchers.ts",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Criar GET /api/portfolio/benchmark",
+      "target": "apps/web",
+      "done": true
+    }
+  ],
+  "risks": [
+    "Retorno do portfólio é aproximação (P&L% sobre custo médio), não TWR. Documentado em ADR-0009.",
+    "BCB API pode ter latência ou instabilidade — TTL longo atenua o impacto"
+  ],
+  "observability": [],
+  "rollback": "DROP TABLE benchmark_series_cache. Remover route handler e lib files."
+}

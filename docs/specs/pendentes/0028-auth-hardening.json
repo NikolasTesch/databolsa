@@ -1,0 +1,217 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0028",
+  "title": "Hardening de autenticação — JWT fail-fast e rate limiting",
+  "status": "implemented",
+  "type": "infra",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["implementador"],
+  "summary": "Remove o fallback hardcoded 'changeme' do JWT_SECRET e adiciona rate limiting (10 req/60 s por IP) nos endpoints de login e register, eliminando dois vetores de segurança críticos: segredos fracos em produção e ataques de força bruta sem restrição.",
+  "motivation": "O módulo jwt.ts usa `?? 'changeme'` como fallback, o que significa que um deploy sem variável de ambiente gera tokens válidos com segredo público. Adicionalmente, os endpoints /auth/login e /auth/register não têm qualquer limitação de taxa, tornando-os alvos triviais para credential stuffing e força bruta. Ambos são problemas de segurança que precisam ser resolvidos antes de qualquer release público.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §5"],
+    "business_rules": ["RN-11"],
+    "adrs": ["ADR-0003"],
+    "depends_on": ["SPEC-0011"]
+  },
+  "scope": {
+    "in_scope": [
+      "Remover fallback 'changeme' de JWT_SECRET e JWT_REFRESH_SECRET em apps/web/src/lib/auth/jwt.ts",
+      "Adicionar verificação fail-fast no boot: erro imediato se JWT_SECRET não estiver definido",
+      "Aplicar rate limiting de 10 tentativas / 60 s por IP em POST /api/auth/login",
+      "Aplicar rate limiting de 10 tentativas / 60 s por IP em POST /api/auth/register",
+      "Retornar HTTP 429 com header Retry-After quando o limite for excedido",
+      "Adicionar JWT_SECRET ao setup de testes do Vitest para que o fail-fast não quebre a suíte"
+    ],
+    "out_of_scope": [
+      "2FA (autenticação de dois fatores)",
+      "Lockout persistente em banco de dados",
+      "Rotação automática de chaves JWT",
+      "Rate limiting em outros endpoints além de login e register",
+      "Alertas ou notificações de tentativas bloqueadas",
+      "Blacklist de IPs"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Se process.env.JWT_SECRET não estiver definido ou for string vazia, o módulo jwt.ts deve lançar Error('JWT_SECRET environment variable is required') imediatamente na inicialização do módulo, antes de qualquer chamada de função.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "JWT_REFRESH_SECRET pode usar JWT_SECRET como fallback (não literal 'changeme'). O importante é que nunca se use um segredo literal hardcoded.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "POST /api/auth/login deve verificar rate limit de 10 requisições por 60 segundos por IP antes de processar a autenticação. Se excedido, retornar 429 com header Retry-After.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "POST /api/auth/register deve verificar rate limit de 10 requisições por 60 segundos por IP antes de processar o cadastro. Se excedido, retornar 429 com header Retry-After.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "O arquivo de setup de testes do Vitest (src/test/setup.ts) deve definir process.env.JWT_SECRET antes da importação de jwt.ts para que o fail-fast não quebre a suíte de testes existente.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "N/A",
+      "change": "none",
+      "notes": "Nenhuma alteração no schema do banco de dados."
+    }
+  ],
+  "api": [
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "auth": false,
+      "request": "{ email: string, password: string }",
+      "response": "{ access_token: string, refresh_token: string } + cookies HttpOnly",
+      "errors": [
+        "400 payload inválido ou campos ausentes",
+        "401 credenciais inválidas",
+        "429 Too Many Requests — header Retry-After: <segundos>"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/register",
+      "auth": false,
+      "request": "{ email: string, password: string }",
+      "response": "{ access_token: string, refresh_token: string } + cookies HttpOnly",
+      "errors": [
+        "400 payload inválido, campos ausentes ou email já cadastrado",
+        "429 Too Many Requests — header Retry-After: <segundos>"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "processo Node.js iniciado sem a variável JWT_SECRET definida no ambiente",
+      "when": "o módulo jwt.ts é importado/carregado",
+      "then": "um Error com mensagem 'JWT_SECRET environment variable is required' é lançado imediatamente, impedindo a inicialização"
+    },
+    {
+      "id": "AC-02",
+      "given": "JWT_SECRET definido e JWT_REFRESH_SECRET ausente",
+      "when": "o módulo jwt.ts é importado",
+      "then": "JWT_REFRESH_SECRET usa JWT_SECRET como valor, sem erro e sem literal hardcoded"
+    },
+    {
+      "id": "AC-03",
+      "given": "um IP faz 10 requisições em menos de 60 segundos para POST /api/auth/login",
+      "when": "chega a 11ª requisição do mesmo IP",
+      "then": "a rota retorna HTTP 429 com header Retry-After indicando o tempo restante em segundos"
+    },
+    {
+      "id": "AC-04",
+      "given": "um IP faz 10 requisições em menos de 60 segundos para POST /api/auth/register",
+      "when": "chega a 11ª requisição do mesmo IP",
+      "then": "a rota retorna HTTP 429 com header Retry-After indicando o tempo restante em segundos"
+    },
+    {
+      "id": "AC-05",
+      "given": "suíte de testes Vitest do apps/web rodando",
+      "when": "qualquer teste que importe jwt.ts é executado",
+      "then": "o teste não falha com erro de variável JWT_SECRET ausente"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "jwt.ts: importar o módulo sem JWT_SECRET definido e verificar que lança Error com mensagem correta",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "jwt.ts: importar com JWT_SECRET definido e JWT_REFRESH_SECRET ausente; verificar que tokens são gerados sem erro",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "POST /api/auth/login: enviar 11 requisições do mesmo IP e verificar que a 11ª retorna 429 com header Retry-After",
+      "kind": "integration",
+      "covers": ["REQ-03", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "POST /api/auth/register: enviar 11 requisições do mesmo IP e verificar que a 11ª retorna 429 com header Retry-After",
+      "kind": "integration",
+      "covers": ["REQ-04", "AC-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "Suíte existente de testes Vitest: verificar que todos os testes passam após adicionar JWT_SECRET ao setup",
+      "kind": "integration",
+      "covers": ["REQ-05", "AC-05"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar docs/specs/pendentes/0028-auth-hardening.json com status in_progress",
+      "target": "docs/specs/pendentes",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Modificar apps/web/src/lib/auth/jwt.ts: remover fallback 'changeme', adicionar verificação fail-fast de JWT_SECRET no topo do módulo",
+      "target": "apps/web/src/lib/auth",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Modificar apps/web/src/app/api/auth/login/route.ts: adicionar checkRateLimit(10 req / 60s) por IP antes da lógica de autenticação",
+      "target": "apps/web/src/app/api/auth/login",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Modificar apps/web/src/app/api/auth/register/route.ts: adicionar checkRateLimit(10 req / 60s) por IP antes da lógica de cadastro",
+      "target": "apps/web/src/app/api/auth/register",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Modificar apps/web/src/test/setup.ts: adicionar process.env.JWT_SECRET = 'test-secret-for-vitest' antes de qualquer importação que dependa do módulo jwt.ts",
+      "target": "apps/web/src/test",
+      "done": true
+    },
+    {
+      "id": "T-06",
+      "description": "Atualizar docs/specs/README.md adicionando linha da SPEC-0028 no índice de pendentes",
+      "target": "docs/specs",
+      "done": true
+    },
+    {
+      "id": "T-07",
+      "description": "Atualizar status da spec para implemented e marcar todas as tasks como done",
+      "target": "docs/specs/pendentes",
+      "done": true
+    }
+  ],
+  "risks": [
+    "Apps/web em produção sem JWT_SECRET definido vão falhar no boot — é o comportamento desejado (fail-fast), mas exige que o deploy configure a variável antes de atualizar o código.",
+    "O rate limiter usa Map em memória (in-process): em deploy multi-instância (múltiplos workers Node.js), cada instância tem seu próprio contador. Para MVP com single-instance, isso é aceitável."
+  ],
+  "observability": [
+    "Log de warning quando rate limit é excedido: incluir IP, endpoint e retryAfterSec para facilitar diagnóstico."
+  ],
+  "rollback": "Reverter os três arquivos modificados (jwt.ts, login/route.ts, register/route.ts) para o estado anterior via git revert. Garantir que JWT_SECRET esteja no .env antes de fazer rollback se já estiver em produção."
+}

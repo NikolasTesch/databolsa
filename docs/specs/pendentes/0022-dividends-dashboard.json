@@ -1,0 +1,152 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0022",
+  "title": "Dashboard de dividendos e proventos",
+  "status": "implemented",
+  "type": "feature",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["Nikolas"],
+  "summary": "Endpoints que consolidam os proventos recebidos (mensal/trimestral/anual/por ativo) e projetam a renda anual com base nos últimos 12 meses, usando as transações DIVIDEND já existentes.",
+  "motivation": "FIIs são o principal ativo de pessoa física no Brasil. Sem visibilidade de dividendos o portfólio tracker perde valor. Kinvo e Investidor10 têm dashboard de renda passiva.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §7"],
+    "business_rules": ["RN-06", "RN-10", "RN-11"],
+    "adrs": [],
+    "depends_on": []
+  },
+  "scope": {
+    "in_scope": [
+      "GET /api/portfolio/dividends — agregações por mês, trimestre, ano e ativo",
+      "GET /api/portfolio/dividends/projection — projeção anual via média dos últimos 12 meses",
+      "Conversão de USD para BRL via FX cache (RN-10)",
+      "Isolamento por user_id (RN-11)"
+    ],
+    "out_of_scope": [
+      "Previsão estatística de dividendos futuros",
+      "Proventos não lançados pelo usuário (sem scraping automático)",
+      "DY por posição (já calculado em packages/core, exposto via /summary)"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Apenas transações DIVIDEND do user_id (RN-11).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Somatórios em Decimal, nunca float.",
+      "rule_ref": "RN-06",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Projeção anual = soma 12m / meses_com_dividendos × 12.",
+      "rule_ref": "RN-06",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Ativo USD converte para BRL via FX do QuoteService (pode ser stale — RN-10).",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "Transaction",
+      "change": "none",
+      "fields": [],
+      "notes": "Tipo DIVIDEND já existe. Sem migration."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/portfolio/dividends",
+      "auth": true,
+      "request": "nenhum parâmetro",
+      "response": "{ total_brl, by_month[], by_quarter[], by_year[], by_asset[] } com items { key, value_brl }",
+      "errors": ["401 não autorizado"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/portfolio/dividends/projection",
+      "auth": true,
+      "request": "nenhum parâmetro",
+      "response": "{ annual_projection_brl, monthly_avg_brl, basis_months }",
+      "errors": ["401 não autorizado"]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "Usuário com 3 proventos em meses diferentes",
+      "when": "GET /api/portfolio/dividends",
+      "then": "by_month retorna 3 entradas, total correto"
+    },
+    {
+      "id": "AC-02",
+      "given": "Sem proventos",
+      "when": "GET /api/portfolio/dividends/projection",
+      "then": "Retorna zeros sem erro"
+    },
+    {
+      "id": "AC-03",
+      "given": "Ativo USD com provento",
+      "when": "GET /api/portfolio/dividends",
+      "then": "Valor convertido para BRL via FX"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Proventos em meses diferentes → by_month correto",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "Sem proventos → zeros, sem divisão por zero",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "USD convertido para BRL",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-03"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar GET /api/portfolio/dividends",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Criar GET /api/portfolio/dividends/projection",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Tornar getFxRate public no QuoteService",
+      "target": "apps/web",
+      "done": true
+    }
+  ],
+  "risks": [
+    "FX pode ser stale (RN-10) — valor em BRL de ativos USD pode estar defasado, mas comportamento é documentado"
+  ],
+  "observability": [],
+  "rollback": "Remover os dois route handlers. Reverter getFxRate para private."
+}

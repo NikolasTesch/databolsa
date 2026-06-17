@@ -111,6 +111,24 @@ _Nenhuma spec em andamento no momento._
 
 ### Pendentes (`pendentes/`)
 
-_Nenhuma spec pendente no momento._
+| ID        | Título                                                            | Status      |
+| --------- | ----------------------------------------------------------------- | ----------- |
+| SPEC-0021 | Comparação do portfólio com benchmarks (IBOV, CDI, IPCA, S&P500) | implemented |
+| SPEC-0022 | Dashboard de dividendos e proventos                               | implemented |
+| SPEC-0023 | Alocação por setor, classe de ativo e moeda                       | implemented |
+| SPEC-0024 | Metas de renda passiva mensal                                     | implemented |
+| SPEC-0025 | Alertas de preço in-app                                           | implemented |
+| SPEC-0026 | Importação de transações via CSV                                  | implemented |
+| SPEC-0027 | Simulador what-if de posição                                      | implemented |
+| SPEC-0028 | Hardening de autenticação — JWT fail-fast e rate limiting         | implemented |
+| SPEC-0029 | Correção de bugs de cálculo e parsing (parseDate, CDI, PATCH RN-02) | implemented |
+| SPEC-0030 | Camada de serviço de portfólio — centralizar tx-mapper e QuoteService | implemented |
+| SPEC-0031 | Performance de leitura — índice DB e dedupe de cotações           | implemented |
+| SPEC-0032 | Hardening de importação CSV — limite de tamanho e PATCH de asset  | implemented |
+| SPEC-0033 | Consistência de API — envelope de erro e PATCHes faltantes        | implemented |
+| SPEC-0034 | Cobertura de testes — csv-parser, alerts, benchmark e endpoints   | pending |
+| SPEC-0035 | Série temporal real do portfólio e benchmark (TWR)                | implemented |
+| SPEC-0036 | Gaps de produto — paginação de assets                             | implemented |
+| SPEC-0037 | Grupos de investimento — modelo de dados, autorização cross-user e papel admin (fase 1/3) | implemented |
 
 > Mantenha esta tabela ao adicionar specs.

@@ -1,0 +1,210 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0030",
+  "title": "Camada de serviço de portfólio — centralizar tx-mapper e QuoteService",
+  "status": "implemented",
+  "type": "refactor",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["implementador"],
+  "summary": "Centralizar código duplicado que existe em 5+ arquivos de rota de portfólio: a função prismaToCoreTx, a instanciação de QuoteService e a lógica de busca + cálculo de posições. Sem mudar comportamento externo (contratos de API inalterados).",
+  "motivation": "A função prismaToCoreTx está copiada em summary, allocation, benchmark, simulate e assets/[id]/transactions. O QuoteService é instanciado com new em cada módulo. A lógica de buscar assets + cotações + calcular posições está duplicada em summary e allocation. Isso viola DRY e dificulta correções de bugs (exemplo: SPEC-0029 precisou corrigir o mesmo padrão em múltiplos arquivos).",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §5", "SPEC §7"],
+    "business_rules": ["RN-02", "RN-03", "RN-10", "RN-11"],
+    "adrs": ["ADR-0004"],
+    "depends_on": ["SPEC-0029"]
+  },
+  "scope": {
+    "in_scope": [
+      "Criar apps/web/src/lib/portfolio/tx-mapper.ts com a função prismaToCoreTx tipada",
+      "Exportar singleton quoteService de apps/web/src/lib/quotes/quote.service.ts",
+      "Criar apps/web/src/lib/portfolio/positions.ts com computePositions(userId)",
+      "Atualizar summary/route.ts para usar computePositions e o singleton",
+      "Atualizar allocation/route.ts para usar computePositions e o singleton",
+      "Atualizar benchmark/route.ts para importar prismaToCoreTx do tx-mapper e usar singleton",
+      "Atualizar simulate/route.ts para importar prismaToCoreTx do tx-mapper e usar singleton",
+      "Atualizar assets/[id]/transactions/route.ts para importar prismaToCoreTx do tx-mapper"
+    ],
+    "out_of_scope": [
+      "Mudanças no schema Prisma",
+      "Mudanças em contratos de API (shape de request/response)",
+      "Criação de testes (SPEC-0034)",
+      "Otimizações de performance como índices DB ou dedupe (SPEC-0031)",
+      "Mudanças no cálculo financeiro em packages/core",
+      "Implementação de novos endpoints",
+      "Mudanças na camada de autenticação"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "prismaToCoreTx deve existir em exatamente um arquivo (tx-mapper.ts) e ser importada por todos os outros — sem cópias locais",
+      "rule_ref": "RN-03",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "QuoteService deve ser instanciado uma única vez (singleton) e compartilhado entre rotas",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "computePositions(userId) deve buscar assets + transações, calcular posições e cotações, e retornar { positions, totalBrl, anyStale }",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "O shape de resposta de /portfolio/summary e /portfolio/allocation deve ser idêntico ao atual após a refatoração",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "prismaToCoreTx em tx-mapper.ts não deve usar any — tipagem explícita com Prisma.Decimal e TransactionType",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "N/A",
+      "change": "none",
+      "fields": [],
+      "notes": "Nenhuma mudança no schema Prisma."
+    }
+  ],
+  "api": [],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "summary/route.ts e allocation/route.ts após a refatoração",
+      "when": "o arquivo é inspecionado",
+      "then": "não há definição local de prismaToCoreTx nem new QuoteService()"
+    },
+    {
+      "id": "AC-02",
+      "given": "benchmark/route.ts, simulate/route.ts e assets/[id]/transactions/route.ts após a refatoração",
+      "when": "o arquivo é inspecionado",
+      "then": "não há definição local de prismaToCoreTx — importa de tx-mapper"
+    },
+    {
+      "id": "AC-03",
+      "given": "tx-mapper.ts",
+      "when": "TypeScript compila sem erros",
+      "then": "não há any na assinatura de prismaToCoreTx"
+    },
+    {
+      "id": "AC-04",
+      "given": "positions.ts com computePositions",
+      "when": "chamada para um userId com assets e cotações",
+      "then": "retorna { positions: ComputedPosition[], totalBrl: Decimal, anyStale: boolean } com valores corretos"
+    },
+    {
+      "id": "AC-05",
+      "given": "pnpm build em apps/web",
+      "when": "executado após todas as mudanças",
+      "then": "zero erros de TypeScript"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Verificação estática: nenhum arquivo de rota contém definição local de prismaToCoreTx após a refatoração",
+      "kind": "static",
+      "covers": ["REQ-01", "AC-01", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "Verificação estática: nenhum arquivo de rota (exceto quote.service.ts) instancia new QuoteService()",
+      "kind": "static",
+      "covers": ["REQ-02", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "Build TypeScript sem erros após todas as mudanças (pnpm build ou tsc --noEmit)",
+      "kind": "build",
+      "covers": ["REQ-05", "AC-03", "AC-05"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar docs/specs/pendentes/0030-portfolio-layer.json (este arquivo)",
+      "target": "docs/specs/pendentes/",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Criar apps/web/src/lib/portfolio/tx-mapper.ts com prismaToCoreTx tipada sem any",
+      "target": "apps/web/src/lib/portfolio/tx-mapper.ts",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Adicionar export singleton quoteService em apps/web/src/lib/quotes/quote.service.ts",
+      "target": "apps/web/src/lib/quotes/quote.service.ts",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Criar apps/web/src/lib/portfolio/positions.ts com computePositions",
+      "target": "apps/web/src/lib/portfolio/positions.ts",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Atualizar summary/route.ts para usar computePositions e singleton",
+      "target": "apps/web/src/app/api/portfolio/summary/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-06",
+      "description": "Atualizar allocation/route.ts para usar computePositions e singleton",
+      "target": "apps/web/src/app/api/portfolio/allocation/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-07",
+      "description": "Atualizar benchmark/route.ts para usar prismaToCoreTx do tx-mapper e singleton",
+      "target": "apps/web/src/app/api/portfolio/benchmark/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-08",
+      "description": "Atualizar simulate/route.ts para usar prismaToCoreTx do tx-mapper e singleton",
+      "target": "apps/web/src/app/api/portfolio/simulate/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-09",
+      "description": "Atualizar assets/[id]/transactions/route.ts para usar prismaToCoreTx do tx-mapper",
+      "target": "apps/web/src/app/api/assets/[id]/transactions/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-10",
+      "description": "Rodar build/typecheck e confirmar zero erros",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-11",
+      "description": "Atualizar docs/specs/README.md com status implemented",
+      "target": "docs/specs/README.md",
+      "done": true
+    }
+  ],
+  "risks": [
+    {
+      "description": "O singleton de QuoteService usa process.env no constructor — garantir que o módulo é carregado uma vez em Node.js (Next.js hot-reload pode criar múltiplas instâncias em dev, mas isso é aceitável e pré-existente)"
+    }
+  ],
+  "observability": [],
+  "rollback": "Como é uma refatoração sem mudança de comportamento, reverter é simplesmente um git revert do commit. Os contratos de API permanecem inalterados."
+}

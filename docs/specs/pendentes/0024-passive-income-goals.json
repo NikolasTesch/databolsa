@@ -1,0 +1,146 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0024",
+  "title": "Metas de renda passiva mensal",
+  "status": "implemented",
+  "type": "feature",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["Nikolas"],
+  "summary": "Permite ao usuário definir uma meta de renda passiva mensal em BRL. O campo monthly_income_goal é persistido no User e exposto via GET/PATCH /api/user/goals. A UI calcula % atingido usando a projeção da SPEC-0022.",
+  "motivation": "A pergunta mais comum do investidor pessoa física: 'quando vou ter R$ X/mês de renda passiva?' Kinvo e Gorila têm esse recurso.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §7"],
+    "business_rules": ["RN-06", "RN-11"],
+    "adrs": [],
+    "depends_on": ["SPEC-0022"]
+  },
+  "scope": {
+    "in_scope": [
+      "Campo monthly_income_goal Decimal? em User (migration)",
+      "GET /api/user/goals — retorna meta atual",
+      "PATCH /api/user/goals — atualiza ou remove a meta",
+      "Validação: valor não negativo, Decimal nunca float"
+    ],
+    "out_of_scope": [
+      "Múltiplas metas ou metas por ativo/classe",
+      "Notificação quando meta atingida",
+      "Cálculo de % atingido e projeção de data — responsabilidade da UI usando SPEC-0022"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "monthly_income_goal em Decimal(18,2), nullable (meta não obrigatória).",
+      "rule_ref": "RN-06",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Valor negativo rejeitado com 422 INVALID_INPUT.",
+      "rule_ref": "RN-06",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Isolamento por user_id — cada usuário só lê/edita sua própria meta (RN-11).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "PATCH com null/undefined remove a meta (set null).",
+      "rule_ref": "RN-06",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "User",
+      "change": "alter",
+      "fields": [
+        { "name": "monthly_income_goal", "type": "Decimal(18,2)?", "notes": "Meta de renda passiva mensal em BRL. Nullable." }
+      ],
+      "notes": "Migration: ALTER TABLE users ADD COLUMN monthly_income_goal DECIMAL(18,2);"
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/user/goals",
+      "auth": true,
+      "request": "nenhum parâmetro",
+      "response": "{ monthly_income_goal: string | null }",
+      "errors": ["401 não autorizado"]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/user/goals",
+      "auth": true,
+      "request": "{ monthly_income_goal: number | null }",
+      "response": "{ monthly_income_goal: string | null }",
+      "errors": ["401 não autorizado", "422 INVALID_INPUT (negativo ou não numérico)"]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "PATCH com monthly_income_goal: 5000",
+      "when": "GET /api/user/goals",
+      "then": "Retorna '5000'"
+    },
+    {
+      "id": "AC-02",
+      "given": "PATCH com monthly_income_goal: -1",
+      "when": "qualquer",
+      "then": "422 INVALID_INPUT"
+    },
+    {
+      "id": "AC-03",
+      "given": "PATCH com monthly_income_goal: null",
+      "when": "GET /api/user/goals",
+      "then": "Retorna null"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "PATCH válido → GET retorna mesmo valor como string",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "Valor negativo → 422",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "PATCH null remove meta → GET retorna null",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-03"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Adicionar monthly_income_goal ao schema Prisma e criar migration",
+      "target": "apps/web/prisma",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Criar GET + PATCH /api/user/goals",
+      "target": "apps/web",
+      "done": true
+    }
+  ],
+  "risks": [],
+  "observability": [],
+  "rollback": "ALTER TABLE users DROP COLUMN monthly_income_goal. Remover route handler."
+}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Decimal } from 'decimal.js';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth/get-user';
+import type { TransactionType } from '@prisma/client';
 
 export async function PATCH(
   request: NextRequest,
@@ -23,7 +24,14 @@ export async function PATCH(
     return NextResponse.json({ message: 'Transação não encontrada' }, { status: 404 });
   }
 
-  let body: any;
+  interface PatchTransactionBody {
+    date?: string;
+    unit_price?: string | number;
+    quantity?: string | number;
+    fees?: string | number;
+  }
+
+  let body: PatchTransactionBody;
   try {
     body = await request.json();
   } catch {
@@ -32,7 +40,14 @@ export async function PATCH(
 
   const { date, unit_price, quantity, fees } = body;
 
-  const data: any = {};
+  interface UpdateData {
+    date?: Date;
+    unit_price?: string;
+    quantity?: string;
+    fees?: string;
+  }
+
+  const data: UpdateData = {};
   if (date) {
     if (isNaN(Date.parse(date))) {
       return NextResponse.json({ message: 'Data inválida' }, { status: 400 });
@@ -64,6 +79,36 @@ export async function PATCH(
       data.fees = new Decimal(fees).toString();
     } catch {
       return NextResponse.json({ message: 'Taxas inválidas' }, { status: 400 });
+    }
+  }
+
+  // Revalidate RN-02: if quantity or date changes, check the full timeline
+  if (data.quantity !== undefined || data.date !== undefined) {
+    const allTxs = await prisma.transaction.findMany({
+      where: { asset_id: existing.asset_id },
+      orderBy: { date: 'asc' },
+    });
+
+    const timeline = allTxs.map((t) => ({
+      type: t.type as TransactionType,
+      quantity: new Decimal(t.id === existing.id && data.quantity !== undefined ? data.quantity : t.quantity),
+      date: t.id === existing.id && data.date !== undefined ? data.date : t.date,
+    }));
+    timeline.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    let running = new Decimal(0);
+    for (const t of timeline) {
+      if (t.type === 'BUY' || t.type === 'DIVIDEND') {
+        running = running.add(t.quantity);
+      } else if (t.type === 'SELL') {
+        running = running.sub(t.quantity);
+        if (running.lessThan(0)) {
+          return NextResponse.json(
+            { message: 'Quantidade de venda excede a posição disponível nesta data' },
+            { status: 422 }
+          );
+        }
+      }
     }
   }
 

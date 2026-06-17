@@ -30,21 +30,23 @@ vi.mock('@/lib/prisma', () => ({
 
 vi.mock('@/lib/quotes/quote.service', () => {
   const { Decimal } = require('decimal.js');
+  const mockGetQuote = vi.fn().mockResolvedValue({
+    priceBrl: new Decimal('100'),
+    isStale: false,
+  });
+  const mockInstance = { getQuote: mockGetQuote };
   return {
-    QuoteService: vi.fn().mockImplementation(() => {
-      return {
-        getQuote: vi.fn().mockResolvedValue({
-          priceBrl: new Decimal('100'),
-          isStale: false,
-        }),
-      };
-    }),
+    QuoteService: vi.fn().mockImplementation(() => mockInstance),
+    // singleton exportado — usado por positions.ts como defaultQuoteService
+    quoteService: mockInstance,
   };
 });
 
 describe('Route Handlers API Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Padrão: getAuthUser precisa de user.findUnique para carregar role (SPEC-0037)
+    (prisma.user.findUnique as any).mockResolvedValue({ role: 'USER' });
   });
 
   describe('POST /api/auth/register', () => {

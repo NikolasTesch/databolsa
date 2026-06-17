@@ -1,0 +1,165 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0026",
+  "title": "Importação de transações via CSV",
+  "status": "implemented",
+  "type": "feature",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["Nikolas"],
+  "summary": "Upload e parse de CSV (formato B3/CEI e genérico) com preview das linhas validadas antes de confirmar. Validação RN-02 sobre timeline combinada (existente + importado). Commit atômico via Prisma transaction.",
+  "motivation": "A maior fricção de adoção de um portfolio tracker é o lançamento manual de transações. CSV de corretoras remove essa barreira.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §7"],
+    "business_rules": ["RN-01", "RN-02", "RN-11"],
+    "adrs": ["ADR-0011"],
+    "depends_on": []
+  },
+  "scope": {
+    "in_scope": [
+      "POST /api/portfolio/import?mode=preview|commit",
+      "Parser para formato B3/CEI e formato genérico (ticker,tipo,data,qtd,preco,taxas)",
+      "Números no formato pt-BR (1.234,56) e en-US",
+      "Validação RN-02 por ativo (timeline combinada existente + importado)",
+      "Commit atômico (Prisma $transaction) — falha numa linha não grava parcial",
+      "Ticker novo → criação automática de Asset com inferência de classe",
+      "Aceita multipart/form-data (campo file) e text/plain e application/json"
+    ],
+    "out_of_scope": [
+      "OFX/Nota de corretagem PDF",
+      "Open Finance/Pluggy",
+      "Reconciliação automática de dividendos já lançados",
+      "Deduplicação avançada além da validação RN-02"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Valores monetários parseados como Decimal — locale pt-BR com vírgula (RN-01).",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Preview rejeita/marca SELLs que excedem posição na timeline combinada (RN-02).",
+      "rule_ref": "RN-02",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Commit é atômico — nenhuma transação parcial gravada em caso de falha.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Isolamento: importa apenas para o user_id do JWT (RN-11).",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "Transaction",
+      "change": "none",
+      "fields": [],
+      "notes": "Sem migration — cria transações no schema existente."
+    }
+  ],
+  "api": [
+    {
+      "method": "POST",
+      "path": "/api/portfolio/import?mode=preview",
+      "auth": true,
+      "request": "multipart/form-data campo file OU text/plain OU application/json campo csv",
+      "response": "{ mode, total_lines, valid_rows, invalid_rows, errors[], preview[] }",
+      "errors": ["401", "422 INVALID_INPUT/PARSE_ERROR"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/portfolio/import?mode=commit",
+      "auth": true,
+      "request": "mesmo formato do preview",
+      "response": "{ mode, imported, skipped, errors[] }",
+      "errors": ["401", "422 NO_VALID_ROWS"]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "CSV genérico válido com 3 linhas BUY",
+      "when": "POST mode=preview",
+      "then": "preview lista 3 linhas, nenhum erro"
+    },
+    {
+      "id": "AC-02",
+      "given": "CSV com SELL maior que posição",
+      "when": "POST mode=preview",
+      "then": "Linha marcada como erro RN-02, demais linhas válidas no preview"
+    },
+    {
+      "id": "AC-03",
+      "given": "CSV válido mode=commit",
+      "when": "GET /api/portfolio/summary",
+      "then": "Posição reflete os novos aportes importados"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "CSV genérico válido — preview retorna linhas corretas",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "SELL > posição → erro RN-02 na linha correta",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "Números pt-BR (1.234,56) parseados corretamente",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "Ticker novo cria Asset automaticamente",
+      "kind": "integration",
+      "covers": ["REQ-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-05",
+      "description": "Commit atômico: falha numa linha não grava parcial",
+      "kind": "integration",
+      "covers": ["REQ-03", "AC-03"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar csv-parser.ts com suporte a formato B3 e genérico",
+      "target": "apps/web",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Criar POST /api/portfolio/import com modo preview e commit",
+      "target": "apps/web",
+      "done": true
+    }
+  ],
+  "risks": [
+    "Inferência de asset_class por ticker pode estar errada para casos ambíguos — usuário pode corrigir via UI",
+    "CSV B3 muda formato periodicamente — parser usa detecção de cabeçalho"
+  ],
+  "observability": [],
+  "rollback": "Remover route handler e csv-parser.ts. Sem migration."
+}

@@ -1,0 +1,229 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0035",
+  "title": "Série temporal real do portfólio e benchmark (TWR)",
+  "status": "implemented",
+  "type": "feature",
+  "created": "2026-06-17",
+  "updated": "2026-06-17",
+  "authors": ["Nikolas"],
+  "summary": "Substituir a série de 2 pontos (início/fim) do portfólio na rota /api/portfolio/benchmark por uma série diária real calculada a partir do histórico de preços de cada ativo e das transações do usuário. A série é normalizada em base 100 no primeiro dia com posição, permitindo comparação visual justa com IBOV/CDI/IPCA/S&P500.",
+  "motivation": "A série de 2 pontos (linha reta) é visualmente enganosa quando comparada com a curva diária real de benchmarks como IBOV e CDI. Usuários não conseguem identificar períodos de volatilidade, drawdowns ou divergências de curto prazo entre o portfólio e os índices de referência.",
+  "related": {
+    "prd": ["PRD §7"],
+    "spec_doc": ["SPEC §7"],
+    "business_rules": ["RN-01", "RN-02", "RN-03", "RN-10", "RN-11"],
+    "adrs": ["ADR-0009", "ADR-0014"],
+    "depends_on": ["SPEC-0021", "SPEC-0030"]
+  },
+  "scope": {
+    "in_scope": [
+      "Função pura buildPortfolioSeries em packages/core/src/timeseries.ts",
+      "Fetcher de histórico de preços por ativo (brapi para B3/ETF/FII/BDR, Finnhub para STOCK_US, brapi proxy para CRYPTO)",
+      "Cache de histórico de preços por ticker+data usando BenchmarkSeriesCache existente",
+      "Atualização de benchmark/route.ts para usar buildPortfolioSeries",
+      "Câmbio atual (não histórico) para ativos em USD — limitação documentada",
+      "ADR-0014 documentando a decisão de TWR aproximado com câmbio atual",
+      "Forward-fill de preços ausentes para dias sem negociação"
+    ],
+    "out_of_scope": [
+      "Câmbio histórico ponto a ponto (Fase 2)",
+      "TWR rigoroso com ponderação por cash flows (Modified Dietz — Fase 2)",
+      "Testes automatizados (cobertos em SPEC-0034)",
+      "Mudanças no schema Prisma",
+      "Outros endpoints além de benchmark/route.ts",
+      "Interface de usuário além do que já existe"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "buildPortfolioSeries deve gerar série diária normalizada base 100 a partir de transações e histórico de preços.",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Ativo sem preço em determinada data deve usar o último preço disponível (forward-fill).",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Série vazia (sem transações no período) deve retornar array vazio sem erro.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Fetcher de histórico deve usar cache com TTL de 1h e degradar graciosamente (retornar array vazio) se a fonte falhar.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "benchmark/route.ts deve substituir a série de 2 pontos pela série diária real do portfólio.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Câmbio USD/BRL deve ser o câmbio atual (não histórico) — limitação documentada no ADR-0014.",
+      "rule_ref": "RN-10",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-07",
+      "description": "Todos os valores monetários internos devem usar Decimal, nunca float.",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "BenchmarkSeriesCache",
+      "change": "reuse",
+      "fields": [],
+      "notes": "Reutilizar tabela existente com series_key = 'portfolio_asset_{ticker}' para cache de histórico de preços por ativo. TTL de 1h."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/portfolio/benchmark",
+      "auth": true,
+      "request": "?period=1Y&benchmark=IBOVESPA",
+      "response": "{ period, benchmark, portfolio_return_pct, benchmark_return_pct, portfolio_series: [{date, value}], benchmark_series: [{date, value}], is_stale, note }",
+      "errors": ["401 não autorizado", "422 period/benchmark inválido"]
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "Usuário com 2 ativos B3 e histórico de transações de 6 meses",
+      "when": "GET /api/portfolio/benchmark?period=6M",
+      "then": "portfolio_series tem N pontos diários (≥ 2), normalizados em base 100, sem linha reta"
+    },
+    {
+      "id": "AC-02",
+      "given": "Ativo sem preço em determinada data",
+      "when": "buildPortfolioSeries processa a data",
+      "then": "Usa o último preço disponível (forward-fill) sem lançar erro"
+    },
+    {
+      "id": "AC-03",
+      "given": "Usuário sem transações no período selecionado",
+      "when": "GET /api/portfolio/benchmark",
+      "then": "portfolio_series retorna [] e portfolio_return_pct = '0'"
+    },
+    {
+      "id": "AC-04",
+      "given": "Fonte de histórico de preços indisponível",
+      "when": "fetchAssetPriceHistory é chamado",
+      "then": "Retorna [] sem lançar erro; is_stale pode ser true"
+    },
+    {
+      "id": "AC-05",
+      "given": "Portfólio com ativo em USD",
+      "when": "buildPortfolioSeries calcula o valor do dia",
+      "then": "Usa câmbio atual para converter, documentado como aproximação"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "buildPortfolioSeries: série simples com 1 ativo B3, 2 compras, preços disponíveis para 5 dias — verificar normalização base 100.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "buildPortfolioSeries: ativo sem preço no dia 2 — verificar forward-fill (usa preço do dia 1).",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "buildPortfolioSeries: sem transações no período — retorna [].",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "buildPortfolioSeries: venda parcial — posição reduz, valor total do dia reflete nova quantidade.",
+      "kind": "unit",
+      "covers": ["REQ-01", "RN-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "buildPortfolioSeries: ativo USD com câmbio fornecido — valor em BRL calculado corretamente.",
+      "kind": "unit",
+      "covers": ["REQ-06", "AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-06",
+      "description": "fetchAssetPriceHistory: falha de rede retorna [] sem lançar exceção.",
+      "kind": "integration",
+      "covers": ["REQ-04", "AC-04"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar packages/core/src/timeseries.ts com buildPortfolioSeries",
+      "target": "packages/core/src/timeseries.ts",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Exportar buildPortfolioSeries em packages/core/src/index.ts",
+      "target": "packages/core/src/index.ts",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Criar apps/web/src/lib/market/asset-history-fetcher.ts com fetchAssetPriceHistory e cache",
+      "target": "apps/web/src/lib/market/asset-history-fetcher.ts",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Atualizar apps/web/src/app/api/portfolio/benchmark/route.ts para usar buildPortfolioSeries",
+      "target": "apps/web/src/app/api/portfolio/benchmark/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Criar docs/adr/0014-portfolio-twr-time-series.md documentando decisão de câmbio atual",
+      "target": "docs/adr/0014-portfolio-twr-time-series.md",
+      "done": true
+    },
+    {
+      "id": "T-06",
+      "description": "Atualizar docs/specs/README.md com SPEC-0035",
+      "target": "docs/specs/README.md",
+      "done": true
+    }
+  ],
+  "risks": [
+    {
+      "description": "API brapi historicalDataPrice pode ter limite de taxa para usuários com muitos ativos em paralelo",
+      "mitigation": "Cache obrigatório com TTL de 1h; Promise.all com no máximo N ativos por vez"
+    },
+    {
+      "description": "Câmbio atual (não histórico) introduz imprecisão para ativos USD de longo prazo",
+      "mitigation": "Documentado em ADR-0014 como limitação conhecida do MVP"
+    }
+  ],
+  "observability": [
+    "Log de cache HIT/MISS para histórico de preços por ativo",
+    "Log de warning quando fonte de histórico falha (degradação RN-10)"
+  ],
+  "rollback": "Reverter benchmark/route.ts para o commit anterior que usava série de 2 pontos. timeseries.ts e asset-history-fetcher.ts podem ser removidos sem impacto em outras funcionalidades."
+}
