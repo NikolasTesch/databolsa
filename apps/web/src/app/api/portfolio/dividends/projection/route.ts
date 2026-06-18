@@ -2,12 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Decimal } from 'decimal.js';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth/get-user';
+import { assertCanViewPortfolio } from '@/lib/auth/groups';
 import { quoteService } from '@/lib/quotes/quote.service';
+import { jsonError } from '@/lib/http/errors';
 
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+  }
+
+  const targetUserId = request.nextUrl.searchParams.get('targetUserId') ?? user.id;
+  if (targetUserId !== user.id) {
+    try {
+      await assertCanViewPortfolio(user.id, targetUserId);
+    } catch {
+      return jsonError('FORBIDDEN', 'Você não tem permissão para ver esta carteira', 403);
+    }
   }
 
   // Janela dos últimos 12 meses
@@ -19,7 +30,7 @@ export async function GET(request: NextRequest) {
     where: {
       type: 'DIVIDEND',
       date: { gte: twelveMonthsAgo },
-      asset: { user_id: user.id },
+      asset: { user_id: targetUserId },
     },
     include: { asset: { select: { currency: true } } },
   });

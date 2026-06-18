@@ -45,17 +45,17 @@ function DashboardSkeleton() {
 export default function DashboardPage() {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: queryKeys.portfolio.summary(),
-    queryFn: getPortfolioSummary,
+    queryFn: () => getPortfolioSummary(),
   });
 
   const { data: history } = useQuery({
     queryKey: queryKeys.portfolio.history(),
-    queryFn: getPortfolioHistory,
+    queryFn: () => getPortfolioHistory(),
   });
 
   const { data: monthly } = useQuery({
     queryKey: queryKeys.portfolio.monthlyActivity(),
-    queryFn: getMonthlyActivity,
+    queryFn: () => getMonthlyActivity(),
   });
 
   return (

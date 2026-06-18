@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /** Rotas que requerem autenticação */
-const PROTECTED_PREFIXES = ['/dashboard', '/assets'];
+const PROTECTED_PREFIXES = ['/dashboard', '/assets', '/portfolio/groups'];
 
 /** Rotas de auth — redirecionar para /dashboard se já logado */
 const AUTH_PREFIXES = ['/login', '/register'];

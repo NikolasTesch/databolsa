@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Decimal } from 'decimal.js';
 import { getAuthUser } from '@/lib/auth/get-user';
+import { assertCanViewPortfolio } from '@/lib/auth/groups';
 import { computePositions } from '@/lib/portfolio/positions';
+import { jsonError } from '@/lib/http/errors';
 
 interface PositionItem {
   ticker: string;
@@ -27,7 +29,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
   }
 
-  const { positions: computed, totalBrl } = await computePositions(user.id);
+  const targetUserId = request.nextUrl.searchParams.get('targetUserId') ?? user.id;
+  if (targetUserId !== user.id) {
+    try {
+      await assertCanViewPortfolio(user.id, targetUserId);
+    } catch {
+      return jsonError('FORBIDDEN', 'Você não tem permissão para ver esta carteira', 403);
+    }
+  }
+
+  const { positions: computed, totalBrl } = await computePositions(targetUserId);
 
   const positions: PositionItem[] = computed.map((cp) => {
     const { asset, position } = cp;

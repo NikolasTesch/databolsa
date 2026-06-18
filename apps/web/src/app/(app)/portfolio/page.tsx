@@ -8,6 +8,7 @@ import { getPortfolioSummary } from '@/lib/api/portfolio';
 import { listAssets } from '@/lib/api/assets';
 import { listTransactions } from '@/lib/api/transactions';
 import { Spinner } from '@/components/ui/Spinner';
+import { BannerReadOnly } from '@/components/groups/BannerReadOnly';
 import { DetailedPositionTable } from '@/components/portfolio/DetailedPositionTable';
 import { RentabilidadePanel } from '@/components/portfolio/RentabilidadePanel';
 import { ComposicaoCharts } from '@/components/portfolio/ComposicaoCharts';
@@ -30,10 +31,13 @@ function PortfolioPageInner() {
   const router = useRouter();
   const pathname = usePathname();
   const activeTab = (searchParams.get('tab') as TabId) ?? 'posicao';
+  const targetUserId = searchParams.get('targetUserId') ?? undefined;
+  const targetUserEmail = searchParams.get('userEmail') ?? undefined;
 
   const { data: summary, isLoading: loadingSummary } = useQuery({
-    queryKey: queryKeys.portfolio.summary(),
-    queryFn: getPortfolioSummary,
+    queryKey: queryKeys.portfolio.summary(targetUserId),
+    queryFn: () => getPortfolioSummary(targetUserId),
+    enabled: true,
   });
 
   const { data: assets = [], isLoading: loadingAssets } = useQuery({
@@ -60,9 +64,14 @@ function PortfolioPageInner() {
   }
 
   const isLoading = loadingSummary || loadingAssets;
+  const isReadOnly = Boolean(targetUserId);
 
   return (
     <div className="space-y-6">
+      {isReadOnly && targetUserEmail && (
+        <BannerReadOnly targetUserEmail={targetUserEmail} />
+      )}
+
       <h1 className="text-2xl font-semibold">Portfólio</h1>
 
       {/* Tabs */}

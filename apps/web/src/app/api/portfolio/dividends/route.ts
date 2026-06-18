@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Decimal } from 'decimal.js';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth/get-user';
+import { assertCanViewPortfolio } from '@/lib/auth/groups';
 import { quoteService } from '@/lib/quotes/quote.service';
+import { jsonError } from '@/lib/http/errors';
 
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
@@ -10,11 +12,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
   }
 
+  const targetUserId = request.nextUrl.searchParams.get('targetUserId') ?? user.id;
+  if (targetUserId !== user.id) {
+    try {
+      await assertCanViewPortfolio(user.id, targetUserId);
+    } catch {
+      return jsonError('FORBIDDEN', 'Você não tem permissão para ver esta carteira', 403);
+    }
+  }
+
   // Busca todas as transações DIVIDEND do usuário (RN-11)
   const dividendTxs = await prisma.transaction.findMany({
     where: {
       type: 'DIVIDEND',
-      asset: { user_id: user.id },
+      asset: { user_id: targetUserId },
     },
     include: { asset: { select: { ticker: true, currency: true, asset_class: true } } },
     orderBy: { date: 'asc' },

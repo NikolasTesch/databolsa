@@ -121,6 +121,8 @@ e idealmente um check de CI.
 | SPEC-0035 | Série temporal real do portfólio e benchmark (TWR)                | verified |
 | SPEC-0036 | Gaps de produto — paginação de assets                             | verified |
 | SPEC-0037 | Grupos de investimento — modelo de dados, autorização cross-user e papel admin (fase 1/3) | verified |
+| SPEC-0038 | Grupos de investimento — endpoints REST de grupos e convites (fase 2/3) | verified |
+| SPEC-0039 | Grupos de investimento — interface de usuário Next.js (fase 3/3)   | verified |
 
 ### Em andamento (`em-andamento/`)
 
@@ -128,9 +130,6 @@ _Nenhuma spec em andamento no momento._
 
 ### Pendentes (`pendentes/`)
 
-| ID        | Título                                                            | Status      |
-| --------- | ----------------------------------------------------------------- | ----------- |
-| SPEC-0038 | Grupos de investimento — endpoints REST de grupos e convites (fase 2/3) | draft       |
-| SPEC-0039 | Grupos de investimento — interface de usuário Next.js (fase 3/3)   | draft       |
+_Nenhuma spec pendente no momento._
 
 > Mantenha esta tabela ao adicionar specs.

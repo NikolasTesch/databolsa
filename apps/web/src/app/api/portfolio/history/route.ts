@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Decimal } from 'decimal.js';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth/get-user';
+import { assertCanViewPortfolio } from '@/lib/auth/groups';
+import { jsonError } from '@/lib/http/errors';
 
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
@@ -9,10 +11,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
   }
 
+  const targetUserId = request.nextUrl.searchParams.get('targetUserId') ?? user.id;
+  if (targetUserId !== user.id) {
+    try {
+      await assertCanViewPortfolio(user.id, targetUserId);
+    } catch {
+      return jsonError('FORBIDDEN', 'Você não tem permissão para ver esta carteira', 403);
+    }
+  }
+
   try {
     const transactions = await prisma.transaction.findMany({
       where: {
-        asset: { user_id: user.id },
+        asset: { user_id: targetUserId },
         type: { in: ['BUY', 'SELL'] },
       },
       orderBy: { date: 'asc' },

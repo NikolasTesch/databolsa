@@ -5,7 +5,9 @@ import type { PricePoint } from '@databolsa/core';
 import { Decimal } from 'decimal.js';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth/get-user';
+import { assertCanViewPortfolio } from '@/lib/auth/groups';
 import { quoteService } from '@/lib/quotes/quote.service';
+import { jsonError } from '@/lib/http/errors';
 import { prismaToCoreTx } from '@/lib/portfolio/tx-mapper';
 import {
   getCachedSeries,
@@ -59,6 +61,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
   }
 
+  const targetUserId = request.nextUrl.searchParams.get('targetUserId') ?? user.id;
+  if (targetUserId !== user.id) {
+    try {
+      await assertCanViewPortfolio(user.id, targetUserId);
+    } catch {
+      return jsonError('FORBIDDEN', 'Você não tem permissão para ver esta carteira', 403);
+    }
+  }
+
   const { searchParams } = new URL(request.url);
   const period = (searchParams.get('period') ?? '1Y') as PeriodId;
   const benchmark = (searchParams.get('benchmark') ?? 'IBOVESPA') as BenchmarkId;
@@ -72,7 +83,7 @@ export async function GET(request: NextRequest) {
 
   // Busca ativos do usuário com posições (RN-11)
   const assets = await prisma.asset.findMany({
-    where: { user_id: user.id },
+    where: { user_id: targetUserId },
     include: { transactions: { orderBy: { date: 'asc' } } },
   });
 

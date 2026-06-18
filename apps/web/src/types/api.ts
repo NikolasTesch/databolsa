@@ -119,6 +119,66 @@ export interface MonthlyActivityDto {
   transaction_count: number;
 }
 
+// ---- Groups ----
+
+export type GroupMemberRole = 'LEADER' | 'MEMBER';
+
+export interface GroupListItem {
+  id: string;
+  name: string;
+  description: string | null;
+  role: GroupMemberRole;
+  memberCount: number;
+}
+
+export interface GroupMember {
+  user_id: string;
+  email: string;
+  role: GroupMemberRole;
+  joined_at: string;
+}
+
+export interface GroupInvite {
+  id: string;
+  code: string;
+  role: GroupMemberRole;
+  expires_at: string | null;
+  max_uses: number | null;
+  uses: number;
+  revoked: boolean;
+}
+
+export interface GroupDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  created_by: string;
+  members: GroupMember[];
+  invites?: GroupInvite[];
+}
+
+export interface CreateGroupResponse {
+  id: string;
+  name: string;
+  description: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+export interface CreateInviteResponse {
+  id: string;
+  code: string;
+  role: string;
+  expires_at: string | null;
+  max_uses: number | null;
+}
+
+export interface AcceptInviteResponse {
+  success: boolean;
+  group_id: string;
+  role: string;
+}
+
 // ---- Error ----
 
 export interface ApiError {
