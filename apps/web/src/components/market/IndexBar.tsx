@@ -13,20 +13,36 @@ interface IndexBarProps {
 }
 
 export function IndexBar({ indices }: IndexBarProps) {
+  if (!indices.length) return null;
+
   return (
     <section
-      className="bg-surface border-y border-border py-3 px-4"
+      className="bg-surface border-y border-border py-3 overflow-hidden"
       aria-label="Indicadores de mercado"
     >
-      <div className="overflow-x-auto">
-        <div className="flex items-center gap-0 min-w-max md:justify-center">
+      {/* marquee-track duplica o conteúdo para loop contínuo */}
+      <div className="marquee-track flex w-max items-center">
+        {/* Cópia visível */}
+        {indices.map((idx) => (
+          <IndexCard
+            key={idx.id}
+            label={idx.label}
+            value={idx.value}
+            changePercent={idx.changePercent}
+            stale={idx.stale}
+            className="border-r"
+          />
+        ))}
+        {/* Cópia para loop contínuo */}
+        <div className="flex items-center" aria-hidden="true">
           {indices.map((idx) => (
             <IndexCard
-              key={idx.id}
+              key={`_${idx.id}`}
               label={idx.label}
               value={idx.value}
               changePercent={idx.changePercent}
               stale={idx.stale}
+              className="border-r"
             />
           ))}
         </div>

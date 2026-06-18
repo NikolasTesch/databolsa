@@ -31,3 +31,64 @@
     @apply text-neutralChange font-mono;
   }
 }
+
+/* ─── Keyframes ─────────────────────────────────────────────────────────── */
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes orb-drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(32px, -36px) scale(1.07); }
+}
+
+@keyframes orb-drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(-24px, 28px) scale(0.94); }
+}
+
+@keyframes orb-drift-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(18px, 20px) scale(1.05); }
+}
+
+@keyframes float-particle {
+  0%   { opacity: 0;    transform: translateY(0)     scale(0.85); }
+  15%  { opacity: 0.55; }
+  85%  { opacity: 0.45; }
+  100% { opacity: 0;    transform: translateY(-90px) scale(1); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ─── Animation utilities ────────────────────────────────────────────────── */
+
+@layer utilities {
+  .hero-orb-a { animation: orb-drift-a  9s ease-in-out infinite; }
+  .hero-orb-b { animation: orb-drift-b 13s ease-in-out infinite; }
+  .hero-orb-c { animation: orb-drift-c 11s ease-in-out infinite 2s; }
+
+  .hero-animate-1 { animation: fade-in-up 0.55s ease-out 0.05s both; }
+  .hero-animate-2 { animation: fade-in-up 0.55s ease-out 0.15s both; }
+  .hero-animate-3 { animation: fade-in-up 0.55s ease-out 0.25s both; }
+  .hero-animate-4 { animation: fade-in-up 0.55s ease-out 0.35s both; }
+  .hero-animate-5 { animation: fade-in-up 0.55s ease-out 0.45s both; }
+
+  .marquee-track  { animation: marquee 32s linear infinite; }
+  .marquee-track:hover { animation-play-state: paused; }
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-orb-a, .hero-orb-b, .hero-orb-c,
+  .hero-animate-1, .hero-animate-2, .hero-animate-3,
+  .hero-animate-4, .hero-animate-5,
+  .marquee-track,
+  .float-particle { animation: none !important; }
+}
