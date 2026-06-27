@@ -30,7 +30,7 @@ function formatPrice(value: number): string {
 export function DividendsChart({ data }: DividendsChartProps) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-content-muted text-sm border border-dashed border-border rounded-lg bg-surface-muted/30">
+      <div className="flex items-center justify-center h-48 text-on-surface-variant text-sm border border-dashed border-border rounded-lg bg-surface-muted/30">
         Nenhum provento recebido neste período.
       </div>
     );

@@ -16,7 +16,7 @@ export function ProventosTable({ transactions, assets }: Props) {
   if (dividends.length === 0) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-content-muted">
+        <p className="text-sm text-on-surface-variant">
           Nenhum provento registrado. Adicione uma transação do tipo{' '}
           <span className="font-mono font-medium">DIVIDEND</span> em um ativo para visualizar aqui.
         </p>
@@ -40,7 +40,7 @@ export function ProventosTable({ transactions, assets }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border text-left text-xs font-medium uppercase tracking-wide text-content-muted">
+            <tr className="border-b border-border text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">
               <th className="pb-2 pr-4">Data</th>
               <th className="pb-2 pr-4">Ativo</th>
               <th className="pb-2 pr-4 text-right">Valor/Cota</th>
@@ -51,7 +51,7 @@ export function ProventosTable({ transactions, assets }: Props) {
           <tbody>
             {rows.map(({ tx, asset, total }) => (
               <tr key={tx.id} className="border-b border-border/50 last:border-0">
-                <td className="py-3 pr-4 text-content-muted">
+                <td className="py-3 pr-4 text-on-surface-variant">
                   {new Date(tx.date + 'T00:00:00').toLocaleDateString('pt-BR')}
                 </td>
                 <td className="py-3 pr-4 font-medium">{asset?.ticker ?? '—'}</td>

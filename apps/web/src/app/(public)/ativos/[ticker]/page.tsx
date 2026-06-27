@@ -147,7 +147,7 @@ export default async function AssetAnalysisPage({ params, searchParams }: PagePr
   const price = cached ? cached.price.toFixed(assetClass === 'CRYPTO' ? 8 : 2) : '—';
 
   return (
-    <>
+    <div className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop pb-12">
       <AssetHeader
         ticker={ticker}
         name={name}
@@ -161,19 +161,41 @@ export default async function AssetAnalysisPage({ params, searchParams }: PagePr
       />
 
       {fundamentals && (
-        <IndicatorGrid
-          indicators={fundamentals.indicators}
-          assetClass={assetClass}
-        />
+        <section className="mt-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-primary">monitoring</span>
+            <h2 className="text-lg font-semibold text-on-surface">Indicadores Fundamentalistas</h2>
+          </div>
+          <IndicatorGrid
+            indicators={fundamentals.indicators}
+            assetClass={assetClass}
+          />
+        </section>
       )}
 
-      <PriceHistorySection ticker={ticker} />
+      <section className="mt-8">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="material-symbols-outlined text-primary">show_chart</span>
+          <h2 className="text-lg font-semibold text-on-surface">Histórico de Preços</h2>
+        </div>
+        <PriceHistorySection ticker={ticker} />
+      </section>
 
-      <DividendsTable dividends={dividends} assetClass={assetClass} />
+      {hasDividends && dividends.length > 0 && (
+        <section className="mt-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-primary">payments</span>
+            <h2 className="text-lg font-semibold text-on-surface">Proventos</h2>
+          </div>
+          <DividendsTable dividends={dividends} assetClass={assetClass} />
+        </section>
+      )}
 
-      <Suspense fallback={null}>
-        <RelatedNewsSection ticker={ticker} limit={6} />
-      </Suspense>
-    </>
+      <section className="mt-8">
+        <Suspense fallback={null}>
+          <RelatedNewsSection ticker={ticker} limit={6} />
+        </Suspense>
+      </section>
+    </div>
   );
 }

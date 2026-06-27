@@ -9,7 +9,7 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 
 export function Badge({ variant = 'default', className, children, ...props }: BadgeProps) {
   const variants: Record<BadgeVariant, string> = {
-    default: 'bg-surface-muted text-content-muted',
+    default: 'bg-surface-muted text-on-surface-variant',
     success: 'bg-profit-surface text-profit-content',
     danger: 'bg-loss-surface text-loss-content',
     warning: 'bg-stale-surface text-stale-content',

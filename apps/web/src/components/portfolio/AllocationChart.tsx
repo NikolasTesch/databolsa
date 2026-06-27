@@ -33,7 +33,7 @@ export function AllocationChart({ positions }: AllocationChartProps) {
   if (data.length === 0) {
     return (
       <div className="flex h-48 items-center justify-center rounded-xl border border-border bg-surface">
-        <p className="text-sm text-content-muted">Sem dados de alocação disponíveis</p>
+        <p className="text-sm text-on-surface-variant">Sem dados de alocação disponíveis</p>
       </div>
     );
   }

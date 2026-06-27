@@ -121,7 +121,7 @@ export function SearchBar({ variant = 'hero', placeholder }: SearchBarProps) {
   return (
     <div ref={containerRef} className={cn('relative w-full', isHero ? 'max-w-xl mx-auto' : 'max-w-xs')}>
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted" aria-hidden="true">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" aria-hidden="true">
           <svg className={cn('fill-none stroke-current', isHero ? 'h-5 w-5' : 'h-4 w-4')} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -141,7 +141,7 @@ export function SearchBar({ variant = 'hero', placeholder }: SearchBarProps) {
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder={placeholder ?? defaultPlaceholder}
           className={cn(
-            'w-full rounded-lg border border-border bg-surface text-content placeholder:text-content-subtle',
+            'w-full rounded-lg border border-border bg-surface text-on-surface placeholder:text-outline',
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary',
             'transition-colors',
             isHero ? 'h-12 pl-11 pr-4 text-base' : 'h-9 pl-9 pr-3 text-sm',
@@ -177,8 +177,8 @@ export function SearchBar({ variant = 'hero', placeholder }: SearchBarProps) {
               )}
             >
               <AssetClassBadge assetClass={result.assetClass} />
-              <span className="font-mono text-sm font-semibold text-content">{result.ticker}</span>
-              <span className="text-xs text-content-muted truncate flex-1">{result.name}</span>
+              <span className="font-mono text-sm font-semibold text-on-surface">{result.ticker}</span>
+              <span className="text-xs text-on-surface-variant truncate flex-1">{result.name}</span>
             </li>
           ))}
         </ul>

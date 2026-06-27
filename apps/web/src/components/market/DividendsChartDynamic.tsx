@@ -7,7 +7,7 @@ const DividendsChart = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center h-[200px] text-content-muted text-sm animate-pulse border border-dashed border-border rounded-lg bg-surface-muted/30">
+      <div className="flex items-center justify-center h-[200px] text-on-surface-variant text-sm animate-pulse border border-dashed border-border rounded-lg bg-surface-muted/30">
         Carregando gráfico de proventos...
       </div>
     ),

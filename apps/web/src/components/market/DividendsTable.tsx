@@ -115,7 +115,7 @@ export function DividendsTable({ dividends, assetClass }: DividendsTableProps) {
       <div className="bg-surface border border-border rounded-lg p-6">
         {/* Cabeçalho com título e filtros */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <h2 className="text-sm font-semibold text-content-muted uppercase tracking-wide">
+          <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wide">
             Histórico de Proventos
           </h2>
           <div className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export function DividendsTable({ dividends, assetClass }: DividendsTableProps) {
                   'text-xs px-3 py-1 rounded transition-colors',
                   range === opt.value
                     ? 'bg-primary text-white font-medium'
-                    : 'bg-surface-muted text-content-muted hover:bg-primary/10',
+                    : 'bg-surface-muted text-on-surface-variant hover:bg-primary/10',
                 )}
               >
                 {opt.label}
@@ -145,7 +145,7 @@ export function DividendsTable({ dividends, assetClass }: DividendsTableProps) {
 
         {/* Tabela ou Mensagem Vazia */}
         {filteredDividends.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 gap-2 text-content-muted border border-dashed border-border rounded-lg bg-surface-muted/30">
+          <div className="flex flex-col items-center justify-center py-8 gap-2 text-on-surface-variant border border-dashed border-border rounded-lg bg-surface-muted/30">
             <svg
               className="h-8 w-8 opacity-40"
               fill="none"
@@ -165,7 +165,7 @@ export function DividendsTable({ dividends, assetClass }: DividendsTableProps) {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-xs text-content-muted uppercase border-b border-border">
+                  <tr className="text-xs text-on-surface-variant uppercase border-b border-border">
                     <th className="text-left pb-2 pr-4">Data de Pagamento</th>
                     <th className="text-left pb-2 pr-4">Tipo</th>
                     <th className="text-right pb-2">Valor por Cota</th>
@@ -177,9 +177,9 @@ export function DividendsTable({ dividends, assetClass }: DividendsTableProps) {
                       key={`${d.paymentDate}-${idx}`}
                       className={`border-b border-border/50 hover:bg-primary/5 transition-colors ${idx % 2 === 0 ? 'bg-surface' : 'bg-surface-muted'}`}
                     >
-                      <td className="py-2 pr-4 font-mono text-content">{formatDate(d.paymentDate)}</td>
-                      <td className="py-2 pr-4 text-content-muted">{d.type}</td>
-                      <td className="py-2 text-right font-mono text-content">
+                      <td className="py-2 pr-4 font-mono text-on-surface">{formatDate(d.paymentDate)}</td>
+                      <td className="py-2 pr-4 text-on-surface-variant">{d.type}</td>
+                      <td className="py-2 text-right font-mono text-on-surface">
                         R$ {parseFloat(d.value).toLocaleString('pt-BR', { minimumFractionDigits: 4 })}
                       </td>
                     </tr>
@@ -194,17 +194,17 @@ export function DividendsTable({ dividends, assetClass }: DividendsTableProps) {
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 text-xs rounded border border-border bg-surface text-content-muted hover:bg-surface-muted hover:text-content transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                  className="px-3 py-1 text-xs rounded border border-border bg-surface text-on-surface-variant hover:bg-surface-muted hover:text-on-surface transition-colors disabled:opacity-40 disabled:pointer-events-none"
                 >
                   Anterior
                 </button>
-                <span className="text-xs text-content-muted font-medium">
+                <span className="text-xs text-on-surface-variant font-medium">
                   Página {currentPage} de {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 text-xs rounded border border-border bg-surface text-content-muted hover:bg-surface-muted hover:text-content transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                  className="px-3 py-1 text-xs rounded border border-border bg-surface text-on-surface-variant hover:bg-surface-muted hover:text-on-surface transition-colors disabled:opacity-40 disabled:pointer-events-none"
                 >
                   Próximo
                 </button>

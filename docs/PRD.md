@@ -1,7 +1,7 @@
 # PRD — DataBolsa
 
 > Documento de Requisitos de Produto (Product Requirements Document)
-> Versão 0.1 — MVP · Status: rascunho
+> Versão 1.0 — Produção · Status: consolidado
 
 ## 1. Visão geral
 
@@ -68,6 +68,20 @@ Este produto resolve isso com **lançamento manual** das operações: simples de
 
 **RF-09 — Multiplataforma.** Web exibe a experiência completa; o app mobile permite ao menos consultar o patrimônio e registrar/editar operações.
 
+**RF-10 — Notícias relacionadas.** O sistema exibe notícias financeiras integradas e de fontes relevantes para o portfólio do usuário e na tela pública.
+
+**RF-11 — Ferramentas financeiras.** Um conversor de moedas integrado (fiat e cripto) e simulador what-if para planejar futuras alocações e compras.
+
+**RF-12 — Cursos educacionais.** Integração com a listagem de cursos gratuitos disponibilizados pela B3 para educação financeira.
+
+**RF-13 — Dashboards de proventos e benchmarks.** Visões dedicadas para recebimento de dividendos (histórico e yield on cost) e comparação de rentabilidade da carteira frente a índices (CDI, IBOV, IPCA, S&P500).
+
+**RF-14 — Alertas de preço.** Permite configurar disparadores in-app para avisar o usuário quando a cotação de um ativo cruza um limite definido.
+
+**RF-15 — Importação de transações.** Upload de arquivos CSV para carregamento em massa de operações, com pré-visualização e desambiguação de datas.
+
+**RF-16 — Grupos de investimento.** Compartilhamento de carteiras entre usuários através de grupos, permitindo a visualização consolidada por líderes e administradores.
+
 ## 7. Regras de negócio
 
 Estas regras são o coração do produto e devem ter cobertura de testes (ver SPEC.md).
@@ -98,6 +112,14 @@ preço_médio = (Σ (quantidade_compra × preço_compra) + taxas) / Σ quantidad
 
 **RN-11 — Isolamento por usuário.** Toda operação, ativo e cálculo pertence a um único usuário; nenhum dado é compartilhado entre contas.
 
+**RN-12 — Cálculo de rentabilidade histórica (TWR).** A rentabilidade consolidada histórica da carteira deve ser calculada usando a metodologia TWR (Time-Weighted Return) para evitar distorções causadas por novos fluxos de aporte/retirada.
+
+**RN-13 — Cache persistente de câmbio.** Conversões de moedas no conversor de ferramentas utilizam cotações de banco de dados locais caso as APIs externas falhem, com alertas de dados stale caso a taxa tenha mais de 24 horas.
+
+**RN-14 — Privacidade em grupos.** Um usuário ao entrar em um grupo de investimentos pode selecionar quais de suas carteiras deseja compartilhar. Membros regulares não possuem visibilidade sobre carteiras de outros membros; apenas o Líder/Admin possui visão agregada/detalhada conforme permissão.
+
+**RN-15 — Avaliação assíncrona de alertas de preço.** Os gatilhos de alertas de preço configurados são processados em segundo plano (lazy-evaluation) à medida que novas cotações entram no cache de cotações (`QuoteCache`), sem sobrecarregar a API principal.
+
 ## 8. Requisitos não-funcionais
 
 - **Segurança:** dados acessíveis apenas pelo dono; chaves de API externas nunca expostas no cliente; senhas com hash.
@@ -115,11 +137,11 @@ Como projeto de portfólio, o sucesso é medido por demonstração de competênc
 
 ## 10. Roadmap por fases
 
-**Fase 1 — MVP (foco atual).** Lançamento manual, cotações via APIs externas, dashboard consolidado, web + mobile.
+**Fase 1 — MVP & Lançamento Manual (Concluída).** Lançamento de operações, cotações resilientes com cache, dashboard, conversor, notícias, cursos, simulador, importação CSV, alertas, benchmarks TWR e grupos de investimento.
 
-**Fase 2 — Integração automática.** Sincronização com corretoras via agregador de Open Finance (ex.: Pluggy, que tem parceria com a B3), reduzindo o lançamento manual. Implica tratar consentimento, credenciais e conformidade regulatória.
+**Fase 2 — Integração Automática (Próximo Passo).** Sincronização automática com corretoras via APIs de Open Finance (ex.: Pluggy / B3), minimizando a necessidade de lançamentos manuais.
 
-**Fase 3 — Inteligência.** Acompanhamento de proventos/dividendos, yield on cost, comparação com benchmarks (IBOV, CDI), e relatórios.
+**Fase 3 — Relatórios & Imposto de Renda.** Geração automatizada de relatórios fiscais mensais e anuais, cálculo de DARF e declaração pré-preenchida de IR.
 
 ## 11. Riscos e considerações
 

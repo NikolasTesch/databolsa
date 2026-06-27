@@ -28,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className={`${ibmPlexSans.variable} ${ibmPlexMono.variable}`}>
-      <body className="bg-background text-content font-sans min-h-screen">
+    <html lang="pt-BR" className={`dark ${ibmPlexSans.variable} ${ibmPlexMono.variable}`}>
+      <body className="bg-background text-on-surface font-sans min-h-screen">
         <Providers>{children}</Providers>
       </body>
     </html>

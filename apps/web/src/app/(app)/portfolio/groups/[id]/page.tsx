@@ -123,7 +123,7 @@ export default function GroupDetailPage() {
         <div>
           <h1 className="text-2xl font-semibold">{group.name}</h1>
           {group.description && (
-            <p className="mt-1 text-content-muted">{group.description}</p>
+            <p className="mt-1 text-on-surface-variant">{group.description}</p>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -156,14 +156,14 @@ export default function GroupDetailPage() {
       <Card>
         <div className="flex items-center justify-between border-b border-border pb-4">
           <h2 className="text-lg font-semibold">Membros</h2>
-          <span className="text-sm text-content-muted">
+          <span className="text-sm text-on-surface-variant">
             {group.members.length} {group.members.length === 1 ? 'membro' : 'membros'}
           </span>
         </div>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-left text-content-muted">
+              <tr className="border-b border-border text-left text-on-surface-variant">
                 <th className="pb-2 pr-4 font-medium">Email</th>
                 <th className="pb-2 pr-4 font-medium">Papel</th>
                 <th className="pb-2 pr-4 font-medium">Membro desde</th>
@@ -173,7 +173,7 @@ export default function GroupDetailPage() {
             <tbody>
               {group.members.map((member) => (
                 <tr key={member.user_id} className="border-b border-border/50">
-                  <td className="py-3 pr-4 text-content">{member.email}</td>
+                  <td className="py-3 pr-4 text-on-surface">{member.email}</td>
                   <td className="py-3 pr-4">
                     <Badge
                       variant={member.role === 'LEADER' ? 'info' : 'neutral'}
@@ -181,7 +181,7 @@ export default function GroupDetailPage() {
                       {member.role === 'LEADER' ? 'Líder' : 'Membro'}
                     </Badge>
                   </td>
-                  <td className="py-3 pr-4 text-content-muted">
+                  <td className="py-3 pr-4 text-on-surface-variant">
                     {new Date(member.joined_at).toLocaleDateString('pt-BR')}
                   </td>
                   <td className="py-3 text-right">
@@ -229,17 +229,17 @@ export default function GroupDetailPage() {
                     >
                       {invite.role === 'LEADER' ? 'Líder' : 'Membro'}
                     </Badge>
-                    <span className="font-mono text-xs text-content-muted">
+                    <span className="font-mono text-xs text-on-surface-variant">
                       {invite.code.slice(0, 8)}...
                     </span>
                     {invite.expires_at && (
-                      <span className="text-xs text-content-subtle">
+                      <span className="text-xs text-outline">
                         Expira em{' '}
                         {new Date(invite.expires_at).toLocaleDateString('pt-BR')}
                       </span>
                     )}
                     {invite.max_uses !== null && (
-                      <span className="text-xs text-content-subtle">
+                      <span className="text-xs text-outline">
                         {invite.uses}/{invite.max_uses} usos
                       </span>
                     )}
@@ -266,7 +266,7 @@ export default function GroupDetailPage() {
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-sm text-content-muted">
+            <p className="mt-4 text-sm text-on-surface-variant">
               Nenhum convite ativo no momento.
             </p>
           )}
@@ -308,14 +308,14 @@ export default function GroupDetailPage() {
                   Convite criado com sucesso!
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-content">
+                  <label className="mb-1 block text-sm font-medium text-on-surface">
                     Link do convite
                   </label>
                   <div className="flex gap-2">
                     <input
                       readOnly
                       value={`${typeof window !== 'undefined' ? window.location.origin : ''}/portfolio/groups/join?code=${lastInviteCode}`}
-                      className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-content"
+                      className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface"
                       onClick={(e) => (e.target as HTMLInputElement).select()}
                     />
                     <Button
@@ -341,7 +341,7 @@ export default function GroupDetailPage() {
             ) : (
               <form onSubmit={handleCreateInvite} className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-content">
+                  <label className="mb-1 block text-sm font-medium text-on-surface">
                     Papel do convidado
                   </label>
                   <select
@@ -349,7 +349,7 @@ export default function GroupDetailPage() {
                     onChange={(e) =>
                       setInviteRole(e.target.value as 'MEMBER' | 'LEADER')
                     }
-                    className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-content"
+                    className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-on-surface"
                   >
                     <option value="MEMBER">Membro</option>
                     <option value="LEADER">Líder</option>

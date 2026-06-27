@@ -37,7 +37,7 @@ function wrapper({ children }: { children: React.ReactNode }) {
 }
 
 const ASSET_ID = 'asset-test-123';
-const API_BASE = 'http://localhost:3001';
+const API_BASE = 'http://localhost:3000';
 
 describe('TransactionForm — validação client-side', () => {
   it('exibe erro quando quantity é zero', async () => {

@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { SearchBar } from '@/components/market/SearchBar';
 
@@ -5,82 +8,112 @@ interface PublicHeaderProps {
   isAuthenticated: boolean;
 }
 
-const NAV_LINKS = [
-  { label: 'Ações', type: 'STOCK_BR' },
-  { label: 'FIIs', type: 'FII' },
-  { label: 'ETFs', type: 'ETF' },
-  { label: 'BDRs', type: 'BDR' },
-  { label: 'Crypto', type: 'CRYPTO' },
-  { label: 'Stocks US', type: 'STOCK_US' },
+const NAV_ITEMS = [
+  { label: 'Home', href: '/' },
+  { label: 'Mercados', href: '/#mercados' },
+  { label: 'Dividendos', href: '/#dividendos' },
+  { label: 'Cripto', href: '/#cripto' },
+  { label: 'Ferramentas', href: '/ferramentas' },
+  { label: 'Cursos', href: '/#cursos' },
 ] as const;
 
 export function PublicHeader({ isAuthenticated }: PublicHeaderProps) {
-  return (
-    <header className="sticky top-0 z-sticky bg-surface border-b border-border">
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="flex h-16 items-center gap-4">
-          <Link href="/" className="flex-shrink-0 text-xl font-semibold text-primary" aria-label="DataBolsa — página inicial">
-            DataBolsa
-          </Link>
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-          <nav className="hidden lg:flex items-center gap-1 flex-1" aria-label="Navegação por classe de ativo">
-            {NAV_LINKS.map((link) => (
+  return (
+    <header className="sticky top-0 z-sticky bg-background/80 backdrop-blur-md border-b border-border">
+      <div className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop">
+        <div className="flex items-center justify-between h-16">
+          {/* Left: brand + nav */}
+          <div className="flex items-center gap-8">
+            <Link
+              href="/"
+              className="font-sans text-headline-md font-bold tracking-tight text-primary"
+            >
+              databolsa
+            </Link>
+
+            {/* Desktop nav */}
+            <nav className="hidden md:flex items-center gap-6">
+              {NAV_ITEMS.map((item) => {
+                const isActive = item.href === '/' || item.href === '/#mercados';
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className={`text-body-sm transition-colors ${
+                      isActive
+                        ? 'text-primary font-bold border-b-2 border-primary pb-[21px] mt-[23px]'
+                        : 'text-on-surface-variant hover:text-primary'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Right: search + auth */}
+          <div className="flex items-center gap-4">
+            <div className="hidden lg:block w-64">
+              <SearchBar variant="compact" />
+            </div>
+
+            <div className="flex items-center gap-2 border-l border-border pl-4">
+              {isAuthenticated ? (
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-1.5 rounded text-body-sm bg-primary-container text-on-primary-container hover:bg-primary hover:text-white transition-colors font-medium"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="px-3 py-1.5 text-body-sm text-on-surface-variant hover:text-on-surface transition-colors"
+                  >
+                    Entrar
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="px-4 py-1.5 rounded text-body-sm bg-primary-container text-on-primary-container hover:bg-primary hover:text-white transition-colors font-medium"
+                  >
+                    Criar conta
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Mobile menu button */}
+            <button
+              className="md:hidden p-2 text-on-surface-variant hover:text-on-surface"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Abrir menu"
+            >
+              <span className="material-symbols-outlined text-[24px]">
+                {mobileOpen ? 'close' : 'menu'}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile nav dropdown */}
+        {mobileOpen && (
+          <nav className="md:hidden pb-4 border-t border-border pt-3 flex flex-col gap-2">
+            {NAV_ITEMS.map((item) => (
               <Link
-                key={link.type}
-                href={`/?type=${link.type}`}
-                className="px-3 py-1.5 text-sm font-medium text-content-muted hover:text-content rounded transition-colors"
+                key={item.label}
+                href={item.href}
+                className="px-3 py-2 text-body-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-muted rounded transition-colors"
+                onClick={() => setMobileOpen(false)}
               >
-                {link.label}
+                {item.label}
               </Link>
             ))}
-            <Link
-              href="/ferramentas"
-              className="px-3 py-1.5 text-sm font-medium text-content-muted hover:text-content rounded transition-colors"
-            >
-              Ferramentas
-            </Link>
-            <Link
-              href="/#cursos"
-              className="px-3 py-1.5 text-sm font-medium text-content-muted hover:text-content rounded transition-colors"
-            >
-              Cursos
-            </Link>
           </nav>
-
-          <div className="hidden md:flex flex-1 lg:flex-none lg:w-64">
-            <SearchBar variant="compact" />
-          </div>
-
-          <div className="flex-shrink-0 flex items-center gap-2 border-l border-border pl-4">
-            {isAuthenticated ? (
-              <Link
-                href="/dashboard"
-                className="px-3 py-1.5 text-sm font-medium text-content-muted hover:bg-surface-muted rounded transition-colors"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="px-3 py-1.5 text-sm font-medium text-content-muted hover:bg-surface-muted rounded transition-colors"
-                >
-                  Entrar
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-3 py-1.5 text-sm font-medium bg-primary text-white rounded hover:bg-primary-hover transition-colors"
-                >
-                  Criar conta
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="md:hidden pb-3">
-          <SearchBar variant="compact" />
-        </div>
+        )}
       </div>
     </header>
   );

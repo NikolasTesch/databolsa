@@ -72,11 +72,11 @@ export function SummaryCards({ data }: SummaryCardsProps) {
     >
       <motion.div variants={cardVariants}>
         <Card>
-          <p className="text-sm font-medium text-content-muted">Patrimônio Total</p>
+          <p className="text-sm font-medium text-on-surface-variant">Patrimônio Total</p>
           <div className="mt-1">
             <AnimatedValue target={patrimonio} fallback={formatBRL(data.patrimonio_total_brl)} />
           </div>
-          <p className="mt-1 text-xs text-content-subtle">
+          <p className="mt-1 text-xs text-outline">
             {data.positions.filter((p) => p.valor_atual_brl !== null).length} posições com cotação
           </p>
         </Card>
@@ -84,11 +84,11 @@ export function SummaryCards({ data }: SummaryCardsProps) {
 
       <motion.div variants={cardVariants}>
         <Card>
-          <p className="text-sm font-medium text-content-muted">Ativos na Carteira</p>
+          <p className="text-sm font-medium text-on-surface-variant">Ativos na Carteira</p>
           <p className="mt-1 font-mono text-2xl font-semibold tabular-nums">
             {data.positions.length}
           </p>
-          <p className="mt-1 text-xs text-content-subtle">
+          <p className="mt-1 text-xs text-outline">
             {data.positions.filter((p) => p.is_stale).length > 0
               ? `${data.positions.filter((p) => p.is_stale).length} com cotação desatualizada`
               : 'Todas as cotações atualizadas'}

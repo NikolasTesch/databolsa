@@ -55,10 +55,10 @@ export default function AssetDetailPage({ params }: AssetDetailPageProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/assets" className="text-content-muted hover:text-content">
+          <Link href="/assets" className="text-on-surface-variant hover:text-on-surface">
             ← Ativos
           </Link>
-          <h1 className="text-xl font-semibold text-content">{asset.ticker}</h1>
+          <h1 className="text-xl font-semibold text-on-surface">{asset.ticker}</h1>
           <AssetClassBadge assetClass={asset.asset_class} />
         </div>
         <Link
@@ -72,20 +72,20 @@ export default function AssetDetailPage({ params }: AssetDetailPageProps) {
       <Card>
         <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wider text-content-subtle">Nome</dt>
-            <dd className="mt-1 text-sm text-content">{asset.name}</dd>
+            <dt className="text-xs font-medium uppercase tracking-wider text-outline">Nome</dt>
+            <dd className="mt-1 text-sm text-on-surface">{asset.name}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wider text-content-subtle">Moeda</dt>
-            <dd className="mt-1 font-mono text-sm text-content">{asset.currency}</dd>
+            <dt className="text-xs font-medium uppercase tracking-wider text-outline">Moeda</dt>
+            <dd className="mt-1 font-mono text-sm text-on-surface">{asset.currency}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wider text-content-subtle">Fonte</dt>
-            <dd className="mt-1 text-sm text-content">{asset.data_source}</dd>
+            <dt className="text-xs font-medium uppercase tracking-wider text-outline">Fonte</dt>
+            <dd className="mt-1 text-sm text-on-surface">{asset.data_source}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wider text-content-subtle">Cadastrado em</dt>
-            <dd className="mt-1 text-sm text-content">
+            <dt className="text-xs font-medium uppercase tracking-wider text-outline">Cadastrado em</dt>
+            <dd className="mt-1 text-sm text-on-surface">
               {new Date(asset.created_at).toLocaleDateString('pt-BR')}
             </dd>
           </div>
@@ -93,7 +93,7 @@ export default function AssetDetailPage({ params }: AssetDetailPageProps) {
       </Card>
 
       <div>
-        <h2 className="mb-3 text-base font-semibold text-content">Transações</h2>
+        <h2 className="mb-3 text-base font-semibold text-on-surface">Transações</h2>
         {txQuery.isLoading ? (
           <div className="flex justify-center py-8">
             <Spinner />

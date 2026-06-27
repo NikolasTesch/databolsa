@@ -15,26 +15,26 @@ flutter test
 flutter analyze
 
 # Rodar o app (emulador Android)
-flutter run --dart-define=BASE_URL=http://10.0.2.2:3001
+flutter run --dart-define=BASE_URL=http://10.0.2.2:3000
 
 # Rodar o app (iOS Simulator ou macOS)
-flutter run --dart-define=BASE_URL=http://localhost:3001
+flutter run --dart-define=BASE_URL=http://localhost:3000
 
 # Rodar o app (dispositivo físico — substitua pelo IP da máquina)
-flutter run --dart-define=BASE_URL=http://192.168.1.x:3001
+flutter run --dart-define=BASE_URL=http://192.168.1.x:3000
 ```
 
 ## Configuração de BASE_URL
 
 A URL base da API é configurada via `--dart-define=BASE_URL=...`. O padrão é
-`http://10.0.2.2:3001` (emulador Android, que redireciona para o `localhost` da
+`http://10.0.2.2:3000` (emulador Android, que redireciona para o `localhost` da
 máquina host).
 
 | Ambiente | BASE_URL |
 |---|---|
-| Emulador Android | `http://10.0.2.2:3001` |
-| iOS Simulator / macOS | `http://localhost:3001` |
-| Dispositivo físico | `http://<IP_DA_MAQUINA>:3001` |
+| Emulador Android | `http://10.0.2.2:3000` |
+| iOS Simulator / macOS | `http://localhost:3000` |
+| Dispositivo físico | `http://<IP_DA_MAQUINA>:3000` |
 
 ## Tokens de design (app_tokens.dart)
 

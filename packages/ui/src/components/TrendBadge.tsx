@@ -37,7 +37,7 @@ export function TrendBadge({ value, showIcon = true, className }: TrendBadgeProp
     return (
       <span
         className={cn(
-          'inline-flex items-center gap-0.5 text-xs font-mono font-medium text-content-muted',
+          'inline-flex items-center gap-0.5 text-xs font-mono font-medium text-on-surface-variant',
           className,
         )}
       >
@@ -55,7 +55,7 @@ export function TrendBadge({ value, showIcon = true, className }: TrendBadgeProp
     ? 'text-profit'
     : isNegative
       ? 'text-loss'
-      : 'text-content-muted';
+      : 'text-on-surface-variant';
 
   const displayValue =
     value.startsWith('-') || value.startsWith('+')

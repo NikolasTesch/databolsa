@@ -62,10 +62,10 @@ function JoinPageInner() {
     return (
       <div className="mx-auto max-w-md pt-12">
         <Card className="p-8 text-center">
-          <h1 className="mb-2 text-xl font-semibold text-content">
+          <h1 className="mb-2 text-xl font-semibold text-on-surface">
             Convite Inválido
           </h1>
-          <p className="mb-6 text-sm text-content-muted">
+          <p className="mb-6 text-sm text-on-surface-variant">
             O link de convite não contém um código válido.
           </p>
           <Link href="/portfolio/groups">
@@ -82,10 +82,10 @@ function JoinPageInner() {
       <div className="mx-auto max-w-md pt-12">
         <Card className="p-8 text-center">
           <div className="mb-4 text-4xl">✓</div>
-          <h1 className="mb-2 text-xl font-semibold text-content">
+          <h1 className="mb-2 text-xl font-semibold text-on-surface">
             Convite Aceito!
           </h1>
-          <p className="mb-6 text-sm text-content-muted">
+          <p className="mb-6 text-sm text-on-surface-variant">
             Você agora faz parte do grupo.
           </p>
           <Link href={groupLink}>
@@ -104,7 +104,7 @@ function JoinPageInner() {
           <h1 className="mb-2 text-xl font-semibold text-danger">
             Erro ao Aceitar Convite
           </h1>
-          <p className="mb-6 text-sm text-content-muted">{errorMessage}</p>
+          <p className="mb-6 text-sm text-on-surface-variant">{errorMessage}</p>
           <Link href="/portfolio/groups">
             <Button variant="secondary">Ir para Grupos</Button>
           </Link>
@@ -117,10 +117,10 @@ function JoinPageInner() {
   return (
     <div className="mx-auto max-w-md pt-12">
       <Card className="p-8 text-center">
-        <h1 className="mb-2 text-xl font-semibold text-content">
+        <h1 className="mb-2 text-xl font-semibold text-on-surface">
           Você foi convidado para um grupo!
         </h1>
-        <p className="mb-6 text-sm text-content-muted">
+        <p className="mb-6 text-sm text-on-surface-variant">
           Aceite o convite para começar a compartilhar carteiras de
           investimento com o grupo.
         </p>

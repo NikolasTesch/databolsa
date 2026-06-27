@@ -9,7 +9,7 @@ export default function NewAssetPage({ searchParams }: NewAssetPageProps) {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-content">Novo Ativo</h1>
+      <h1 className="text-xl font-semibold text-on-surface">Novo Ativo</h1>
       <AssetForm
         defaultTicker={ticker}
         defaultAssetClass={assetClass}

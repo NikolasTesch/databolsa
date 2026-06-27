@@ -8,7 +8,7 @@ const PriceHistoryChart = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center h-[280px] text-content-muted text-sm animate-pulse">
+      <div className="flex items-center justify-center h-[280px] text-on-surface-variant text-sm animate-pulse">
         Carregando gráfico...
       </div>
     ),

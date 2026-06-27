@@ -24,7 +24,7 @@ export function AppShell({ children, title, topbarActions }: AppShellProps) {
           title={title}
           actions={topbarActions}
         />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto p-margin-mobile md:p-margin-desktop">
           {children}
         </main>
       </div>

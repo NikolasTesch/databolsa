@@ -16,7 +16,7 @@ export default function AssetsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-content">Meus Ativos</h1>
+        <h1 className="text-xl font-semibold text-on-surface">Meus Ativos</h1>
         <Link
           href="/assets/new"
           className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover transition-colors"

@@ -6,14 +6,14 @@ import 'api_exception.dart';
 // dio_client.dart — configuração do Dio + AuthInterceptor com refresh automático.
 //
 // BASE_URL configurável via --dart-define=BASE_URL=http://...
-//   • Emulador Android: http://10.0.2.2:3001
-//   • iOS Simulator / macOS: http://localhost:3001
+//   • Emulador Android: http://10.0.2.2:3000
+//   • iOS Simulator / macOS: http://localhost:3000
 //   • Dispositivo físico: IP da máquina na rede local
 // ============================================================================
 
 const String _kDefaultBaseUrl = String.fromEnvironment(
   'BASE_URL',
-  defaultValue: 'http://10.0.2.2:3001',
+  defaultValue: 'http://10.0.2.2:3000',
 );
 
 /// Callback chamado pelo [AuthInterceptor] para obter um novo access token.

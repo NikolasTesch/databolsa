@@ -78,12 +78,12 @@ export function CryptoConverter() {
 
   return (
     <div className="rounded-xl border border-border bg-surface p-6">
-      <h3 className="text-base font-semibold text-content mb-4">Conversor de Criptoativos</h3>
+      <h3 className="text-base font-semibold text-on-surface mb-4">Conversor de Criptoativos</h3>
 
       <form onSubmit={handleConvert} className="flex flex-col gap-4">
         <div className="flex gap-3">
           <div className="flex-1">
-            <label htmlFor="crypto-amount" className="block text-xs text-content-muted mb-1">
+            <label htmlFor="crypto-amount" className="block text-xs text-on-surface-variant mb-1">
               Quantidade
             </label>
             <input
@@ -93,20 +93,20 @@ export function CryptoConverter() {
               step="any"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface text-content px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="w-full rounded-lg border border-border bg-surface text-on-surface px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               placeholder="0.01"
             />
           </div>
 
           <div className="w-24">
-            <label htmlFor="crypto-from" className="block text-xs text-content-muted mb-1">
+            <label htmlFor="crypto-from" className="block text-xs text-on-surface-variant mb-1">
               Cripto
             </label>
             <select
               id="crypto-from"
               value={from}
               onChange={(e) => setFrom(e.target.value as CryptoFrom)}
-              className="w-full rounded-lg border border-border bg-surface text-content px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="w-full rounded-lg border border-border bg-surface text-on-surface px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               {CRYPTO_OPTIONS.map((opt) => (
                 <option key={opt} value={opt}>
@@ -117,14 +117,14 @@ export function CryptoConverter() {
           </div>
 
           <div className="w-24">
-            <label htmlFor="crypto-to" className="block text-xs text-content-muted mb-1">
+            <label htmlFor="crypto-to" className="block text-xs text-on-surface-variant mb-1">
               Para
             </label>
             <select
               id="crypto-to"
               value={to}
               onChange={(e) => setTo(e.target.value as FiatTo)}
-              className="w-full rounded-lg border border-border bg-surface text-content px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="w-full rounded-lg border border-border bg-surface text-on-surface px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               {FIAT_OPTIONS.map((opt) => (
                 <option key={opt} value={opt}>
@@ -159,10 +159,10 @@ export function CryptoConverter() {
 
       {result && !error && (
         <div className="mt-4 rounded-lg bg-surface-muted p-4">
-          <div className="text-2xl font-bold text-content">
+          <div className="text-2xl font-bold text-on-surface">
             {formatValue(result.result, result.to)}
           </div>
-          <div className="text-xs text-content-muted mt-1">
+          <div className="text-xs text-on-surface-variant mt-1">
             1 {result.from} = {formatValue(result.rate, result.to)} · Atualizado às {formatTime(result.updatedAt)}
             {result.stale && (
               <span className="ml-1 text-amber-500">(cotação desatualizada)</span>

@@ -9,7 +9,7 @@ const REGISTER_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
 const COOKIE_OPTS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  sameSite: 'strict' as const,
   path: '/',
 };
 

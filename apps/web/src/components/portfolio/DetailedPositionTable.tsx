@@ -21,17 +21,17 @@ function calcDiff(currentPrice: string | null, avgPrice: string) {
 }
 
 function signClass(value: string | null) {
-  if (!value) return 'text-content-muted';
+  if (!value) return 'text-on-surface-variant';
   const sign = getValueSign(value);
   if (sign === 'positive') return 'text-green-600';
   if (sign === 'negative') return 'text-red-600';
-  return 'text-content-muted';
+  return 'text-on-surface-variant';
 }
 
 export function DetailedPositionTable({ positions }: Props) {
   if (positions.length === 0) {
     return (
-      <p className="text-sm text-content-muted">Nenhuma posição em aberto.</p>
+      <p className="text-sm text-on-surface-variant">Nenhuma posição em aberto.</p>
     );
   }
 
@@ -39,7 +39,7 @@ export function DetailedPositionTable({ positions }: Props) {
     <div className="overflow-x-auto">
       <table className="w-full min-w-[900px] text-sm">
         <thead>
-          <tr className="border-b border-border text-left text-xs font-medium uppercase tracking-wide text-content-muted">
+          <tr className="border-b border-border text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">
             <th className="pb-2 pr-4">Ativo</th>
             <th className="pb-2 pr-4 text-right">Preço Médio</th>
             <th className="pb-2 pr-4 text-right">Preço Atual</th>
@@ -99,7 +99,7 @@ export function DetailedPositionTable({ positions }: Props) {
                     ? `${new Decimal(pos.lucro_prejuizo_pct).toFixed(2).replace('.', ',')}%`
                     : '—'}
                 </td>
-                <td className="py-3 text-right font-mono text-content-muted">
+                <td className="py-3 text-right font-mono text-on-surface-variant">
                   {pos.alocacao_pct ? formatAllocationPct(pos.alocacao_pct) : '—'}
                 </td>
               </tr>

@@ -36,7 +36,7 @@ export function AssetComparison({ summary, assets }: Props) {
     <div className="space-y-6">
       {/* Seletor */}
       <div>
-        <p className="mb-3 text-sm text-content-muted">
+        <p className="mb-3 text-sm text-on-surface-variant">
           Selecione até {MAX_SELECTED} ativos para comparar ({selectedIds.length}/{MAX_SELECTED}{' '}
           selecionados)
         </p>
@@ -51,7 +51,7 @@ export function AssetComparison({ summary, assets }: Props) {
                   'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
                   isSelected
                     ? 'border-primary bg-primary text-white'
-                    : 'border-border bg-surface text-content hover:border-primary/50',
+                    : 'border-border bg-surface text-on-surface hover:border-primary/50',
                 )}
               >
                 {pos.ticker}
@@ -80,17 +80,17 @@ export function AssetComparison({ summary, assets }: Props) {
 
                 <div className="space-y-2 text-sm">
                   <div>
-                    <p className="text-xs text-content-muted">Preço Médio</p>
+                    <p className="text-xs text-on-surface-variant">Preço Médio</p>
                     <p className="font-mono font-medium">{formatBRL(pos.average_price)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-content-muted">Preço Atual</p>
+                    <p className="text-xs text-on-surface-variant">Preço Atual</p>
                     <p className="font-mono font-medium">
                       {pos.current_price_brl ? formatBRL(pos.current_price_brl) : '—'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-content-muted">P/L</p>
+                    <p className="text-xs text-on-surface-variant">P/L</p>
                     <p
                       className={cn(
                         'font-mono font-medium',
@@ -105,7 +105,7 @@ export function AssetComparison({ summary, assets }: Props) {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-content-muted">P/L %</p>
+                    <p className="text-xs text-on-surface-variant">P/L %</p>
                     <p
                       className={cn(
                         'font-mono font-medium',
@@ -122,8 +122,8 @@ export function AssetComparison({ summary, assets }: Props) {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-content-muted">% Carteira</p>
-                    <p className="font-mono font-medium text-content-muted">
+                    <p className="text-xs text-on-surface-variant">% Carteira</p>
+                    <p className="font-mono font-medium text-on-surface-variant">
                       {pos.alocacao_pct ? formatAllocationPct(pos.alocacao_pct) : '—'}
                     </p>
                   </div>
@@ -133,7 +133,7 @@ export function AssetComparison({ summary, assets }: Props) {
           })}
         </div>
       ) : (
-        <p className="text-sm text-content-muted">
+        <p className="text-sm text-on-surface-variant">
           Selecione pelo menos 2 ativos para comparar.
         </p>
       )}

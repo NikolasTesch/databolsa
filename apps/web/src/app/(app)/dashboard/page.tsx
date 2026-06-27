@@ -15,9 +15,9 @@ import Link from 'next/link';
 function SkeletonCard() {
   return (
     <div className="rounded-xl border border-border bg-surface p-6 animate-pulse">
-      <div className="mb-3 h-3 w-24 rounded bg-neutral-200" />
-      <div className="h-8 w-32 rounded bg-neutral-200" />
-      <div className="mt-2 h-3 w-16 rounded bg-neutral-200" />
+      <div className="mb-3 h-3 w-24 rounded bg-surface-muted" />
+      <div className="h-8 w-32 rounded bg-surface-muted" />
+      <div className="mt-2 h-3 w-16 rounded bg-surface-muted" />
     </div>
   );
 }
@@ -59,9 +59,12 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-content">Dashboard</h1>
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-[28px] text-primary">dashboard</span>
+          <h1 className="text-xl font-semibold text-on-surface">Dashboard</h1>
+        </div>
         <Link
           href="/assets/new"
           className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
@@ -97,28 +100,39 @@ export default function DashboardPage() {
 
             {/* Crescimento Patrimonial */}
             <Card padding="md">
-              <h2 className="mb-4 text-sm font-medium text-content-muted">Crescimento do Capital Investido</h2>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="material-symbols-outlined text-primary">trending_up</span>
+                <h2 className="text-sm font-medium text-on-surface-variant">Crescimento do Capital Investido</h2>
+              </div>
               <GrowthChartDynamic dataPoints={history?.data_points ?? []} />
             </Card>
 
             {/* Atividade do Mês */}
             {monthly && (
               <Card padding="md">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-primary">calendar_month</span>
+                  <h2 className="text-sm font-medium text-on-surface-variant">Atividade do Mês</h2>
+                </div>
                 <MonthlyActivityCard data={monthly} />
               </Card>
             )}
 
             {data.positions.filter((p) => p.valor_atual_brl !== null).length > 0 && (
               <Card padding="md">
-                <h2 className="mb-4 text-sm font-medium text-content-muted">
-                  Alocação por Ativo
-                </h2>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-primary">pie_chart</span>
+                  <h2 className="text-sm font-medium text-on-surface-variant">Alocação por Ativo</h2>
+                </div>
                 <AllocationChartDynamic positions={data.positions} />
               </Card>
             )}
 
             <div>
-              <h2 className="mb-3 text-base font-semibold text-content">Posições</h2>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-primary">account_balance</span>
+                <h2 className="text-base font-semibold text-on-surface">Posições</h2>
+              </div>
               <PositionTable positions={data.positions} />
             </div>
           </motion.div>

@@ -29,23 +29,27 @@ export async function RelatedNewsSection({
 
   return (
     <section
-      className="mx-auto max-w-7xl px-4 py-12"
+      className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12"
       aria-label={sectionTitle}
     >
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-content">{sectionTitle}</h2>
-        <p className="text-sm text-content-muted mt-1">
-          {ticker
-            ? `Últimas matérias relacionadas a ${ticker}`
-            : 'Principais notícias do mercado financeiro'}
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-headline-md font-semibold text-on-surface">{sectionTitle}</h2>
+          <p className="text-body-sm text-text-muted mt-1">
+            {ticker
+              ? `Últimas matérias relacionadas a ${ticker}`
+              : 'Principais notícias do mercado financeiro'}
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {displayArticles.map((article) => (
-          <NewsCard key={article.id} article={article} />
-        ))}
-      </div>
+      {displayArticles.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {displayArticles.map((article) => (
+            <NewsCard key={article.id} article={article} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

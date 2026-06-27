@@ -19,20 +19,20 @@ export function MonthlyActivityCard({ data }: Props) {
 
   return (
     <div>
-      <p className="mb-3 text-xs font-medium uppercase tracking-wide text-content-muted">
+      <p className="mb-3 text-xs font-medium uppercase tracking-wide text-on-surface-variant">
         Atividade em {monthName}
       </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {metrics.map(({ key, label, colorClass }) => (
           <div key={key} className="rounded-lg border border-border bg-surface p-3">
-            <p className="text-xs text-content-muted">{label}</p>
+            <p className="text-xs text-on-surface-variant">{label}</p>
             <p className={`mt-1 font-mono text-sm font-semibold ${colorClass}`}>
               {formatBRL(data[key])}
             </p>
           </div>
         ))}
       </div>
-      <p className="mt-2 text-xs text-content-muted">
+      <p className="mt-2 text-xs text-on-surface-variant">
         {data.transaction_count} transaç{data.transaction_count !== 1 ? 'ões' : 'ão'} no período
       </p>
     </div>

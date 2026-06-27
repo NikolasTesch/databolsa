@@ -37,19 +37,19 @@ export function AssetHeader({
           {/* Linha 1: badge + ticker + nome */}
           <div className="flex items-center gap-2 flex-wrap">
             <AssetClassBadge assetClass={assetClass} />
-            <span className="text-2xl font-mono font-bold text-content">{ticker}</span>
+            <span className="text-2xl font-mono font-bold text-on-surface">{ticker}</span>
             {name && name !== ticker && (
-              <span className="text-base text-content-muted">{name}</span>
+              <span className="text-base text-on-surface-variant">{name}</span>
             )}
           </div>
 
           {/* Linha 2: preço */}
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-4xl font-mono font-bold text-content">
+            <span className="text-4xl font-mono font-bold text-on-surface">
               {isUsd ? `US$ ${price}` : `R$ ${price}`}
             </span>
             {isUsd && priceInBrl && (
-              <span className="text-lg font-mono text-content-muted">
+              <span className="text-lg font-mono text-on-surface-variant">
                 ≈ R$ {priceInBrl}
               </span>
             )}
@@ -59,7 +59,7 @@ export function AssetHeader({
           <div className="flex items-center gap-2">
             <TrendBadge value={changePercent} showIcon className="text-xl" />
             {changeValue && (
-              <span className="text-sm font-mono text-content-muted">
+              <span className="text-sm font-mono text-on-surface-variant">
                 ({parseFloat(changeValue) >= 0 ? '+' : ''}{parseFloat(changeValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} hoje)
               </span>
             )}

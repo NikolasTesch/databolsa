@@ -27,14 +27,23 @@ const PARTICLES: { label: string; top: string; left: string; delay: string; dura
 export function HeroSection() {
   return (
     <section
-      className="relative overflow-hidden bg-background pb-20 pt-20 md:pb-28 md:pt-28"
+      className="relative overflow-hidden bg-background py-20 md:pb-28 md:pt-28"
       aria-label="Busca de ativos"
     >
       {/* Ambient gradient orbs */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="hero-orb-a absolute -left-48 -top-48 h-[540px] w-[540px] rounded-full bg-[#2756A4]/[0.09] blur-3xl" />
-        <div className="hero-orb-b absolute -right-28 top-1/4 h-[380px] w-[380px] rounded-full bg-[#4EC3E4]/[0.07] blur-3xl" />
-        <div className="hero-orb-c absolute -bottom-20 left-1/3 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-[#2756A4]/[0.06] blur-2xl" />
+        <div
+          className="hero-orb-a absolute -left-48 -top-48 h-[540px] w-[540px] rounded-full blur-3xl"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 9%, transparent)' }}
+        />
+        <div
+          className="hero-orb-b absolute -right-28 top-1/4 h-[380px] w-[380px] rounded-full blur-3xl"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--color-tertiary) 7%, transparent)' }}
+        />
+        <div
+          className="hero-orb-c absolute -bottom-20 left-1/3 h-[300px] w-[300px] -translate-x-1/2 rounded-full blur-2xl"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--color-tertiary-container) 8%, transparent)' }}
+        />
       </div>
 
       {/* Floating particle numbers */}
@@ -60,7 +69,7 @@ export function HeroSection() {
         <div className="flex flex-col items-center gap-7 text-center">
 
           {/* Live badge */}
-          <div className="hero-animate-1 inline-flex items-center gap-2 rounded-full border border-border/50 bg-surface/70 px-4 py-1.5 text-xs text-content-muted backdrop-blur-sm">
+          <div className="hero-animate-1 inline-flex items-center gap-2 rounded-full border border-border/50 bg-surface/70 px-4 py-1.5 text-xs text-on-surface-variant backdrop-blur-sm">
             <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
@@ -69,18 +78,18 @@ export function HeroSection() {
           </div>
 
           {/* Headline */}
-          <h1 className="hero-animate-2 max-w-2xl text-4xl font-bold leading-tight tracking-tight text-content md:text-5xl">
+          <h1 className="hero-animate-2 max-w-2xl text-4xl font-bold tracking-tight text-on-surface md:text-5xl">
             Análise de ativos e{' '}
             <span
               className="bg-clip-text text-transparent"
-              style={{ backgroundImage: 'linear-gradient(135deg, #2756A4 0%, #4EC3E4 100%)' }}
+              style={{ backgroundImage: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-tertiary) 100%)' }}
             >
               acompanhamento de carteira
             </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="hero-animate-3 max-w-md text-lg leading-relaxed text-content-muted">
+          <p className="hero-animate-3 max-w-md text-lg leading-relaxed text-on-surface-variant">
             B3, criptos, stocks americanos e muito mais.
           </p>
 
@@ -93,7 +102,7 @@ export function HeroSection() {
 
           {/* Quick chips */}
           <div className="hero-animate-5 flex flex-wrap items-center justify-center gap-2">
-            <span className="text-xs text-content-muted">Mais buscados:</span>
+            <span className="text-xs text-on-surface-variant">Mais buscados:</span>
             {QUICK_CHIPS.map((chip) => (
               <QuickChip key={chip.label} label={chip.label} href={chip.href} />
             ))}

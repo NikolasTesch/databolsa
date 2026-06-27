@@ -15,9 +15,9 @@ import 'features/transactions/presentation/transaction_repository.dart';
 // main.dart — bootstrap do app DataBolsa Mobile.
 //
 // BASE_URL configurável via --dart-define:
-//   flutter run --dart-define=BASE_URL=http://10.0.2.2:3001   (emulador Android)
-//   flutter run --dart-define=BASE_URL=http://localhost:3001   (iOS Simulator)
-//   flutter run --dart-define=BASE_URL=http://192.168.x.x:3001 (dispositivo físico)
+//   flutter run --dart-define=BASE_URL=http://10.0.2.2:3000   (emulador Android)
+//   flutter run --dart-define=BASE_URL=http://localhost:3000   (iOS Simulator)
+//   flutter run --dart-define=BASE_URL=http://192.168.x.x:3000 (dispositivo físico)
 // ============================================================================
 
 void main() async {

@@ -14,8 +14,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       primary: 'bg-primary text-white hover:bg-primary-hover',
-      secondary: 'border border-border bg-surface text-content hover:bg-surface-muted',
-      ghost: 'text-content-muted hover:bg-surface-muted hover:text-content',
+      secondary: 'border border-border bg-surface text-on-surface hover:bg-surface-muted',
+      ghost: 'text-on-surface-variant hover:bg-surface-muted hover:text-on-surface',
       danger: 'bg-danger text-white hover:opacity-90',
     };
 

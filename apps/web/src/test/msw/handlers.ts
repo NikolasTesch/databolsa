@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import type { PortfolioSummaryDto, Asset, Transaction } from '@/types/api';
 
-const BASE = 'http://localhost:3001';
+const BASE = 'http://localhost:3000';
 
 // --- Portfolio ---
 

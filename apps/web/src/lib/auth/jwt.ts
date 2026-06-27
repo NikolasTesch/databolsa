@@ -2,13 +2,20 @@ import { SignJWT, jwtVerify } from 'jose';
 
 const rawSecret = process.env.JWT_SECRET;
 if (!rawSecret) {
-  throw new Error('JWT_SECRET environment variable is required');
+  throw new Error('JWT_SECRET environment variable is required. Generate with: openssl rand -hex 32');
+}
+
+const rawRefreshSecret = process.env.JWT_REFRESH_SECRET;
+if (!rawRefreshSecret) {
+  throw new Error('JWT_REFRESH_SECRET environment variable is required and MUST be different from JWT_SECRET. Generate with: openssl rand -hex 32');
+}
+
+if (rawSecret === rawRefreshSecret) {
+  throw new Error('JWT_SECRET and JWT_REFRESH_SECRET must be different keys. Use separate values for access and refresh token signing.');
 }
 
 const JWT_SECRET = new TextEncoder().encode(rawSecret);
-const JWT_REFRESH_SECRET = new TextEncoder().encode(
-  process.env.JWT_REFRESH_SECRET ?? rawSecret
-);
+const JWT_REFRESH_SECRET = new TextEncoder().encode(rawRefreshSecret);
 
 export async function signAccessToken(payload: { sub: string; email: string }): Promise<string> {
   return new SignJWT(payload)

@@ -67,12 +67,15 @@ function PortfolioPageInner() {
   const isReadOnly = Boolean(targetUserId);
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-6 space-y-6">
       {isReadOnly && targetUserEmail && (
         <BannerReadOnly targetUserEmail={targetUserEmail} />
       )}
 
-      <h1 className="text-2xl font-semibold">Portfólio</h1>
+      <div className="flex items-center gap-3">
+        <span className="material-symbols-outlined text-[28px] text-primary">pie_chart</span>
+        <h1 className="text-2xl font-semibold text-on-surface">Portfólio</h1>
+      </div>
 
       {/* Tabs */}
       <div className="border-b border-border">
@@ -84,7 +87,7 @@ function PortfolioPageInner() {
               className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'border-primary text-primary'
-                  : 'border-transparent text-content-muted hover:border-border hover:text-content'
+                  : 'border-transparent text-on-surface-variant hover:border-border hover:text-on-surface'
               }`}
             >
               {tab.label}
@@ -99,7 +102,7 @@ function PortfolioPageInner() {
           <Spinner />
         </div>
       ) : !summary ? (
-        <p className="text-sm text-content-muted">Sem dados de portfólio.</p>
+        <p className="text-sm text-on-surface-variant">Sem dados de portfólio.</p>
       ) : (
         <>
           {activeTab === 'posicao' && (

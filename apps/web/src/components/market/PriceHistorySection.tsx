@@ -46,7 +46,7 @@ export function PriceHistorySection({ ticker, initialRange = '1y' }: PriceHistor
     <div className="mx-4 md:mx-8 mb-8">
       <div className="bg-surface border border-border rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-content-muted uppercase tracking-wide">
+          <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wide">
             Histórico de Preços
           </h2>
           <div className="flex items-center gap-2">
@@ -58,7 +58,7 @@ export function PriceHistorySection({ ticker, initialRange = '1y' }: PriceHistor
                   'text-xs px-3 py-1 rounded transition-colors',
                   range === opt.value
                     ? 'bg-primary text-white'
-                    : 'bg-surface-muted text-content-muted hover:bg-primary/10',
+                    : 'bg-surface-muted text-on-surface-variant hover:bg-primary/10',
                 )}
               >
                 {opt.label}
@@ -68,7 +68,7 @@ export function PriceHistorySection({ ticker, initialRange = '1y' }: PriceHistor
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-[280px] text-content-muted text-sm animate-pulse">
+          <div className="flex items-center justify-center h-[280px] text-on-surface-variant text-sm animate-pulse">
             Carregando...
           </div>
         ) : (

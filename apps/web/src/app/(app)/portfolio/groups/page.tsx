@@ -66,8 +66,8 @@ export default function GroupsListPage() {
         </div>
       ) : !groups || groups.length === 0 ? (
         <Card className="flex flex-col items-center gap-3 py-12 text-center">
-          <p className="text-content-muted">Nenhum grupo ainda</p>
-          <p className="text-sm text-content-subtle">
+          <p className="text-on-surface-variant">Nenhum grupo ainda</p>
+          <p className="text-sm text-outline">
             Crie um grupo para compartilhar sua carteira com outras pessoas.
           </p>
           <Button
@@ -85,11 +85,11 @@ export default function GroupsListPage() {
               <Card className="h-full cursor-pointer transition-shadow hover:shadow-md">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-base font-semibold text-content">
+                    <h3 className="truncate text-base font-semibold text-on-surface">
                       {group.name}
                     </h3>
                     {group.description && (
-                      <p className="mt-1 line-clamp-2 text-sm text-content-muted">
+                      <p className="mt-1 line-clamp-2 text-sm text-on-surface-variant">
                         {group.description}
                       </p>
                     )}
@@ -100,7 +100,7 @@ export default function GroupsListPage() {
                     {group.role === 'LEADER' ? 'Líder' : 'Membro'}
                   </Badge>
                 </div>
-                <p className="mt-3 text-xs text-content-subtle">
+                <p className="mt-3 text-xs text-outline">
                   {group.memberCount} {group.memberCount === 1 ? 'membro' : 'membros'}
                 </p>
               </Card>

@@ -82,6 +82,28 @@ const colors: TailwindTheme['colors'] = {
     content: color.finance.stale.content,
   },
   neutralChange: 'var(--color-neutral-change)',
+
+  // --- Stitch-specific extras (Material 3 inspired) ---
+  'on-surface': 'var(--color-on-surface)',
+  'on-surface-variant': 'var(--color-on-surface-variant)',
+  'surface-container': {
+    lowest: 'var(--color-surface-container-lowest)',
+    low: 'var(--color-surface-container-low)',
+    DEFAULT: 'var(--color-surface-container)',
+    high: 'var(--color-surface-container-high)',
+    highest: 'var(--color-surface-container-highest)',
+  },
+  'surface-dim': 'var(--color-surface-dim)',
+  'surface-bright': 'var(--color-surface-bright)',
+  outline: {
+    DEFAULT: 'var(--color-outline)',
+    variant: 'var(--color-outline-variant)',
+  },
+  tertiary: {
+    DEFAULT: 'var(--color-tertiary)',
+    container: 'var(--color-tertiary-container)',
+  },
+  'error-red': '#EF4444',
 };
 
 const preset: Config = {

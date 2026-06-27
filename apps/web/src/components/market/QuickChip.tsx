@@ -12,7 +12,7 @@ export function QuickChip({ label, href, className }: QuickChipProps) {
     <Link
       href={href}
       className={cn(
-        'inline-flex items-center rounded-full bg-surface-muted px-3 py-1 text-xs text-content-muted',
+        'inline-flex items-center rounded-full bg-surface-muted px-3 py-1 text-xs text-on-surface-variant',
         'hover:bg-primary hover:text-white transition-all duration-200 hover:scale-105 cursor-pointer',
         className,
       )}

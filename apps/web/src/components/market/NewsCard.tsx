@@ -27,42 +27,34 @@ export function NewsCard({ article }: NewsCardProps) {
       href={article.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex flex-col rounded-xl border border-border bg-surface hover:border-primary hover:shadow-md transition-all duration-200 overflow-hidden"
+      className="group flex flex-col rounded-lg border border-border bg-surface hover:border-primary/30 hover:shadow-sm transition-all duration-200 overflow-hidden"
       aria-label={article.title}
     >
-      {/* Image */}
-      <div className="relative h-40 w-full overflow-hidden bg-surface-muted flex-shrink-0">
-        <img
-          src={article.imageUrl ?? PLACEHOLDER_SVG}
-          alt=""
-          aria-hidden="true"
-          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => {
-            const img = e.currentTarget;
-            img.src = PLACEHOLDER_SVG;
-          }}
-        />
-      </div>
+      {/* Category label */}
+      {article.source && (
+        <div className="px-4 pt-4 pb-0">
+          <span className="text-caption text-primary uppercase tracking-wide font-medium">
+            {article.source}
+          </span>
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex flex-col gap-2 p-4 flex-1">
-        <h3 className="text-sm font-semibold text-content line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="text-body-sm font-semibold text-on-surface line-clamp-2 group-hover:text-primary transition-colors">
           {article.title}
         </h3>
 
         {article.summary && (
-          <p className="text-xs text-content-muted line-clamp-3 flex-1">
+          <p className="text-caption text-text-muted line-clamp-3 flex-1">
             {article.summary}
           </p>
         )}
 
-        <div className="flex items-center justify-between mt-auto pt-2 border-t border-border">
-          <span className="text-xs font-medium text-content-muted truncate">
-            {article.source}
-          </span>
+        <div className="flex items-center justify-between mt-auto pt-2">
           <time
             dateTime={article.publishedAt}
-            className="text-xs text-content-subtle flex-shrink-0 ml-2"
+            className="text-caption text-text-muted flex-shrink-0"
           >
             {formatDate(article.publishedAt)}
           </time>

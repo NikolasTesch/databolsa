@@ -34,7 +34,7 @@ export function AssetList({ assets }: AssetListProps) {
   if (assets.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-surface py-12 text-center">
-        <p className="text-content-muted">Nenhum ativo registrado ainda</p>
+        <p className="text-on-surface-variant">Nenhum ativo registrado ainda</p>
         <p className="mt-2">
           <Link href="/assets/new" className="text-sm font-medium text-primary hover:underline">
             Adicionar primeiro ativo
@@ -48,7 +48,7 @@ export function AssetList({ assets }: AssetListProps) {
     <div className="overflow-x-auto rounded-xl border border-border">
       <table className="w-full text-sm" aria-label="Lista de ativos">
         <thead>
-          <tr className="border-b border-border bg-surface-muted text-xs font-medium uppercase tracking-wider text-content-subtle">
+          <tr className="border-b border-border bg-surface-muted text-xs font-medium uppercase tracking-wider text-outline">
             <th className="px-4 py-3 text-left">Ticker</th>
             <th className="px-4 py-3 text-left">Nome</th>
             <th className="px-4 py-3 text-left">Categoria</th>
@@ -65,12 +65,12 @@ export function AssetList({ assets }: AssetListProps) {
                   {asset.ticker}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-content">{asset.name}</td>
+              <td className="px-4 py-3 text-on-surface">{asset.name}</td>
               <td className="px-4 py-3">
                 <AssetClassBadge assetClass={asset.asset_class} />
               </td>
-              <td className="px-4 py-3 font-mono text-content-muted">{asset.currency}</td>
-              <td className="px-4 py-3 text-content-subtle">{asset.data_source}</td>
+              <td className="px-4 py-3 font-mono text-on-surface-variant">{asset.currency}</td>
+              <td className="px-4 py-3 text-outline">{asset.data_source}</td>
               <td className="px-4 py-3 text-right">
                 <Button
                   variant="danger"

@@ -124,7 +124,7 @@ export function CurrencyConverter() {
 
   return (
     <div className="rounded-xl border border-border bg-surface p-6 shadow-sm hover:shadow-md transition-shadow">
-      <h3 className="text-base font-semibold text-content mb-4">Conversor de Moedas</h3>
+      <h3 className="text-base font-semibold text-on-surface mb-4">Conversor de Moedas</h3>
 
       {/* Tabs */}
       <div className="flex rounded-lg bg-surface-muted p-1 mb-4 border border-border/50">
@@ -134,7 +134,7 @@ export function CurrencyConverter() {
           className={`flex-1 text-center py-1.5 text-xs font-semibold rounded-md transition-all ${
             mode === 'fiat'
               ? 'bg-surface text-primary shadow-sm'
-              : 'text-content-muted hover:text-content'
+              : 'text-on-surface-variant hover:text-on-surface'
           }`}
         >
           Fiat
@@ -145,7 +145,7 @@ export function CurrencyConverter() {
           className={`flex-1 text-center py-1.5 text-xs font-semibold rounded-md transition-all ${
             mode === 'crypto'
               ? 'bg-surface text-primary shadow-sm'
-              : 'text-content-muted hover:text-content'
+              : 'text-on-surface-variant hover:text-on-surface'
           }`}
         >
           Cripto
@@ -155,7 +155,7 @@ export function CurrencyConverter() {
       <form onSubmit={handleConvert} className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
-            <label htmlFor="currency-amount" className="block text-xs text-content-muted mb-1 font-medium">
+            <label htmlFor="currency-amount" className="block text-xs text-on-surface-variant mb-1 font-medium">
               Valor
             </label>
             <input
@@ -165,21 +165,21 @@ export function CurrencyConverter() {
               step="any"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface text-content px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="w-full rounded-lg border border-border bg-surface text-on-surface px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               placeholder="100"
             />
           </div>
 
           <div className="flex gap-3 sm:w-64">
             <div className="flex-1">
-              <label htmlFor="currency-from" className="block text-xs text-content-muted mb-1 font-medium">
+              <label htmlFor="currency-from" className="block text-xs text-on-surface-variant mb-1 font-medium">
                 De
               </label>
               <select
                 id="currency-from"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                className="w-full rounded-lg border border-border bg-surface text-content px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="w-full rounded-lg border border-border bg-surface text-on-surface px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 {mode === 'fiat'
                   ? FIAT_OPTIONS.map((opt) => (
@@ -196,24 +196,28 @@ export function CurrencyConverter() {
             </div>
 
             <div className="flex-1">
-              <label htmlFor="currency-to" className="block text-xs text-content-muted mb-1 font-medium">
+              <label htmlFor="currency-to" className="block text-xs text-on-surface-variant mb-1 font-medium">
                 Para
               </label>
               {mode === 'fiat' ? (
                 <select
                   id="currency-to"
-                  value="BRL"
-                  disabled
-                  className="w-full rounded-lg border border-border bg-surface-muted text-content-muted px-3 py-2 text-sm cursor-not-allowed"
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface text-on-surface px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
-                  <option value="BRL">BRL</option>
+                  {FIAT_OPTIONS.filter((opt) => opt !== from).map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
                 </select>
               ) : (
                 <select
                   id="currency-to"
                   value={to}
                   onChange={(e) => setTo(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-surface text-content px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="w-full rounded-lg border border-border bg-surface text-on-surface px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   <option value="BRL">BRL</option>
                   <option value="USD">USD</option>
@@ -247,10 +251,10 @@ export function CurrencyConverter() {
 
       {result && !error && (
         <div className="mt-4 rounded-lg bg-surface-muted p-4 border border-border/30">
-          <div className="text-2xl font-bold text-content">
+          <div className="text-2xl font-bold text-on-surface">
             {formatValue(result.result, result.to)}
           </div>
-          <div className="text-xs text-content-muted mt-1">
+          <div className="text-xs text-on-surface-variant mt-1">
             1 {result.from} = {formatRate(result.rate, result.to)} · Atualizado às {formatTime(result.updatedAt)}
             {result.stale && (
               <span className="ml-1 text-amber-500 font-semibold">(cotação desatualizada)</span>

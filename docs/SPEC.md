@@ -68,41 +68,103 @@ Manter os **cálculos financeiros em `/packages/core`** permite testá-los isola
 
 ## 4. Modelo de dados
 
-Entidades principais (nomes ilustrativos):
+Entidades principais (Prisma schema):
 
 **User**
 - `id` (uuid, PK)
-- `email` (único)
-- `password_hash`
-- `created_at`
+- `email` (string, unique)
+- `password_hash` (string)
+- `refresh_token_hash` (string, optional)
+- `monthly_income_goal` (decimal, optional)
+- `role` (enum: `USER`, `ADMIN`)
+- `created_at` (datetime)
 
-**Asset** — um ativo na carteira de um usuário
+**Group** — Grupo de investimento
 - `id` (uuid, PK)
-- `user_id` (FK → User)
-- `ticker` (ex.: PETR4, BTC, AAPL)
-- `name`
+- `name` (string)
+- `description` (string, optional)
+- `created_by` (FK -> User)
+- `created_at` (datetime)
+
+**GroupMembership** — Relação membro-grupo
+- `id` (uuid, PK)
+- `group_id` (FK -> Group, Cascade)
+- `user_id` (FK -> User, Cascade)
+- `role` (enum: `LEADER`, `MEMBER`)
+- `joined_at` (datetime)
+- *Chave única combinada [group_id, user_id]*
+
+**GroupInvite** — Convites para grupos
+- `id` (uuid, PK)
+- `group_id` (FK -> Group, Cascade)
+- `code` (string, unique)
+- `role` (enum: `LEADER`, `MEMBER`)
+- `created_by` (FK -> User)
+- `expires_at` (datetime, optional)
+- `max_uses` (int, optional)
+- `uses` (int)
+- `revoked` (boolean)
+- `created_at` (datetime)
+
+**Asset** — Ativo na carteira do usuário
+- `id` (uuid, PK)
+- `user_id` (FK -> User, Cascade)
+- `ticker` (string)
+- `name` (string)
 - `asset_class` (enum: `STOCK_BR`, `FII`, `ETF`, `BDR`, `CRYPTO`, `STOCK_US`)
 - `currency` (enum: `BRL`, `USD`)
 - `data_source` (enum: `BRAPI`, `COINGECKO`, `FINNHUB`)
-- `created_at`
+- `sector` (string, optional)
+- `created_at` (datetime)
+- *Index por [user_id, ticker]*
 
-**Transaction** — uma operação de compra ou venda
+**Transaction** — Compra, venda ou provento
 - `id` (uuid, PK)
-- `asset_id` (FK → Asset)
-- `type` (enum: `BUY`, `SELL`)
-- `date`
+- `asset_id` (FK -> Asset, Cascade)
+- `type` (enum: `BUY`, `SELL`, `DIVIDEND`)
+- `date` (date)
 - `unit_price` (decimal)
 - `quantity` (decimal)
-- `fees` (decimal, default 0)
-- `created_at`
+- `fees` (decimal)
+- `created_at` (datetime)
 
-**QuoteCache** — cotação mais recente por ativo/símbolo
+**PriceAlert** — Alertas de preço in-app
 - `id` (uuid, PK)
-- `symbol`
+- `user_id` (FK -> User, Cascade)
+- `asset_ticker` (string)
+- `condition` (enum: `ABOVE`, `BELOW`)
+- `target_price` (decimal)
+- `is_active` (boolean)
+- `triggered_at` (datetime, optional)
+- `created_at` (datetime)
+
+**QuoteCache** — Cache de cotações
+- `id` (uuid, PK)
+- `symbol` (string)
+- `source` (DataSource)
 - `price` (decimal)
-- `currency`
-- `fetched_at`
-- *(chave de unicidade por símbolo + fonte)*
+- `currency` (string)
+- `changePercent` (decimal, optional)
+- `changeValue` (decimal, optional)
+- `name` (string, optional)
+- `fetched_at` (datetime)
+- *Chave única combinada [symbol, source]*
+
+**BenchmarkSeriesCache** — Cache de dados de índices de referência
+- `id` (uuid, PK)
+- `series_key` (string)
+- `period` (string)
+- `data` (json)
+- `fetched_at` (datetime)
+- *Chave única combinada [series_key, period]*
+
+**AssetFundamentalsCache** — Fundamentos corporativos/cripto
+- `id` (uuid, PK)
+- `symbol` (string)
+- `source` (DataSource)
+- `data` (json)
+- `fetched_at` (datetime)
+- *Chave única combinada [symbol, source]*
 
 > **Atenção a tipos:** usar `decimal`/`numeric` para preços e quantidades, **nunca `float`**, para evitar erros de arredondamento em dinheiro.
 
@@ -124,12 +186,31 @@ Implementados como Next.js Route Handlers em `apps/web/src/app/api/`. Autentica�
 | GET | `/api/assets/:id` | JWT | Detalhe de um ativo |
 | DELETE | `/api/assets/:id` | JWT | Remove ativo |
 | GET | `/api/assets/:id/transactions` | JWT | Lista transações do ativo |
-| POST | `/api/assets/:id/transactions` | JWT | Registra operação (BUY/SELL) |
+| POST | `/api/assets/:id/transactions` | JWT | Registra operação (BUY/SELL/DIVIDEND) |
 | PATCH | `/api/transactions/:id` | JWT | Edita operação |
 | DELETE | `/api/transactions/:id` | JWT | Exclui operação |
 | GET | `/api/portfolio/summary` | JWT | Patrimônio total, alocação, métricas consolidadas |
+| GET | `/api/portfolio/history` | JWT | Série temporal histórica de patrimônio e TWR |
+| GET | `/api/portfolio/monthly-activity` | JWT | Atividades e proventos do mês |
+| GET | `/api/groups` | JWT | Lista grupos de investimento do usuário |
+| POST | `/api/groups` | JWT | Cria um grupo de investimento |
+| GET | `/api/groups/:id` | JWT | Detalhes do grupo (membros, portfólios compartilhados) |
+| DELETE | `/api/groups/:id` | JWT | Exclui/Sai do grupo |
+| POST | `/api/groups/:id/invites` | JWT | Gera um código de convite para o grupo |
+| GET | `/api/groups/invites/:code` | JWT | Detalha as informações de um convite antes de aceitar |
+| POST | `/api/groups/invites/:code/accept` | JWT | Aceita convite e entra no grupo |
+| DELETE | `/api/groups/:id/members/:userId` | JWT | Remove um membro do grupo (líder apenas) |
+| GET | `/api/alerts` | JWT | Lista alertas de preços ativos e disparados |
+| POST | `/api/alerts` | JWT | Cria um novo alerta de preço para ativo |
+| DELETE | `/api/alerts/:id` | JWT | Exclui/desativa um alerta |
+| GET | `/api/market/search?q=` | — | Busca de ativos pública |
+| GET | `/api/market/indices` | — | Obtém índices (IBOV, CDI, etc.) |
+| GET | `/api/market/highlights` | — | Ativos em destaque (altas/baixas/volumes) |
+| GET | `/api/market/news` | — | Feed de notícias de mercado integrado |
+| GET | `/api/market/courses` | — | Listagem de cursos educacionais gratuitos da B3 |
+| GET | `/api/market/tools/convert` | — | Conversor de moedas fiduciárias e cripto |
 
-Todas as rotas protegidas exigem JWT (cookie ou Bearer) e filtram por `user_id`. `/portfolio/history` está fora do escopo do MVP.
+Todas as rotas protegidas exigem JWT (cookie ou Bearer) e filtram por `user_id`.
 
 ## 6. Integração com APIs externas
 
@@ -159,6 +240,20 @@ lucro_prejuízo_%     = lucro_prejuízo_R$ / valor_investido_BRL × 100
 patrimônio_total     = Σ valor_atual_BRL (posições com qtd_atual > 0)
 alocação_ativo_%     = valor_atual_BRL_ativo / patrimônio_total × 100
 ```
+
+### Cálculo de Rentabilidade Ponderada no Tempo (TWR)
+
+Para a série histórica do portfólio, é utilizado o método TWR (Time-Weighted Return), dividindo o histórico em N subperíodos onde ocorrem fluxos de caixa externos (aportes ou retiradas), eliminando o viés do volume de caixa:
+
+```
+R_sub_i = (V_fim_i - Fluxo_i) / V_inicio_i
+TWR     = [ Π_{i=1}^{N} (1 + R_sub_i) - 1 ] × 100
+```
+Onde:
+- `V_inicio_i`: Valor da carteira no início do período i.
+- `V_fim_i`: Valor da carteira no final do período i (antes do fluxo).
+- `Fluxo_i`: Aporte (positivo) ou retirada (negativo) realizado no período i.
+- Proventos (`DIVIDEND`) são tratados como retornos internos gerados pelos ativos, sem alterar o fluxo de caixa externo de aportes.
 
 ## 8. Segurança
 
@@ -219,22 +314,31 @@ docker build -f apps/web/Dockerfile -t databolsa-web .
 
 ## 11. Roadmap técnico
 
-### MVP — concluído
+### Fase 1 — MVP & Funcionalidades Centrais (Concluída)
 
 1. ✅ `/packages/core` com cálculos e testes unitários (SPEC-0001).
 2. ✅ Scaffold do monorepo + design system base (SPEC-0002).
 3. ✅ Infraestrutura Docker (SPEC-0003).
 4. ✅ Design tokens + codegen (SPEC-0004).
 5. ✅ Schema do banco + migrations Prisma (SPEC-0005).
-6. ✅ Backend NestJS — auth + CRUD (SPEC-0006).
-7. ✅ Integração de cotações com cache (SPEC-0007).
-8. ✅ Web Next.js — fluxo completo + dashboard (SPEC-0008).
-9. ✅ Mobile Flutter — consulta + edição (SPEC-0009).
-10. ✅ E2E e CI (SPEC-0010).
-11. ✅ Migração API NestJS → Next.js Route Handlers (SPEC-0011).
+6. ✅ Backend NestJS migrado para Next.js Route Handlers (SPEC-0006, SPEC-0011).
+7. ✅ Integração de cotações com cache resiliente (SPEC-0007, SPEC-0020).
+8. ✅ Web Next.js — dashboard de carteiras e análises (SPEC-0008, SPEC-0012..SPEC-0014).
+9. ✅ Mobile Flutter — consulta e cotações (SPEC-0009, SPEC-0015).
+10. ✅ Notícias, ferramentas de câmbio e cursos da B3 (SPEC-0016..SPEC-0019).
+11. ✅ Dashboards de proventos e alocações detalhadas (SPEC-0022..SPEC-0024).
+12. ✅ Alertas de preços, simuladores e importação CSV (SPEC-0025..SPEC-0027, SPEC-0032, SPEC-0034).
+13. ✅ Séries temporais complexas TWR (SPEC-0035) e paginação (SPEC-0036).
+14. ✅ Grupos de investimentos compartilhados de ponta a ponta (SPEC-0037..SPEC-0039).
 
-### Fase 2 (planejado)
+### Fase 2 (Planejado)
 
-- Integração Open Finance via Pluggy.
-- Gráfico de histórico/série temporal do patrimônio.
-- Relatórios de imposto de renda.
+- Sincronização automatizada via Open Finance (Pluggy / B3).
+- Importação automática de extratos bancários de corretoras em PDF/OFX.
+- Gráficos avançados de análise técnica (velas, médias móveis) integrados na página do ativo.
+
+### Fase 3 (Planejado)
+
+- Relatórios fiscais inteligentes para declaração anual de Imposto de Renda.
+- Calculadora de ganho de capital mensal para apuração de DARF em ações e FIIs.
+- Sugestão inteligente de rebalanceamento de carteira baseada em metas de alocação.

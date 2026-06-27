@@ -15,8 +15,8 @@ interface RateCacheEntry {
 // Singleton in-memory rate cache
 const rateCache = createMemoryCache<RateCacheEntry>(RATE_TTL_MS);
 
-// Supported fiat pairs: from → BRL via AwesomeAPI
-const SUPPORTED_FIAT_FROM = new Set(['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'ARS']);
+// Supported fiat currencies (AwesomeAPI covers any pair among these)
+const SUPPORTED_FIAT = new Set(['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'ARS', 'BRL']);
 // Supported crypto sources (keys of CRYPTO_TICKER_MAP)
 const CRYPTO_TICKERS = new Set(Object.keys(CRYPTO_TICKER_MAP));
 // Supported targets for crypto
@@ -205,7 +205,7 @@ export async function GET(request: NextRequest) {
 
   // Determine conversion type
   const isCrypto = CRYPTO_TICKERS.has(from);
-  const isFiat = SUPPORTED_FIAT_FROM.has(from);
+  const isFiat = SUPPORTED_FIAT.has(from) && SUPPORTED_FIAT.has(to);
 
   if (isCrypto) {
     if (!SUPPORTED_CRYPTO_TO.has(to)) {
@@ -239,13 +239,6 @@ export async function GET(request: NextRequest) {
   }
 
   if (isFiat) {
-    if (to !== 'BRL') {
-      return NextResponse.json(
-        { message: `Par não suportado: ${from}/${to}. Fiat suporta apenas destino BRL.` },
-        { status: 400 },
-      );
-    }
-
     try {
       const { rate, stale } = await fetchFiatRate(from, to);
       const result = amount.times(rate);
@@ -270,7 +263,7 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json(
-    { message: `Par não suportado: ${from}/${to}. Use USD, EUR, GBP para fiat ou BTC, ETH, SOL para crypto.` },
+    { message: `Par não suportado: ${from}/${to}. Use moedas como USD, EUR, GBP, ARS, BRL para fiat, ou BTC, ETH, SOL para crypto.` },
     { status: 400 },
   );
 }

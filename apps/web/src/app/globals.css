@@ -32,6 +32,36 @@
   }
 }
 
+/* ─── Glass panel (Stitch-inspired) ────────────────────────────────────── */
+
+@layer components {
+  .glass-panel {
+    background: rgba(25, 27, 35, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(66, 71, 84, 0.5);
+  }
+
+  .glass-panel-light {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(203, 213, 225, 0.5);
+  }
+}
+
+/* ─── No scrollbar (scroll containers) ──────────────────────────────────── */
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* ─── Keyframes ─────────────────────────────────────────────────────────── */
 
 @keyframes fade-in-up {

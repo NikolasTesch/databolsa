@@ -6,9 +6,9 @@ o mobile (Flutter + Dart). Guia humano:
 [`docs/design-system.md`](../../docs/design-system.md) · Spec:
 [SPEC-0004](../../docs/specs/0004-design-tokens-codegen.json).
 
-> Componentes de UI (Button, Card, Badge…) **ainda não** vivem aqui — primeiro
-> vem `packages/core` (cálculos financeiros), ver roadmap em `docs/SPEC.md §11`.
-> Este pacote, por ora, expõe só tokens e tema.
+> Componentes de UI (`Button`, `Card`, `Badge`, `Input`, `Select`, `Spinner`, `Tooltip`, `TrendBadge`)
+> agora vivem e são exportados diretamente deste pacote. Este pacote expõe os tokens,
+> o preset Tailwind, o tema CSS gerado e a biblioteca de componentes compartilhados para Web.
 
 ## Fonte única
 

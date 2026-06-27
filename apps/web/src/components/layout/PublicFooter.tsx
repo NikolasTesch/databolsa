@@ -1,67 +1,70 @@
 import Link from 'next/link';
 
-const ASSET_LINKS = [
-  { label: 'Ações', href: '/?type=STOCK_BR' },
-  { label: 'FIIs', href: '/?type=FII' },
-  { label: 'ETFs', href: '/?type=ETF' },
-  { label: 'BDRs', href: '/?type=BDR' },
-  { label: 'Crypto', href: '/?type=CRYPTO' },
-  { label: 'Stocks US', href: '/?type=STOCK_US' },
-];
-
-const AUTH_LINKS = [
-  { label: 'Entrar', href: '/login' },
-  { label: 'Criar conta', href: '/register' },
-  { label: 'Dashboard', href: '/dashboard' },
-];
+const FOOTER_LINKS = {
+  Mercado: [
+    { label: 'Ações', href: '/?type=STOCK_BR' },
+    { label: 'FIIs', href: '/?type=FII' },
+    { label: 'ETFs', href: '/?type=ETF' },
+    { label: 'BDRs', href: '/?type=BDR' },
+    { label: 'Crypto', href: '/?type=CRYPTO' },
+    { label: 'Stocks US', href: '/?type=STOCK_US' },
+  ],
+  Ferramentas: [
+    { label: 'Conversor de Moedas', href: '/ferramentas' },
+    { label: 'Simulador', href: '/ferramentas' },
+    { label: 'Calculadora IR', href: '/ferramentas' },
+    { label: 'Análise de Índices', href: '/ferramentas' },
+  ],
+  Institucional: [
+    { label: 'Termos de Uso', href: '/termos' },
+    { label: 'Privacidade', href: '/privacidade' },
+    { label: 'Compliance', href: '/compliance' },
+    { label: 'Ajuda', href: '/ajuda' },
+  ],
+} as const;
 
 export function PublicFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-surface border-t border-border py-8 px-4">
-      <div className="mx-auto max-w-7xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          <div>
-            <span className="text-lg font-semibold text-primary">DataBolsa</span>
-            <p className="mt-2 text-sm text-content-muted">
-              Análise e carteira de investimentos
+    <footer className="border-t border-border bg-background">
+      <div className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12">
+        {/* Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+          {/* Brand column */}
+          <div className="col-span-2 md:col-span-1">
+            <span className="text-headline-md font-bold text-primary">databolsa</span>
+            <p className="mt-2 text-body-sm text-text-muted max-w-xs">
+              Acompanhamento de patrimônio em investimentos com lançamento manual de operações e consolidação em BRL.
             </p>
           </div>
 
-          <div>
-            <h3 className="text-sm font-semibold text-content mb-3">Mercado</h3>
-            <ul className="space-y-2">
-              {ASSET_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-content-muted hover:text-content transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-content mb-3">Conta</h3>
-            <ul className="space-y-2">
-              {AUTH_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-content-muted hover:text-content transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {Object.entries(FOOTER_LINKS).map(([title, links]) => (
+            <div key={title}>
+              <h3 className="text-body-sm font-semibold text-on-surface mb-3">{title}</h3>
+              <ul className="space-y-2">
+                {links.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="text-body-sm text-text-muted hover:text-on-surface transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="border-t border-border pt-6">
-          <p className="text-xs text-content-muted text-center">
-            &copy; {year} DataBolsa. Todos os direitos reservados.
+        {/* Bottom bar */}
+        <div className="border-t border-border pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-caption text-text-muted">
+            &copy; {year} databolsa. Todos os direitos reservados.
           </p>
-          <p className="text-xs text-content-subtle text-center mt-2 max-w-3xl mx-auto leading-relaxed">
-            Aviso: O conteúdo apresentado neste site tem caráter meramente informativo e educacional, não constituindo recomendação, indicação, consulta ou conselho de investimento de qualquer natureza.
+          <p className="text-caption text-text-muted max-w-2xl text-center md:text-right leading-relaxed">
+            Aviso: O conteúdo apresentado neste site tem caráter meramente informativo e educacional, não constituindo recomendação de investimento.
           </p>
         </div>
       </div>

@@ -31,7 +31,7 @@ function formatBRLShort(value: number) {
 export function GrowthChart({ dataPoints }: Props) {
   if (dataPoints.length === 0) {
     return (
-      <div className="flex h-[220px] items-center justify-center text-sm text-content-muted">
+      <div className="flex h-[220px] items-center justify-center text-sm text-on-surface-variant">
         Nenhuma transação registrada ainda.
       </div>
     );

@@ -92,7 +92,7 @@ export function ComposicaoCharts({ positions, assets }: Props) {
 
   if (byClass.length === 0) {
     return (
-      <p className="text-sm text-content-muted">
+      <p className="text-sm text-on-surface-variant">
         Nenhuma posição com cotação disponível.
       </p>
     );
@@ -110,7 +110,7 @@ export function ComposicaoCharts({ positions, assets }: Props) {
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-left text-xs font-medium uppercase tracking-wide text-content-muted">
+                <tr className="border-b border-border text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">
                   <th className="pb-2 pr-4">Classe</th>
                   <th className="pb-2 pr-4 text-right">Valor</th>
                   <th className="pb-2 pr-4 text-right">% Carteira</th>
@@ -132,7 +132,7 @@ export function ComposicaoCharts({ positions, assets }: Props) {
                     <td className="py-2 pr-4 text-right font-mono">
                       {formatBRL(g.value.toString())}
                     </td>
-                    <td className="py-2 pr-4 text-right font-mono text-content-muted">
+                    <td className="py-2 pr-4 text-right font-mono text-on-surface-variant">
                       {formatAllocationPct(g.pct.toString())}
                     </td>
                     <td
@@ -169,7 +169,7 @@ export function ComposicaoCharts({ positions, assets }: Props) {
               <p className="mt-2 font-mono text-lg font-semibold">
                 R$ {g.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
-              <p className="text-xs text-content-muted">{g.pct.toFixed(1)}% da carteira</p>
+              <p className="text-xs text-on-surface-variant">{g.pct.toFixed(1)}% da carteira</p>
             </div>
           ))}
         </div>

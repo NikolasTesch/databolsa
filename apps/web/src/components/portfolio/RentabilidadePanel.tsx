@@ -56,26 +56,26 @@ function ReturnCard({ label, value, note, comingSoon }: ReturnCardProps) {
   return (
     <div className="rounded-xl border border-border bg-surface p-5">
       <div className="flex items-start justify-between">
-        <p className="text-sm text-content-muted">{label}</p>
+        <p className="text-sm text-on-surface-variant">{label}</p>
         {comingSoon && (
-          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs text-content-muted">
+          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs text-on-surface-variant">
             Em breve
           </span>
         )}
       </div>
       {comingSoon ? (
-        <p className="mt-2 text-2xl font-bold text-content-muted">—</p>
+        <p className="mt-2 text-2xl font-bold text-on-surface-variant">—</p>
       ) : (
         <p
           className={`mt-2 font-mono text-2xl font-bold ${
-            isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-content'
+            isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-on-surface'
           }`}
         >
           {isPositive ? '+' : ''}
           {value?.replace('.', ',')}%
         </p>
       )}
-      {note && <p className="mt-1 text-xs text-content-muted">{note}</p>}
+      {note && <p className="mt-1 text-xs text-on-surface-variant">{note}</p>}
     </div>
   );
 }
@@ -104,16 +104,16 @@ export function RentabilidadePanel({ summary }: Props) {
       {portfolioData && (
         <div className="rounded-lg border border-border bg-surface p-4 text-sm">
           <p className="font-medium">Resumo</p>
-          <p className="mt-1 text-content-muted">
+          <p className="mt-1 text-on-surface-variant">
             Capital investido:{' '}
-            <span className="font-mono text-content">
+            <span className="font-mono text-on-surface">
               R${' '}
               {parseFloat(portfolioData.totalInvested).toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
               })}
             </span>
           </p>
-          <p className="text-content-muted">
+          <p className="text-on-surface-variant">
             P/L não realizado:{' '}
             <span
               className={`font-mono ${
@@ -129,7 +129,7 @@ export function RentabilidadePanel({ summary }: Props) {
         </div>
       )}
 
-      <p className="text-xs text-content-muted">
+      <p className="text-xs text-on-surface-variant">
         * CDI estimado com base em {CDI_ANNUAL_RATE}% a.a. — valores aproximados. IBOV e S&P 500
         requerem dados históricos de mercado (em desenvolvimento).
       </p>

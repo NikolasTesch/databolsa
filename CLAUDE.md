@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-**MVP web implementado — home pública em andamento.** O monorepo está scaffoldado (`/apps/{web,mobile}`, `/packages/{core,types,ui}`), a infraestrutura Docker funciona e o design system base existe. A API NestJS foi **migrada para Next.js Route Handlers** dentro de `apps/web` (ADR-0004, SPEC-0011) — `apps/api` foi removido.
+**Fase 1 (MVP + Core) concluída e verificada.** O monorepo está scaffoldado (`/apps/{web,mobile}`, `/packages/{core,types,ui}`), a infraestrutura Docker funciona e a biblioteca de componentes e design system existe e é amplamente utilizada. A API NestJS foi **migrada para Next.js Route Handlers** dentro de `apps/web` (ADR-0004, SPEC-0011) — o antigo `apps/api` foi removido.
 
 `packages/core` é um projeto Node.js standalone (TypeScript + Jest + decimal.js) com cobertura completa de testes. pnpm workspaces está configurado na raiz (`pnpm-workspace.yaml`).
 
-Specs concluídas (todas `verified`): SPEC-0001..SPEC-0011. Em andamento: SPEC-0012 (`implemented` — home pública com busca e destaques de mercado; pendente verificação e testes). Pendentes: SPEC-0013 (página de análise de ativo), SPEC-0014 (adicionar ativo pesquisado à carteira). Consulte `docs/SPEC.md` para arquitetura e `docs/specs/README.md` para o índice completo.
+Specs concluídas (todas `verified`): de **SPEC-0001** a **SPEC-0039** (incluindo autenticação, cotações com cache resiliente, conversão de moedas, importação de CSV, simulação, alertas de preço, benchmarks TWR e gestão de grupos de investimento). Consulte [SPEC.md](file:///c:/PASTA%20IMPORTANTE/TESCH_DEV/databolsa/docs/SPEC.md) para arquitetura e [docs/specs/README.md](file:///c:/PASTA%20IMPORTANTE/TESCH_DEV/databolsa/docs/specs/README.md) para o índice completo.
 
 ### Build/test commands
 

@@ -24,8 +24,8 @@ export function PositionTable({ positions }: PositionTableProps) {
   if (positions.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-surface py-12 text-center">
-        <p className="text-content-muted">Nenhuma posição ainda.</p>
-        <p className="mt-1 text-sm text-content-subtle">
+        <p className="text-on-surface-variant">Nenhuma posição ainda.</p>
+        <p className="mt-1 text-sm text-outline">
           <Link href="/assets/new" className="text-primary hover:underline">
             Adicione um ativo
           </Link>{' '}
@@ -39,7 +39,7 @@ export function PositionTable({ positions }: PositionTableProps) {
     <div className="overflow-x-auto rounded-xl border border-border">
       <table className="w-full text-sm" aria-label="Posições do portfólio">
         <thead>
-          <tr className="border-b border-border bg-surface-muted text-xs font-medium uppercase tracking-wider text-content-subtle">
+          <tr className="border-b border-border bg-surface-muted text-xs font-medium uppercase tracking-wider text-outline">
             <th className="px-4 py-3 text-left">Ativo</th>
             <th className="px-4 py-3 text-right">Qtd</th>
             <th className="px-4 py-3 text-right">Preço Médio</th>
@@ -67,23 +67,23 @@ export function PositionTable({ positions }: PositionTableProps) {
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/assets/${pos.asset_id}`}
-                      className="font-medium text-content hover:text-primary"
+                      className="font-medium text-on-surface hover:text-primary"
                     >
                       {pos.ticker}
                     </Link>
                     {pos.is_stale && <StaleBadge />}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-right font-mono tabular-nums text-content">
+                <td className="px-4 py-3 text-right font-mono tabular-nums text-on-surface">
                   {formatQty(pos.current_quantity)}
                 </td>
-                <td className="px-4 py-3 text-right font-mono tabular-nums text-content">
+                <td className="px-4 py-3 text-right font-mono tabular-nums text-on-surface">
                   {formatBRL(pos.average_price)}
                 </td>
-                <td className="px-4 py-3 text-right font-mono tabular-nums text-content">
+                <td className="px-4 py-3 text-right font-mono tabular-nums text-on-surface">
                   {formatBRL(pos.invested_value)}
                 </td>
-                <td className="px-4 py-3 text-right font-mono tabular-nums text-content">
+                <td className="px-4 py-3 text-right font-mono tabular-nums text-on-surface">
                   {pos.valor_atual_brl !== null ? formatBRL(pos.valor_atual_brl) : '—'}
                 </td>
                 <td
@@ -104,7 +104,7 @@ export function PositionTable({ positions }: PositionTableProps) {
                 >
                   {pos.lucro_prejuizo_pct !== null ? formatPct(pos.lucro_prejuizo_pct) : '—'}
                 </td>
-                <td className="px-4 py-3 text-right font-mono tabular-nums text-content">
+                <td className="px-4 py-3 text-right font-mono tabular-nums text-on-surface">
                   {pos.alocacao_pct !== null ? formatAllocationPct(pos.alocacao_pct) : '—'}
                 </td>
               </motion.tr>

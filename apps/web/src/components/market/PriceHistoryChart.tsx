@@ -39,7 +39,7 @@ function formatPrice(value: number): string {
 export function PriceHistoryChart({ series, ticker }: PriceHistoryChartProps) {
   if (!series || series.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-content-muted text-sm">
+      <div className="flex items-center justify-center h-48 text-on-surface-variant text-sm">
         Histórico não disponível para {ticker}
       </div>
     );
