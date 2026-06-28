@@ -29,6 +29,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className={`dark ${ibmPlexSans.variable} ${ibmPlexMono.variable}`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const saved = localStorage.getItem('theme');
+                  if (saved === 'light') {
+                    document.documentElement.classList.remove('dark');
+                  } else {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (_) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="bg-background text-on-surface font-sans min-h-screen">
         <Providers>{children}</Providers>
       </body>

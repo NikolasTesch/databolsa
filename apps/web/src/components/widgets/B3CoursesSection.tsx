@@ -1,54 +1,52 @@
 import Link from 'next/link';
+import { B3_COURSES, type B3Course } from '@/lib/courses-data';
 
-interface CourseItem {
-  icon: string;
-  title: string;
-  description: string;
-  hours: string;
+const LEVEL_STYLES: Record<B3Course['level'], { bg: string; text: string; border: string }> = {
+  Iniciante: {
+    bg: 'bg-secondary/10',
+    text: 'text-secondary',
+    border: 'border-secondary/20',
+  },
+  Intermediário: {
+    bg: 'bg-primary/10',
+    text: 'text-primary',
+    border: 'border-primary/20',
+  },
+  Avançado: {
+    bg: 'bg-tertiary/10',
+    text: 'text-tertiary',
+    border: 'border-tertiary/20',
+  },
+};
+
+const CATEGORY_ICONS: Record<string, string> = {
+  'Renda Variável': 'trending_up',
+  'Fundos': 'domain',
+  'Criptomoedas': 'currency_bitcoin',
+  'Gestão de Investimentos': 'account_balance',
+  'Derivativos': 'alt_route',
+};
+
+function getLevelStyle(level: B3Course['level']) {
+  return LEVEL_STYLES[level] ?? LEVEL_STYLES.Iniciante;
 }
 
-const COURSES: CourseItem[] = [
-  {
-    icon: 'show_chart',
-    title: 'Análise Técnica Essencial',
-    description:
-      'Aprenda a ler gráficos e identificar tendências do mercado financeiro com analistas certificados.',
-    hours: '40h',
-  },
-  {
-    icon: 'domain',
-    title: 'Dominando FIIs',
-    description:
-      'Como analisar fundos imobiliários e montar uma carteira de alto retorno com segurança.',
-    hours: '25h',
-  },
-  {
-    icon: 'monitoring',
-    title: 'Valuation na Prática',
-    description:
-      'Modelagem financeira completa para valuation de empresas e tomada de decisão.',
-    hours: '60h',
-  },
-  {
-    icon: 'alt_route',
-    title: 'Opções e Derivativos',
-    description:
-      'Estratégias de proteção e alavancagem com opções para investidores avançados.',
-    hours: '35h',
-  },
-];
-
 export default function B3CoursesSection() {
+  const displayCourses = B3_COURSES.slice(0, 4);
+
   return (
-    <section className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12">
+    <section
+      id="cursos"
+      className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12"
+    >
       {/* Header */}
       <div className="flex items-end justify-between mb-8">
         <div>
           <h2 className="text-xl font-semibold text-on-surface">
-            Cursos Especializados
+            Cursos B3 Educação
           </h2>
           <p className="text-sm text-on-surface-variant mt-1">
-            Aprenda com analistas certificados (CNPI)
+            Cursos oficiais da B3 para todos os níveis
           </p>
         </div>
         <Link
@@ -59,46 +57,61 @@ export default function B3CoursesSection() {
         </Link>
       </div>
 
-      {/* Cards grid */}
+      {/* Cards grid — Stitch glass-card pattern */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {COURSES.map((course) => (
-          <div
-            key={course.title}
-            className="bg-surface border border-border rounded-lg p-5 flex flex-col"
-          >
-            {/* Icon */}
-            <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center">
-              <span className="material-symbols-outlined text-[32px] text-primary">
-                {course.icon}
-              </span>
-            </div>
+        {displayCourses.map((course) => {
+          const levelStyle = getLevelStyle(course.level);
+          return (
+            <a
+              key={course.id}
+              href={course.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-surface border border-border rounded-xl overflow-hidden flex flex-col hover:border-secondary/30 transition-all duration-300"
+            >
+              {/* Top accent bar */}
+              <div className={`h-1.5 w-full ${levelStyle.bg}`} />
 
-            {/* Title */}
-            <h3 className="text-base font-semibold text-on-surface mt-4">
-              {course.title}
-            </h3>
+              <div className="p-5 flex flex-col flex-1 gap-4">
+                {/* Icon + Level badge */}
+                <div className="flex items-start justify-between">
+                  <div className="bg-primary/10 w-11 h-11 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <span className="material-symbols-outlined text-[26px] text-primary">
+                      {CATEGORY_ICONS[course.category] ?? 'school'}
+                    </span>
+                  </div>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${levelStyle.bg} ${levelStyle.text} ${levelStyle.border} border`}
+                  >
+                    {course.level}
+                  </span>
+                </div>
 
-            {/* Description */}
-            <p className="text-sm text-on-surface-variant mt-1 flex-1">
-              {course.description}
-            </p>
+                {/* Title */}
+                <h3 className="text-base font-semibold text-on-surface leading-snug">
+                  {course.title}
+                </h3>
 
-            {/* Hours + Matricular button */}
-            <div className="flex items-center justify-between mt-4">
-              <span className="bg-surface-muted rounded px-2 py-0.5 text-xs text-on-surface-variant">
-                {course.hours}
-              </span>
-              <Link
-                href={`/cursos/${course.title
-                  .toLowerCase()
-                  .replace(/\s+/g, '-')}`}
-                className="text-sm text-primary hover:underline font-medium"
-              >
-                Matricular
-              </Link>
-            </div>
-          </div>
-        ))}
+                {/* Description */}
+                <p className="text-sm text-on-surface-variant leading-relaxed flex-1 line-clamp-3">
+                  {course.description}
+                </p>
+
+                {/* Footer: duration + CTA */}
+                <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                  <span className="inline-flex items-center gap-1 text-xs text-on-surface-variant font-mono">
+                    <span className="material-symbols-outlined text-[16px]">schedule</span>
+                    {course.duration}
+                  </span>
+                  <span className="text-xs font-semibold text-primary group-hover:text-secondary transition-colors flex items-center gap-1">
+                    Acessar
+                    <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </span>
+                </div>
+              </div>
+            </a>
+          );
+        })}
       </div>
     </section>
   );

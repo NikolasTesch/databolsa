@@ -34,7 +34,7 @@ export function PublicFooter() {
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
             <span className="text-headline-md font-bold text-primary">databolsa</span>
-            <p className="mt-2 text-body-sm text-text-muted max-w-xs">
+            <p className="mt-2 text-body-sm text-on-surface-variant max-w-xs">
               Acompanhamento de patrimônio em investimentos com lançamento manual de operações e consolidação em BRL.
             </p>
           </div>
@@ -47,7 +47,7 @@ export function PublicFooter() {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-body-sm text-text-muted hover:text-on-surface transition-colors"
+                      className="text-body-sm text-on-surface-variant hover:text-on-surface transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -60,10 +60,10 @@ export function PublicFooter() {
 
         {/* Bottom bar */}
         <div className="border-t border-border pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-caption text-text-muted">
+          <p className="text-caption text-on-surface-variant">
             &copy; {year} databolsa. Todos os direitos reservados.
           </p>
-          <p className="text-caption text-text-muted max-w-2xl text-center md:text-right leading-relaxed">
+          <p className="text-caption text-on-surface-variant max-w-2xl text-center md:text-right leading-relaxed">
             Aviso: O conteúdo apresentado neste site tem caráter meramente informativo e educacional, não constituindo recomendação de investimento.
           </p>
         </div>

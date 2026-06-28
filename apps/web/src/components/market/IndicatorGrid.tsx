@@ -23,7 +23,7 @@ const INDICATORS_BY_CLASS: Record<AssetClass, IndicatorDef[]> = {
     { label: 'Margem Líq. (%)', key: 'netMargin', tooltip: 'Percentual do lucro líquido sobre a receita', format: PCT },
     { label: 'EV/EBITDA', key: 'evEbitda', tooltip: 'Enterprise Value sobre EBITDA', format: NUM },
     { label: 'Dívida/PL', key: 'debtToEquity', tooltip: 'Relação dívida líquida / patrimônio líquido', format: NUM },
-    { label: 'Market Cap', key: 'marketCap', tooltip: 'Capitalização de mercado em R$', format: BRL },
+    { label: 'Valor de Mercado', key: 'marketCap', tooltip: 'Capitalização de mercado em R$', format: BRL },
   ],
   FII: [
     { label: 'P/VP', key: 'pb', tooltip: 'Preço sobre Valor Patrimonial da cota', format: NUM },
@@ -43,7 +43,7 @@ const INDICATORS_BY_CLASS: Record<AssetClass, IndicatorDef[]> = {
   BDR: [
     { label: 'P/L', key: 'pe', tooltip: 'Preço/Lucro do ativo subjacente', format: NUM },
     { label: 'DY (%)', key: 'dy', tooltip: 'Dividend Yield', format: PCT },
-    { label: 'Market Cap', key: 'marketCap', tooltip: 'Market cap da empresa original em USD', format: USD },
+    { label: 'Valor de Mercado', key: 'marketCap', tooltip: 'Market cap da empresa original em USD', format: USD },
     { label: 'Var. 52 sem.', key: 'change52w', tooltip: 'Variação de preço nas últimas 52 semanas', format: PCT },
   ],
   STOCK_US: [
@@ -52,13 +52,13 @@ const INDICATORS_BY_CLASS: Record<AssetClass, IndicatorDef[]> = {
     { label: 'DY (%)', key: 'dy', tooltip: 'Dividend Yield', format: PCT },
     { label: 'ROE (%)', key: 'roe', tooltip: 'Return on Equity', format: PCT },
     { label: 'EPS (USD)', key: 'eps', tooltip: 'Earnings per Share em USD', format: USD },
-    { label: 'Market Cap', key: 'marketCap', tooltip: 'Capitalização de mercado em USD', format: USD },
+    { label: 'Valor de Mercado', key: 'marketCap', tooltip: 'Capitalização de mercado em USD', format: USD },
     { label: 'Receita', key: 'revenue', tooltip: 'Receita por ação em USD', format: USD },
   ],
   CRYPTO: [
-    { label: 'Market Cap', key: 'marketCap', tooltip: 'Capitalização de mercado em BRL', format: BRL },
+    { label: 'Valor de Mercado', key: 'marketCap', tooltip: 'Capitalização de mercado em BRL', format: BRL },
     { label: 'Vol. 24h', key: 'volume24h', tooltip: 'Volume de negociação nas últimas 24h em BRL', format: BRL },
-    { label: 'Supply Circ.', key: 'circulatingSupply', tooltip: 'Quantidade de moedas em circulação', format: NUM },
+    { label: 'Supply em Circulação', key: 'circulatingSupply', tooltip: 'Quantidade de moedas em circulação', format: NUM },
     { label: 'Supply Máx.', key: 'maxSupply', tooltip: 'Quantidade máxima de moedas que existirão', format: NUM },
     { label: 'Var. 7d (%)', key: 'change7d', tooltip: 'Variação de preço nos últimos 7 dias', format: PCT },
     { label: 'Var. 30d (%)', key: 'change30d', tooltip: 'Variação de preço nos últimos 30 dias', format: PCT },

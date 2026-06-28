@@ -1,55 +1,56 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import type { NormalizedFundamentals } from '@/lib/fundamentals/fundamentals-adapter.interface';
 
-interface FundamentalData {
-  pl: number;
-  pvp: number;
-  dy: number;
-  roe: number;
-  margem: number;
-  divida: number;
+interface TickerResult {
+  ticker: string;
+  indicators: NormalizedFundamentals | null;
+  error?: string;
 }
 
-const MOCK_DATA: Record<string, FundamentalData> = {
-  PETR4: { pl: 4.2, pvp: 1.8, dy: 16.4, roe: 22.1, margem: 18.5, divida: 0.45 },
-  VALE3: { pl: 6.8, pvp: 2.1, dy: 8.2, roe: 31.4, margem: 24.2, divida: 0.32 },
-  ITUB4: { pl: 8.1, pvp: 1.5, dy: 6.5, roe: 18.7, margem: 26.8, divida: 2.1 },
-  BBAS3: { pl: 5.1, pvp: 1.2, dy: 9.5, roe: 20.3, margem: 24.1, divida: 3.8 },
-  WEGE3: { pl: 32.4, pvp: 6.8, dy: 1.8, roe: 21.0, margem: 16.2, divida: 0.15 },
-  ABEV3: { pl: 14.2, pvp: 2.8, dy: 5.2, roe: 19.8, margem: 22.4, divida: 0.28 },
-};
-
 interface RowDef {
-  key: keyof FundamentalData;
+  key: keyof Pick<NormalizedFundamentals, 'pe' | 'pb' | 'dy' | 'roe' | 'netMargin' | 'debtToEquity'>;
   label: string;
   suffix: string;
   higherBetter: boolean | null;
 }
 
 const ROWS: RowDef[] = [
-  { key: 'pl', label: 'P/L', suffix: '', higherBetter: false },
-  { key: 'pvp', label: 'P/VP', suffix: '', higherBetter: false },
+  { key: 'pe', label: 'P/L', suffix: '', higherBetter: false },
+  { key: 'pb', label: 'P/VP', suffix: '', higherBetter: false },
   { key: 'dy', label: 'DY', suffix: '%', higherBetter: true },
   { key: 'roe', label: 'ROE', suffix: '%', higherBetter: true },
-  { key: 'margem', label: 'Margem Líquida', suffix: '%', higherBetter: true },
-  { key: 'divida', label: 'Dívida Líquida/Patrimônio', suffix: '', higherBetter: false },
+  { key: 'netMargin', label: 'Margem Líquida', suffix: '%', higherBetter: true },
+  { key: 'debtToEquity', label: 'Dívida Líq./Patrimônio', suffix: '', higherBetter: false },
 ];
 
-function formatValue(value: number, suffix: string): string {
-  if (suffix === '%') return `${value.toFixed(1)}%`;
-  return value.toFixed(value % 1 === 0 ? 1 : 2);
+function parseNum(value: string | null): number | null {
+  if (value === null || value === '') return null;
+  const n = parseFloat(value);
+  return isNaN(n) ? null : n;
 }
 
-function isGood(value: number, higherBetter: boolean | null): boolean | null {
-  if (higherBetter === null) return null;
+function formatValue(value: string | null, suffix: string): string {
+  const num = parseNum(value);
+  if (num === null) return '—';
+  if (suffix === '%') return `${num.toFixed(1)}%`;
+  return num.toFixed(num % 1 === 0 ? 1 : 2);
+}
+
+function getGoodColor(value: string | null, higherBetter: boolean | null): string {
+  const num = parseNum(value);
+  if (num === null || higherBetter === null) return 'text-on-surface';
   const threshold = 15;
-  if (higherBetter) return value >= threshold;
-  return value <= threshold;
+  const isGood = higherBetter ? num >= threshold : num <= threshold;
+  if (isGood) return 'text-profit';
+  return 'text-loss';
 }
 
 export default function AssetComparator() {
   const [tickers, setTickers] = useState<string[]>(['', '', '', '']);
+  const [results, setResults] = useState<TickerResult[]>([]);
+  const [loading, setLoading] = useState(false);
   const [compared, setCompared] = useState(false);
 
   function updateTicker(index: number, value: string) {
@@ -57,15 +58,39 @@ export default function AssetComparator() {
     next[index] = value.toUpperCase();
     setTickers(next);
     setCompared(false);
+    setResults([]);
   }
 
-  function handleCompare() {
+  const handleCompare = useCallback(async () => {
+    const filled = tickers.filter((t) => t.trim().length > 0);
+    if (filled.length < 2) return;
+
+    setLoading(true);
     setCompared(true);
-  }
+
+    const fetched = await Promise.all(
+      filled.map(async (ticker) => {
+        try {
+          const res = await fetch(`/api/market/${ticker}/fundamentals`);
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            return { ticker, indicators: null, error: body.message ?? 'Não encontrado' };
+          }
+          const data = await res.json();
+          return { ticker: data.ticker, indicators: data.indicators as NormalizedFundamentals };
+        } catch {
+          return { ticker, indicators: null, error: 'Erro ao buscar' };
+        }
+      }),
+    );
+
+    setResults(fetched);
+    setLoading(false);
+  }, [tickers]);
 
   const filledTickers = tickers.filter((t) => t.trim().length > 0);
-  const validTickers = filledTickers.filter((t) => MOCK_DATA[t.toUpperCase()]);
   const canCompare = filledTickers.length >= 2;
+  const validResults = results.filter((r) => r.indicators !== null);
 
   return (
     <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
@@ -96,9 +121,7 @@ export default function AssetComparator() {
               type="text"
               value={ticker}
               onChange={(e) => updateTicker(i, e.target.value)}
-              placeholder={
-                ['ex: PETR4', 'ex: VALE3', 'ex: ITUB4', 'ex: BBAS3'][i]
-              }
+              placeholder={['ex: PETR4', 'ex: VALE3', 'ex: ITUB4', 'ex: BBAS3'][i]}
               className="bg-surface border border-border rounded-lg px-3 py-2 text-sm text-on-surface w-full font-mono placeholder:text-outline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             />
           </div>
@@ -108,15 +131,15 @@ export default function AssetComparator() {
       <button
         type="button"
         onClick={handleCompare}
-        disabled={!canCompare}
+        disabled={!canCompare || loading}
         className="w-full bg-primary text-white font-medium py-2.5 rounded-lg text-sm hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         <span className="material-symbols-outlined text-lg">compare_arrows</span>
-        Comparar
+        {loading ? 'Buscando dados...' : 'Comparar'}
       </button>
 
       {/* Not enough tickers hint */}
-      {compared && !canCompare && (
+      {compared && !canCompare && !loading && (
         <div className="mt-6 flex items-center justify-center gap-2 py-8 text-on-surface-variant">
           <span className="material-symbols-outlined text-base">info</span>
           <p className="text-sm">Adicione ao menos 2 ativos para comparar</p>
@@ -124,35 +147,35 @@ export default function AssetComparator() {
       )}
 
       {/* Results table */}
-      {compared && canCompare && (
+      {compared && canCompare && !loading && results.length > 0 && (
         <div className="mt-6 overflow-x-auto">
           {/* Ticker badges */}
-          <div className="flex gap-3 mb-4">
-            {validTickers.map((ticker) => (
+          <div className="flex gap-3 mb-4 flex-wrap">
+            {validResults.map((r) => (
               <span
-                key={ticker}
+                key={r.ticker}
                 className="inline-flex items-center gap-1.5 rounded-full bg-surface-container-low border border-outline-variant px-3 py-1 text-xs font-semibold font-mono text-on-surface"
               >
                 <span className="material-symbols-outlined text-sm text-primary">
                   candlestick_chart
                 </span>
-                {ticker.toUpperCase()}
+                {r.ticker}
               </span>
             ))}
-            {validTickers.length < filledTickers.length && (
-              <span className="inline-flex items-center rounded-full bg-loss-surface px-3 py-1 text-xs font-medium text-loss-content">
-                {filledTickers
-                  .filter((t) => !MOCK_DATA[t.toUpperCase()])
-                  .join(', ')}{' '}
-                não encontrado
+            {results.filter((r) => r.error).map((r) => (
+              <span
+                key={r.ticker}
+                className="inline-flex items-center rounded-full bg-loss-surface px-3 py-1 text-xs font-medium text-loss-content"
+              >
+                {r.ticker}: {r.error}
               </span>
-            )}
+            ))}
           </div>
 
-          {validTickers.length === 0 ? (
+          {validResults.length === 0 ? (
             <div className="flex items-center justify-center gap-2 py-8 text-on-surface-variant">
               <span className="material-symbols-outlined text-base">search_off</span>
-              <p className="text-sm">Nenhum ativo reconhecido. Verifique os tickers informados.</p>
+              <p className="text-sm">Nenhum indicador encontrado para os tickers informados.</p>
             </div>
           ) : (
             <table className="w-full text-sm">
@@ -161,51 +184,44 @@ export default function AssetComparator() {
                   <th className="text-left py-2.5 pr-4 text-xs text-on-surface-variant uppercase tracking-wider font-medium">
                     Indicador
                   </th>
-                  {validTickers.map((ticker) => (
+                  {validResults.map((r) => (
                     <th
-                      key={ticker}
+                      key={r.ticker}
                       className="text-center py-2.5 px-3 text-xs text-on-surface-variant uppercase tracking-wider font-mono font-semibold"
                     >
-                      {ticker}
+                      {r.ticker}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {ROWS.map((row) => {
-                  const values = validTickers.map(
-                    (t) => MOCK_DATA[t.toUpperCase()]?.[row.key],
-                  );
-                  const best = row.higherBetter !== null
-                    ? Math[row.higherBetter ? 'max' : 'min'](...values)
+                  const values = validResults.map((r) => r.indicators?.[row.key] ?? null);
+                  const bestVal = row.higherBetter !== null
+                    ? values.reduce<number | null>((best, v) => {
+                        const n = parseNum(v);
+                        if (n === null) return best;
+                        if (best === null) return n;
+                        return row.higherBetter ? Math.max(best, n) : Math.min(best, n);
+                      }, null)
                     : null;
 
                   return (
-                    <tr
-                      key={row.key}
-                      className="border-b border-border/50 last:border-b-0"
-                    >
+                    <tr key={row.key} className="border-b border-border/50 last:border-b-0">
                       <td className="py-3 pr-4 text-on-surface-variant text-xs">
                         {row.label}
                       </td>
-                      {validTickers.map((ticker) => {
-                        const data = MOCK_DATA[ticker.toUpperCase()];
-                        if (!data) return null;
-                        const val = data[row.key];
-                        const good = isGood(val, row.higherBetter);
-
-                        let colorClass = 'text-on-surface';
-                        if (good === true) colorClass = 'text-profit';
-                        else if (good === false) colorClass = 'text-loss';
-
-                        const isBest = best !== null && val === best;
+                      {validResults.map((r) => {
+                        const val = r.indicators?.[row.key] ?? null;
+                        const num = parseNum(val);
+                        const isBest = bestVal !== null && num !== null && num === bestVal;
 
                         return (
                           <td
-                            key={ticker}
-                            className={`py-3 px-3 text-center font-mono text-sm ${colorClass}`}
+                            key={r.ticker}
+                            className={`py-3 px-3 text-center font-mono text-sm ${getGoodColor(val, row.higherBetter)}`}
                           >
-                            <span className={isBest && validTickers.length > 1 ? 'font-bold' : ''}>
+                            <span className={isBest && validResults.length > 1 ? 'font-bold' : ''}>
                               {formatValue(val, row.suffix)}
                             </span>
                           </td>

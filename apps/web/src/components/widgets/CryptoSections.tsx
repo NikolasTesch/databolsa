@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { fetchCryptoNews } from '@/lib/news/news.service';
+import type { NewsArticle } from '@/lib/news/news.service';
 
 interface CryptoAsset {
   emoji: string;
@@ -8,13 +10,6 @@ interface CryptoAsset {
   changeUp: boolean;
   price: string;
   volume: string;
-}
-
-interface NewsItem {
-  date: string;
-  category: string;
-  title: string;
-  href: string;
 }
 
 interface TrendingItem {
@@ -28,27 +23,6 @@ const CRYPTO_ASSETS: CryptoAsset[] = [
   { emoji: 'Ξ', symbol: 'ETH', name: 'Ethereum', changePercent: '+2,10%', changeUp: true, price: '$ 3.450,20', volume: '18B' },
   { emoji: '₮', symbol: 'USDT', name: 'Tether', changePercent: '0,00%', changeUp: true, price: '$ 1,00', volume: '45B' },
   { emoji: 'S', symbol: 'SOL', name: 'Solana', changePercent: '-1,24%', changeUp: false, price: '$ 145,80', volume: '4,2B' },
-];
-
-const NEWS: NewsItem[] = [
-  {
-    date: '25 jun',
-    category: 'Regulação',
-    title: 'SEC adia decisão sobre ETFs de Ethereum, mercado reage com cautela',
-    href: '#',
-  },
-  {
-    date: '24 jun',
-    category: 'Mercado',
-    title: 'Bitcoin testa suporte dos US$ 65 mil após saída de liquidez',
-    href: '#',
-  },
-  {
-    date: '23 jun',
-    category: 'Análise',
-    title: 'Altitude Smart Money aponta acúmulo de SOL por baleias',
-    href: '#',
-  },
 ];
 
 const TRENDING: TrendingItem[] = [
@@ -78,7 +52,16 @@ function ChangeIndicator({ percent, up }: { percent: string; up: boolean }) {
   );
 }
 
-function CryptoSections() {
+function formatArticleDate(publishedAt: string): string {
+  const d = new Date(publishedAt);
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+
+async function CryptoSections() {
+  const { articles } = await fetchCryptoNews();
+  const newsItems = articles.slice(0, 4);
+  const sourceLabel = (source: string) => source || 'Cripto';
+
   return (
     <section className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12 space-y-10">
       {/* ── Mercado Cripto ── */}
@@ -125,30 +108,34 @@ function CryptoSections() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* News list — 2/3 */}
           <div className="md:col-span-2 space-y-4">
-            {NEWS.map((item) => (
-              <Link
-                key={item.title}
-                href={item.href}
+            {newsItems.length > 0 ? newsItems.map((item) => (
+              <a
+                key={item.id}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="block rounded-lg border border-border bg-surface p-4 hover:border-primary/30 transition-colors"
               >
                 <div className="flex items-center gap-3 mb-1.5">
-                  <time className="text-xs text-on-surface-variant">{item.date}</time>
+                  <time className="text-xs text-on-surface-variant">{formatArticleDate(item.publishedAt)}</time>
                   <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">
-                    {item.category}
+                    {sourceLabel(item.source)}
                   </span>
                 </div>
                 <p className="text-sm text-on-surface font-medium leading-snug">
                   {item.title}
                 </p>
-              </Link>
-            ))}
+              </a>
+            )) : (
+              <p className="text-sm text-on-surface-variant">Nenhuma notícia disponível no momento.</p>
+            )}
           </div>
 
           {/* Trending sidebar — 1/3 */}
           <div className="rounded-lg border border-border bg-surface p-4">
             <h3 className="text-sm font-semibold text-on-surface mb-3 flex items-center gap-2">
               <span className="material-symbols-outlined text-lg text-primary">trending_up</span>
-              Trending
+              Em alta
             </h3>
             <div className="space-y-3">
               {TRENDING.map((item) => (

@@ -35,7 +35,7 @@ export async function RelatedNewsSection({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-headline-md font-semibold text-on-surface">{sectionTitle}</h2>
-          <p className="text-body-sm text-text-muted mt-1">
+          <p className="text-body-sm text-on-surface-variant mt-1">
             {ticker
               ? `Últimas matérias relacionadas a ${ticker}`
               : 'Principais notícias do mercado financeiro'}

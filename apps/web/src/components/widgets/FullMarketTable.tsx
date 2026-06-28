@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { cn } from '@/components/ui/cn';
 
 /* ── Types ── */
@@ -27,6 +27,7 @@ interface MarketRow {
 interface NewsEntry {
   time: string;
   headline: string;
+  href?: string;
 }
 
 interface RankingItem {
@@ -34,7 +35,28 @@ interface RankingItem {
   value: string;
 }
 
-/* ── Mock data ── */
+interface IndexApiItem {
+  id: string;
+  label: string;
+  value: string;
+  changePercent: string | null;
+  stale: boolean;
+}
+
+interface HighlightItem {
+  ticker: string;
+  name: string;
+  price: string;
+  changePercent: string;
+}
+
+interface NewsArticle {
+  id: string;
+  title: string;
+  source: string;
+  url: string;
+  publishedAt: string;
+}
 
 const NAV_TABS = [
   { label: 'Ações', key: 'acoes' },
@@ -45,65 +67,18 @@ const NAV_TABS = [
 
 const FILTERS = ['Todas', 'Ações', 'FIIs', 'BDRs', 'ETFs', 'Cripto'] as const;
 
-const HEADER_TICKERS: TickerValue[] = [
-  { name: 'IBOV', value: '128.452,10', changePercent: '+1,24%', trend: 'up' },
-  { name: 'S&P500', value: '5.123,40', changePercent: '-0,52%', trend: 'down' },
-  { name: 'USD/BRL', value: '4,9523', changePercent: '-0,18%', trend: 'down' },
-  { name: 'BTC/BRL', value: '345.890', changePercent: '+2,45%', trend: 'up' },
-  { name: 'DXY', value: '104,20', changePercent: '0,00%', trend: 'flat' },
-];
+function detectTrend(change: string | null): 'up' | 'down' | 'flat' {
+  if (change === null || change === '0' || change === '0,00%') return 'flat';
+  return change.startsWith('+') ? 'up' : 'down';
+}
 
-const TABLE_ROWS: MarketRow[] = [
-  { ticker: 'PETR4', fullName: 'Petrobras PN', price: 'R$ 39,45', changePercent: '+1,85%', trend: 'up', pl: '4,2', dy: '16,4%', volume: '2,1B', mktCap: '514B' },
-  { ticker: 'VALE3', fullName: 'Vale ON', price: 'R$ 62,10', changePercent: '-0,75%', trend: 'down', pl: '6,8', dy: '8,2%', volume: '1,5B', mktCap: '280B' },
-  { ticker: 'ITUB4', fullName: 'Itaú Unibanco PN', price: 'R$ 34,22', changePercent: '+0,42%', trend: 'up', pl: '8,1', dy: '6,5%', volume: '850M', mktCap: '335B' },
-  { ticker: 'BBDC4', fullName: 'Bradesco PN', price: 'R$ 14,05', changePercent: '-1,20%', trend: 'down', pl: '10,5', dy: '7,1%', volume: '620M', mktCap: '149B' },
-  { ticker: 'WEGE3', fullName: 'WEG ON', price: 'R$ 38,90', changePercent: '+2,10%', trend: 'up', pl: '32,4', dy: '1,8%', volume: '310M', mktCap: '163B' },
-  { ticker: 'MGLU3', fullName: 'Magaz Luiza ON', price: 'R$ 1,85', changePercent: '-4,63%', trend: 'down', pl: '—', dy: '0,0%', volume: '120M', mktCap: '12B' },
-  { ticker: 'EMBR3', fullName: 'Embraer ON', price: 'R$ 32,10', changePercent: '+5,42%', trend: 'up', pl: '15,2', dy: '2,1%', volume: '890M', mktCap: '58B' },
-  { ticker: 'SUZB3', fullName: 'Suzano ON', price: 'R$ 52,40', changePercent: '+3,15%', trend: 'up', pl: '8,9', dy: '5,8%', volume: '420M', mktCap: '72B' },
-  { ticker: 'BBAS3', fullName: 'Banco do Brasil ON', price: 'R$ 28,75', changePercent: '+0,85%', trend: 'up', pl: '5,1', dy: '9,5%', volume: '1,1B', mktCap: '82B' },
-  { ticker: 'JBSS3', fullName: 'JBS ON', price: 'R$ 35,20', changePercent: '-0,28%', trend: 'down', pl: '10,2', dy: '4,2%', volume: '480M', mktCap: '95B' },
-];
-
-const NEWS_ITEMS: NewsEntry[] = [
-  { time: '14:32', headline: 'COPOM mantém Selic em 14,25% ao ano, decisão unânime' },
-  { time: '13:15', headline: 'Petrobras anuncia nova política de preços para diesel' },
-  { time: '11:50', headline: 'Inflação IPCA-15 desacelera para 0,32% em maio' },
-  { time: '10:05', headline: 'Dólar recua com fluxo de exportações recorde' },
-];
-
-const TOP_GAINERS: RankingItem[] = [
-  { ticker: 'EMBR3', value: '+5,42%' },
-  { ticker: 'SUZB3', value: '+3,15%' },
-  { ticker: 'WEGE3', value: '+2,10%' },
-  { ticker: 'PRIO3', value: '+2,10%' },
-  { ticker: 'JBSS3', value: '+2,88%' },
-];
-
-const DY_RANKING: RankingItem[] = [
-  { ticker: 'PETR4', value: '16,4%' },
-  { ticker: 'BBAS3', value: '9,5%' },
-  { ticker: 'VALE3', value: '8,2%' },
-  { ticker: 'BBDC4', value: '7,1%' },
-  { ticker: 'ITUB4', value: '6,5%' },
-];
-
-const MKT_CAP_RANKING: RankingItem[] = [
-  { ticker: 'PETR4', value: '514B' },
-  { ticker: 'ITUB4', value: '335B' },
-  { ticker: 'VALE3', value: '280B' },
-  { ticker: 'WEGE3', value: '163B' },
-  { ticker: 'BBDC4', value: '149B' },
-];
-
-const REVENUE_RANKING: RankingItem[] = [
-  { ticker: 'PETR4', value: 'R$ 621B' },
-  { ticker: 'VALE3', value: 'R$ 214B' },
-  { ticker: 'JBSS3', value: 'R$ 178B' },
-  { ticker: 'ITUB4', value: 'R$ 165B' },
-  { ticker: 'BBAS3', value: 'R$ 132B' },
-];
+function formatTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return iso;
+  }
+}
 
 /* ── Shared helpers ── */
 
@@ -273,35 +248,106 @@ function RankingSubTable({
   );
 }
 
-/* ── Rankings panel ── */
-
-function RankingsPanel() {
-  return (
-    <div className="glass-panel p-4 rounded-lg">
-      <h3 className="text-sm font-semibold text-on-surface mb-3">Rankings</h3>
-      <div className="space-y-4">
-        <RankingSubTable title="Maiores DY" items={DY_RANKING} accent="text-profit" />
-        <div className="border-t border-border/40" />
-        <RankingSubTable title="Maiores Mkt Cap" items={MKT_CAP_RANKING} accent="text-on-surface-variant" />
-        <div className="border-t border-border/40" />
-        <RankingSubTable title="Maiores Receitas" items={REVENUE_RANKING} accent="text-on-surface-variant" />
-      </div>
-    </div>
-  );
-}
-
 /* ── Main component ── */
 
 export default function FullMarketTable() {
   const [activeTab, setActiveTab] = useState('acoes');
   const [activeFilter, setActiveFilter] = useState('Todas');
+  const [indices, setIndices] = useState<TickerValue[]>([]);
+  const [highlightsGainers, setHighlightsGainers] = useState<HighlightItem[]>([]);
+  const [highlightsLosers, setHighlightsLosers] = useState<HighlightItem[]>([]);
+  const [news, setNews] = useState<NewsEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [indicesRes, highlightsRes, newsRes] = await Promise.all([
+          fetch('/api/market/indices'),
+          fetch('/api/market/highlights?type=STOCK_BR&limit=10'),
+          fetch('/api/market/news?limit=4'),
+        ]);
+
+        if (indicesRes.ok) {
+          const data = await indicesRes.json();
+          if (data?.indices) {
+            setIndices(
+              data.indices.map((idx: IndexApiItem) => ({
+                name: idx.label,
+                value: idx.value,
+                changePercent: idx.changePercent ?? '—',
+                trend: detectTrend(idx.changePercent),
+              })),
+            );
+          }
+        }
+
+        if (highlightsRes.ok) {
+          const data = await highlightsRes.json();
+          if (data?.gainers) setHighlightsGainers(data.gainers);
+          if (data?.losers) setHighlightsLosers(data.losers);
+        }
+
+        if (newsRes.ok) {
+          const data = await newsRes.json();
+          if (data?.news) {
+            setNews(
+              data.news.slice(0, 4).map((article: NewsArticle) => ({
+                time: formatTime(article.publishedAt),
+                headline: article.title,
+                href: article.url,
+              })),
+            );
+          }
+        }
+      } catch {
+        // Component will show empty state
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  const tableRows = useMemo((): MarketRow[] => {
+    const gainers = (highlightsGainers ?? []).map((h) => ({
+      ticker: h.ticker,
+      fullName: h.name,
+      price: h.price,
+      changePercent: h.changePercent,
+      trend: detectTrend(h.changePercent) as 'up' | 'down' | 'flat',
+      pl: '—',
+      dy: '—',
+      volume: '—',
+      mktCap: '—',
+    }));
+    const losers = (highlightsLosers ?? []).map((h) => ({
+      ticker: h.ticker,
+      fullName: h.name,
+      price: h.price,
+      changePercent: h.changePercent,
+      trend: detectTrend(h.changePercent) as 'up' | 'down' | 'flat',
+      pl: '—',
+      dy: '—',
+      volume: '—',
+      mktCap: '—',
+    }));
+    return [...gainers, ...losers].slice(0, 10);
+  }, [highlightsGainers, highlightsLosers]);
+
+  const topGainers = useMemo((): RankingItem[] => {
+    return (highlightsGainers ?? []).slice(0, 4).map((h) => ({
+      ticker: h.ticker,
+      value: h.changePercent,
+    }));
+  }, [highlightsGainers]);
 
   return (
     <section
       className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-8 space-y-6"
       aria-label="Mercado completo"
     >
-      {/* ── 1. Quick Nav Menu ── */}
       <div
         className="flex gap-2 overflow-x-auto no-scrollbar snap-x snap-mandatory"
         role="tablist"
@@ -317,14 +363,14 @@ export default function FullMarketTable() {
         ))}
       </div>
 
-      {/* ── 2. Market Header Cards ── */}
-      <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory">
-        {HEADER_TICKERS.map((ticker) => (
-          <MarketHeaderCard key={ticker.name} {...ticker} />
-        ))}
-      </div>
+      {indices.length > 0 && (
+        <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory">
+          {indices.map((idx) => (
+            <MarketHeaderCard key={idx.name} {...idx} />
+          ))}
+        </div>
+      )}
 
-      {/* ── 3. Filter pills ── */}
       {activeTab === 'acoes' && (
         <div className="flex gap-2 overflow-x-auto no-scrollbar snap-x snap-mandatory">
           {FILTERS.map((filter) => (
@@ -344,71 +390,61 @@ export default function FullMarketTable() {
         </div>
       )}
 
-      {/* ── 4. Main Data Table + 5. Sidebar ── */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        {/* Table ─ 3/4 width */}
         <div className="xl:col-span-3 overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">
-                  Ativo
-                </th>
-                <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">
-                  Preço
-                </th>
-                <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">
-                  Var %
-                </th>
-                <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">
-                  P/L
-                </th>
-                <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">
-                  DY %
-                </th>
-                <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">
-                  Volume
-                </th>
-                <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">
-                  Mkt Cap
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {TABLE_ROWS.map((row, i) => (
-                <TableRow key={row.ticker} row={row} index={i} />
+          {loading ? (
+            <div className="flex flex-col gap-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-12 rounded-lg bg-surface-muted animate-pulse" />
               ))}
-            </tbody>
-          </table>
+            </div>
+          ) : tableRows.length === 0 ? (
+            <p className="text-sm text-on-surface-variant py-8 text-center">Nenhum dado disponível no momento.</p>
+          ) : (
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">Ativo</th>
+                  <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">Preço</th>
+                  <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">Var %</th>
+                  <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">P/L</th>
+                  <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">DY %</th>
+                  <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">Volume</th>
+                  <th className="text-caption text-on-surface-variant uppercase tracking-wide font-medium py-3 px-2 whitespace-nowrap">Valor de Mercado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tableRows.map((row, i) => (
+                  <TableRow key={row.ticker} row={row} index={i} />
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
-        {/* Sidebar ─ 1/4 width */}
         <div className="space-y-4">
           {/* Maiores Altas */}
           <div className="glass-panel p-4 rounded-lg">
             <h3 className="text-sm font-semibold text-on-surface mb-3">Maiores Altas</h3>
-            <div className="space-y-2">
-              {TOP_GAINERS.slice(0, 4).map((item) => (
-                <div key={item.ticker} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-outline w-4">
-                      {TOP_GAINERS.indexOf(item) + 1}
-                    </span>
-                    <span className="font-mono text-xs text-on-surface font-semibold">
-                      {item.ticker}
-                    </span>
+            {topGainers.length > 0 ? (
+              <div className="space-y-2">
+                {topGainers.map((item, i) => (
+                  <div key={item.ticker} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs text-outline w-4">{i + 1}</span>
+                      <span className="font-mono text-xs text-on-surface font-semibold">{item.ticker}</span>
+                    </div>
+                    <span className="font-mono text-xs text-profit">{item.value}</span>
                   </div>
-                  <span className="font-mono text-xs text-profit">{item.value}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-on-surface-variant">Carregando...</p>
+            )}
           </div>
 
           {/* Notícias Urgentes */}
-          <NewsSidebar items={NEWS_ITEMS} />
-
-          {/* Rankings */}
-          <RankingsPanel />
+          {news.length > 0 && <NewsSidebar items={news} />}
         </div>
       </div>
     </section>

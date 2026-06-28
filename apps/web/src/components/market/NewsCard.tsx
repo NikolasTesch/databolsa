@@ -46,7 +46,7 @@ export function NewsCard({ article }: NewsCardProps) {
         </h3>
 
         {article.summary && (
-          <p className="text-caption text-text-muted line-clamp-3 flex-1">
+          <p className="text-caption text-on-surface-variant line-clamp-3 flex-1">
             {article.summary}
           </p>
         )}
@@ -54,7 +54,7 @@ export function NewsCard({ article }: NewsCardProps) {
         <div className="flex items-center justify-between mt-auto pt-2">
           <time
             dateTime={article.publishedAt}
-            className="text-caption text-text-muted flex-shrink-0"
+            className="text-caption text-on-surface-variant flex-shrink-0"
           >
             {formatDate(article.publishedAt)}
           </time>

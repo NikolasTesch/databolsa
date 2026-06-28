@@ -34,7 +34,7 @@ export function TransactionTable({ transactions, assetId }: TransactionTableProp
 
   if (transactions.length === 0) {
     return (
-      <p className="py-6 text-center text-sm text-content-muted">
+      <p className="py-6 text-center text-sm text-on-surface-variant">
         Nenhuma transação registrada.
       </p>
     );
@@ -44,7 +44,7 @@ export function TransactionTable({ transactions, assetId }: TransactionTableProp
     <div className="overflow-x-auto rounded-xl border border-border">
       <table className="w-full text-sm" aria-label="Transações do ativo">
         <thead>
-          <tr className="border-b border-border bg-surface-muted text-xs font-medium uppercase tracking-wider text-content-subtle">
+          <tr className="border-b border-border bg-surface-muted text-xs font-medium uppercase tracking-wider text-outline">
             <th className="px-4 py-3 text-left">Tipo</th>
             <th className="px-4 py-3 text-left">Data</th>
             <th className="px-4 py-3 text-right">Qtd</th>
@@ -68,16 +68,16 @@ export function TransactionTable({ transactions, assetId }: TransactionTableProp
                   {tx.type === 'BUY' ? 'Compra' : 'Venda'}
                 </span>
               </td>
-              <td className="px-4 py-3 text-content">
+              <td className="px-4 py-3 text-on-surface">
                 {new Date(tx.date).toLocaleDateString('pt-BR')}
               </td>
-              <td className="px-4 py-3 text-right font-mono tabular-nums text-content">
+              <td className="px-4 py-3 text-right font-mono tabular-nums text-on-surface">
                 {formatQty(tx.quantity)}
               </td>
-              <td className="px-4 py-3 text-right font-mono tabular-nums text-content">
+              <td className="px-4 py-3 text-right font-mono tabular-nums text-on-surface">
                 {formatBRL(tx.unit_price)}
               </td>
-              <td className="px-4 py-3 text-right font-mono tabular-nums text-content-muted">
+              <td className="px-4 py-3 text-right font-mono tabular-nums text-on-surface-variant">
                 {tx.fees ? formatBRL(tx.fees) : '—'}
               </td>
               <td className="px-4 py-3 text-right">

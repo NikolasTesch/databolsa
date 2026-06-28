@@ -151,5 +151,84 @@ export async function fetchTickerNews(ticker: string): Promise<{ articles: NewsA
   }
 }
 
+const CRYPTO_KEYWORDS = ['bitcoin', 'ethereum', 'solana', 'crypto', 'blockchain', 'defi', 'altcoin', 'btc', 'eth', 'token'];
+
+/**
+ * Fetch crypto/cripto news from Finnhub (category=crypto).
+ * Falls back to filtered general news on failure.
+ */
+export async function fetchCryptoNews(): Promise<{ articles: NewsArticle[]; cached: boolean }> {
+  const cacheKey = 'news:crypto';
+
+  const hit = newsCache.get(cacheKey);
+  if (hit) {
+    return { articles: hit, cached: true };
+  }
+
+  try {
+    const token = getToken();
+    const url = `https://finnhub.io/api/v1/news?category=crypto&token=${token}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+
+    if (!res.ok) throw new Error(`Finnhub crypto returned ${res.status}`);
+
+    const raw: FinnhubArticle[] = await res.json();
+    const articles = (Array.isArray(raw) ? raw : []).map(normalizeArticle);
+
+    if (articles.length > 0) {
+      newsCache.set(cacheKey, articles);
+      return { articles, cached: false };
+    }
+  } catch (err) {
+    console.warn(`[news.service] Finnhub crypto error: ${String(err)}. Filtering general news.`);
+  }
+
+  const general = await fetchGeneralNews();
+  const fallback = general.articles.filter((a) =>
+    CRYPTO_KEYWORDS.some((kw) =>
+      a.title.toLowerCase().includes(kw),
+    ),
+  );
+
+  if (fallback.length > 0) {
+    newsCache.set(cacheKey, fallback);
+    return { articles: fallback, cached: false };
+  }
+
+  return { articles: NEWS_FALLBACK, cached: false };
+}
+
+const DIVIDEND_KEYWORDS = [
+  'dividend', 'provento', 'JCP', 'juros sobre capital',
+  'yield', 'rendimento', 'distribuição', 'proventos',
+  'dividendo', 'DY', 'data-com', 'data com',
+];
+
+/**
+ * Fetch dividend/proventos news by filtering Finnhub general news.
+ */
+export async function fetchDividendsNews(): Promise<{ articles: NewsArticle[]; cached: boolean }> {
+  const cacheKey = 'news:dividends';
+
+  const hit = newsCache.get(cacheKey);
+  if (hit) {
+    return { articles: hit, cached: true };
+  }
+
+  const general = await fetchGeneralNews();
+  const dividendArticles = general.articles.filter((a) =>
+    DIVIDEND_KEYWORDS.some((kw) =>
+      a.title.toLowerCase().includes(kw) || a.summary.toLowerCase().includes(kw),
+    ),
+  );
+
+  if (dividendArticles.length > 0) {
+    newsCache.set(cacheKey, dividendArticles);
+    return { articles: dividendArticles, cached: false };
+  }
+
+  return { articles: NEWS_FALLBACK, cached: false };
+}
+
 /** Expose cache for testing — do not use in production code */
 export { newsCache as _newsCache };

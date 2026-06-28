@@ -39,7 +39,9 @@ export default async function PublicHomePage() {
       </Suspense>
 
       {/* Dividends */}
-      <DividendsSection />
+      <Suspense fallback={<div className="flex justify-center py-12"><Spinner size="md" /></div>}>
+        <DividendsSection />
+      </Suspense>
 
       {/* Tools */}
       <ToolsSection />

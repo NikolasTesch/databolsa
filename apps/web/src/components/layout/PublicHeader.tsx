@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { SearchBar } from '@/components/market/SearchBar';
+import { ThemeToggle } from './ThemeToggle';
 
 interface PublicHeaderProps {
   isAuthenticated: boolean;
 }
 
 const NAV_ITEMS = [
-  { label: 'Home', href: '/' },
+  { label: 'Início', href: '/' },
   { label: 'Mercados', href: '/#mercados' },
   { label: 'Dividendos', href: '/#dividendos' },
   { label: 'Cripto', href: '/#cripto' },
@@ -59,6 +60,8 @@ export function PublicHeader({ isAuthenticated }: PublicHeaderProps) {
             <div className="hidden lg:block w-64">
               <SearchBar variant="compact" />
             </div>
+
+            <ThemeToggle />
 
             <div className="flex items-center gap-2 border-l border-border pl-4">
               {isAuthenticated ? (

@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode } from 'react';
+import { ThemeToggle } from './ThemeToggle';
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -23,7 +24,10 @@ export function Topbar({ onMenuClick, title, actions }: TopbarProps) {
         {title && <h1 className="text-base font-semibold text-on-surface lg:text-lg">{title}</h1>}
       </div>
 
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      <div className="flex items-center gap-4">
+        {actions && <div className="flex items-center gap-2">{actions}</div>}
+        <ThemeToggle />
+      </div>
     </header>
   );
 }
