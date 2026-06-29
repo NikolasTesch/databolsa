@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { SearchBar } from '@/components/market/SearchBar';
 import { ThemeToggle } from './ThemeToggle';
+import { BrandLogo } from './BrandLogo';
 
 interface PublicHeaderProps {
   isAuthenticated: boolean;
@@ -27,11 +28,8 @@ export function PublicHeader({ isAuthenticated }: PublicHeaderProps) {
         <div className="flex items-center justify-between h-16">
           {/* Left: brand + nav */}
           <div className="flex items-center gap-8">
-            <Link
-              href="/"
-              className="font-sans text-headline-md font-bold tracking-tight text-primary"
-            >
-              databolsa
+            <Link href="/">
+              <BrandLogo textClassName="text-headline-md font-bold tracking-tight" />
             </Link>
 
             {/* Desktop nav */}

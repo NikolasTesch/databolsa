@@ -51,7 +51,7 @@ export default function ToolsSection() {
     <section className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12">
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-on-surface">Ferramentas Analíticas</h2>
-        <p className="text-sm text-on-surface-muted mt-1">
+        <p className="text-sm text-on-surface-variant mt-1">
           Tudo que você precisa para analisar e gerenciar seus investimentos
         </p>
       </div>
@@ -69,7 +69,7 @@ export default function ToolsSection() {
             <h3 className="text-base font-semibold text-on-surface mt-3">
               {tool.title}
             </h3>
-            <p className="text-sm text-on-surface-muted mt-1 flex-1">
+            <p className="text-sm text-on-surface-variant mt-1 flex-1">
               {tool.description}
             </p>
             <span className="text-sm text-primary mt-3 inline-flex items-center gap-1">
@@ -82,7 +82,7 @@ export default function ToolsSection() {
       <div className="flex justify-center mt-8">
         <Link
           href="/ferramentas"
-          className="inline-flex items-center gap-2 text-sm text-on-surface-muted hover:text-on-surface transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors"
         >
           <span className="material-symbols-outlined text-lg">grid_view</span>
           Ver todas as ferramentas

@@ -1,0 +1,123 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - link "databolsa" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]:
+            - img [ref=e9]
+            - generic [ref=e15]: databolsa
+        - navigation [ref=e16]:
+          - link "Início" [ref=e17] [cursor=pointer]:
+            - /url: /
+          - link "Mercados" [ref=e18] [cursor=pointer]:
+            - /url: /#mercados
+          - link "Dividendos" [ref=e19] [cursor=pointer]:
+            - /url: /#dividendos
+          - link "Cripto" [ref=e20] [cursor=pointer]:
+            - /url: /#cripto
+          - link "Ferramentas" [ref=e21] [cursor=pointer]:
+            - /url: /ferramentas
+          - link "Cursos" [ref=e22] [cursor=pointer]:
+            - /url: /#cursos
+      - generic [ref=e23]:
+        - generic [ref=e26]:
+          - img [ref=e28]
+          - combobox "Buscar ativo..." [ref=e30]
+        - button "Ativar modo claro" [ref=e31] [cursor=pointer]:
+          - generic [ref=e32]: light_mode
+        - generic [ref=e33]:
+          - link "Entrar" [ref=e34] [cursor=pointer]:
+            - /url: /login
+          - link "Criar conta" [ref=e35] [cursor=pointer]:
+            - /url: /register
+  - main [ref=e36]:
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e40]: compare_arrows
+        - generic [ref=e41]:
+          - heading "Comparador de Ativos" [level=1] [ref=e42]
+          - paragraph [ref=e43]: Selecione até 4 ativos e compare indicadores fundamentalistas como P/L, P/VP, DY, ROE, margem líquida e endividamento lado a lado.
+      - generic [ref=e45]:
+        - generic [ref=e46]:
+          - generic [ref=e47]: compare_arrows
+          - heading "Comparador de Ativos" [level=2] [ref=e48]
+        - paragraph [ref=e50]: Compare indicadores fundamentalistas de até 4 ativos lado a lado para tomar decisões mais informadas.
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - generic [ref=e53]: Ativo 1
+            - 'textbox "ex: PETR4" [ref=e54]'
+          - generic [ref=e55]:
+            - generic [ref=e56]: Ativo 2
+            - 'textbox "ex: VALE3" [ref=e57]'
+          - generic [ref=e58]:
+            - generic [ref=e59]: Ativo 3
+            - 'textbox "ex: ITUB4" [ref=e60]'
+          - generic [ref=e61]:
+            - generic [ref=e62]: Ativo 4
+            - 'textbox "ex: BBAS3" [ref=e63]'
+        - button "compare_arrows Comparar" [disabled] [ref=e64]:
+          - generic [ref=e65]: compare_arrows
+          - text: Comparar
+  - contentinfo [ref=e66]:
+    - generic [ref=e67]:
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - img [ref=e71]
+            - generic [ref=e77]: databolsa
+          - paragraph [ref=e78]: Acompanhamento de patrimônio em investimentos com lançamento manual de operações e consolidação em BRL.
+        - generic [ref=e79]:
+          - heading "Mercado" [level=3] [ref=e80]
+          - list [ref=e81]:
+            - listitem [ref=e82]:
+              - link "Ações" [ref=e83] [cursor=pointer]:
+                - /url: /?type=STOCK_BR
+            - listitem [ref=e84]:
+              - link "FIIs" [ref=e85] [cursor=pointer]:
+                - /url: /?type=FII
+            - listitem [ref=e86]:
+              - link "ETFs" [ref=e87] [cursor=pointer]:
+                - /url: /?type=ETF
+            - listitem [ref=e88]:
+              - link "BDRs" [ref=e89] [cursor=pointer]:
+                - /url: /?type=BDR
+            - listitem [ref=e90]:
+              - link "Crypto" [ref=e91] [cursor=pointer]:
+                - /url: /?type=CRYPTO
+            - listitem [ref=e92]:
+              - link "Stocks US" [ref=e93] [cursor=pointer]:
+                - /url: /?type=STOCK_US
+        - generic [ref=e94]:
+          - heading "Ferramentas" [level=3] [ref=e95]
+          - list [ref=e96]:
+            - listitem [ref=e97]:
+              - link "Conversor de Moedas" [ref=e98] [cursor=pointer]:
+                - /url: /ferramentas
+            - listitem [ref=e99]:
+              - link "Simulador" [ref=e100] [cursor=pointer]:
+                - /url: /ferramentas
+            - listitem [ref=e101]:
+              - link "Calculadora IR" [ref=e102] [cursor=pointer]:
+                - /url: /ferramentas
+            - listitem [ref=e103]:
+              - link "Análise de Índices" [ref=e104] [cursor=pointer]:
+                - /url: /ferramentas
+        - generic [ref=e105]:
+          - heading "Institucional" [level=3] [ref=e106]
+          - list [ref=e107]:
+            - listitem [ref=e108]:
+              - link "Termos de Uso" [ref=e109] [cursor=pointer]:
+                - /url: /termos
+            - listitem [ref=e110]:
+              - link "Privacidade" [ref=e111] [cursor=pointer]:
+                - /url: /privacidade
+            - listitem [ref=e112]:
+              - link "Compliance" [ref=e113] [cursor=pointer]:
+                - /url: /compliance
+            - listitem [ref=e114]:
+              - link "Ajuda" [ref=e115] [cursor=pointer]:
+                - /url: /ajuda
+      - generic [ref=e116]:
+        - paragraph [ref=e117]: © 2026 databolsa. Todos os direitos reservados.
+        - paragraph [ref=e118]: "Aviso: O conteúdo apresentado neste site tem caráter meramente informativo e educacional, não constituindo recomendação de investimento."

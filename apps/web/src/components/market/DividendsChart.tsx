@@ -42,13 +42,13 @@ export function DividendsChart({ data }: DividendsChartProps) {
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #e2e8f0)" vertical={false} />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 11, fontFamily: 'sans-serif', fill: 'var(--color-content-muted, #6b7280)' }}
+          tick={{ fontSize: 11, fontFamily: 'sans-serif', fill: 'var(--color-text-muted, #6b7280)' }}
           tickLine={false}
           axisLine={{ stroke: 'var(--color-border, #e2e8f0)' }}
         />
         <YAxis
           tickFormatter={(val) => `R$ ${formatPrice(val)}`}
-          tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--color-content-muted, #6b7280)' }}
+          tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--color-text-muted, #6b7280)' }}
           width={80}
           tickLine={false}
           axisLine={false}
@@ -65,12 +65,12 @@ export function DividendsChart({ data }: DividendsChartProps) {
             borderRadius: '6px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             fontSize: 12,
-            color: 'var(--color-content, #1e293b)'
+            color: 'var(--color-text, #1e293b)'
           }}
         />
         <Bar
           dataKey="value"
-          fill="#16a34a"
+          fill="var(--color-success)"
           radius={[4, 4, 0, 0]}
           maxBarSize={40}
         />

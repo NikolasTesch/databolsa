@@ -68,6 +68,7 @@ export async function fetchInvestNewsArticles(): Promise<NewsArticle[]> {
     // Split into <item> blocks
     const itemRegex = /<item>([\s\S]*?)<\/item>/g;
     const articles: NewsArticle[] = [];
+    const seenUrls = new Set<string>();
     let match: RegExpExecArray | null;
 
     while ((match = itemRegex.exec(xml)) !== null) {
@@ -94,8 +95,12 @@ export async function fetchInvestNewsArticles(): Promise<NewsArticle[]> {
         }
       }
 
-      // Use guid as ID; strip the domain prefix if present
-      const id = `investnews-${guid.replace('https://investnews.com.br/?p=', '')}`;
+      // Skip duplicate URLs (RSS feed occasionally returns the same article twice)
+      if (seenUrls.has(link)) continue;
+      seenUrls.add(link);
+
+      // Use URL as unique ID (hash the full URL for stability)
+      const id = `investnews-${Buffer.from(link).toString('base64url')}`;
 
       articles.push({
         id,

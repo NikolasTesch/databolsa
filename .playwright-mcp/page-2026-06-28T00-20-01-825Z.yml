@@ -1,0 +1,561 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - link "databolsa" [ref=e7] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e8]:
+              - img [ref=e9]
+              - generic [ref=e15]: databolsa
+          - navigation [ref=e16]:
+            - link "Início" [ref=e17] [cursor=pointer]:
+              - /url: /
+            - link "Mercados" [ref=e18] [cursor=pointer]:
+              - /url: /#mercados
+            - link "Dividendos" [ref=e19] [cursor=pointer]:
+              - /url: /#dividendos
+            - link "Cripto" [ref=e20] [cursor=pointer]:
+              - /url: /#cripto
+            - link "Ferramentas" [ref=e21] [cursor=pointer]:
+              - /url: /ferramentas
+            - link "Cursos" [ref=e22] [cursor=pointer]:
+              - /url: /#cursos
+        - generic [ref=e23]:
+          - generic [ref=e26]:
+            - img [ref=e28]
+            - combobox "Buscar ativo..." [ref=e30]
+          - button "Ativar modo claro" [ref=e31] [cursor=pointer]:
+            - generic [ref=e32]: light_mode
+          - generic [ref=e33]:
+            - link "Entrar" [ref=e34] [cursor=pointer]:
+              - /url: /login
+            - link "Criar conta" [ref=e35] [cursor=pointer]:
+              - /url: /register
+    - main [ref=e36]:
+      - region "Busca de ativos" [ref=e37]:
+        - generic:
+          - generic: +2.4%
+          - generic: "-0.7%"
+          - generic: +1.1%
+          - generic: +3.2%
+          - generic: "-1.3%"
+          - generic: +0.9%
+          - generic: +4.0%
+          - generic: "-0.5%"
+        - generic [ref=e39]:
+          - generic [ref=e40]: Mercado em tempo real · B3, Cripto, Stocks US
+          - heading "Análise de ativos e acompanhamento de carteira" [level=1] [ref=e44]
+          - paragraph [ref=e45]: B3, criptos, stocks americanos e muito mais.
+          - generic [ref=e48]:
+            - img [ref=e50]
+            - 'combobox "Pesquise por ticker ou nome... ex: PETR4, Bitcoin" [ref=e52]'
+          - generic [ref=e53]:
+            - generic [ref=e54]: "Mais buscados:"
+            - link "PETR4" [ref=e55] [cursor=pointer]:
+              - /url: /ativos/PETR4?class=STOCK_BR
+            - link "VALE3" [ref=e56] [cursor=pointer]:
+              - /url: /ativos/VALE3?class=STOCK_BR
+            - link "ITUB4" [ref=e57] [cursor=pointer]:
+              - /url: /ativos/ITUB4?class=STOCK_BR
+            - link "BBDC4" [ref=e58] [cursor=pointer]:
+              - /url: /ativos/BBDC4?class=STOCK_BR
+            - link "BTC" [ref=e59] [cursor=pointer]:
+              - /url: /ativos/BTC?class=CRYPTO
+            - link "AAPL" [ref=e60] [cursor=pointer]:
+              - /url: /ativos/AAPL?class=STOCK_US
+      - region "Destaques do mercado" [ref=e61]:
+        - tablist "Classe de ativo" [ref=e62]:
+          - tab "Ações" [selected] [ref=e63] [cursor=pointer]
+          - tab "FIIs" [ref=e64] [cursor=pointer]
+          - tab "BDRs" [ref=e65] [cursor=pointer]
+          - tab "ETFs" [ref=e66] [cursor=pointer]
+          - tab "Cripto" [ref=e67] [cursor=pointer]
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - generic [ref=e70]:
+              - generic [ref=e71]:
+                - generic [ref=e72]: trending_up
+                - heading "Maiores Altas" [level=3] [ref=e73]
+              - link "Ver todos" [ref=e74] [cursor=pointer]:
+                - /url: /ativos?sort=change
+            - generic [ref=e75]:
+              - generic [ref=e76]:
+                - generic [ref=e77]: TO
+                - generic [ref=e78]:
+                  - generic [ref=e79]: TOTS3
+                  - generic [ref=e80]: TOTVS S.A. · R$ 28.69
+                - generic [ref=e81]: "5.63"
+              - generic [ref=e82]:
+                - generic [ref=e83]: LR
+                - generic [ref=e84]:
+                  - generic [ref=e85]: LREN3
+                  - generic [ref=e86]: Lojas Renner S.A. · R$ 14.97
+                - generic [ref=e87]: "3.1"
+              - generic [ref=e88]:
+                - generic [ref=e89]: AB
+                - generic [ref=e90]:
+                  - generic [ref=e91]: ABEV3
+                  - generic [ref=e92]: Ambev SA · R$ 16.73
+                - generic [ref=e93]: "2.07"
+              - generic [ref=e94]:
+                - generic [ref=e95]: VI
+                - generic [ref=e96]:
+                  - generic [ref=e97]: VIIA3
+                  - generic [ref=e98]: Grupo Casas Bahia S.A. · R$ 1.13
+                - generic [ref=e99]: "1.8"
+          - generic [ref=e100]:
+            - generic [ref=e101]:
+              - generic [ref=e102]:
+                - generic [ref=e103]: trending_down
+                - heading "Maiores Baixas" [level=3] [ref=e104]
+              - link "Ver todos" [ref=e105] [cursor=pointer]:
+                - /url: /ativos?sort=change_asc
+            - generic [ref=e106]:
+              - generic [ref=e107]:
+                - generic [ref=e108]: PE
+                - generic [ref=e109]:
+                  - generic [ref=e110]: PETR4
+                  - generic [ref=e111]: Petroleo Brasileiro SA Pfd · R$ 38.06
+                - generic [ref=e112]: "-1.01"
+              - generic [ref=e113]:
+                - generic [ref=e114]: VA
+                - generic [ref=e115]:
+                  - generic [ref=e116]: VALE3
+                  - generic [ref=e117]: Vale S.A. · R$ 78.15
+                - generic [ref=e118]: "-0.65"
+              - generic [ref=e119]:
+                - generic [ref=e120]: TA
+                - generic [ref=e121]:
+                  - generic [ref=e122]: TAEE11
+                  - generic [ref=e123]: Transmissora Alianca De Energia Eletrica S.A. Unit · R$ 39.72
+                - generic [ref=e124]: "-0.4"
+      - region "Notícias do Mercado" [ref=e125]:
+        - generic [ref=e127]:
+          - heading "Notícias do Mercado" [level=2] [ref=e128]
+          - paragraph [ref=e129]: Principais notícias do mercado financeiro
+        - generic [ref=e130]:
+          - link "US carries out fresh strikes against Iran after tanker struck in Hormuz, escalating hostilities - Reuters" [ref=e131] [cursor=pointer]:
+            - /url: https://news.google.com/rss/articles/CBMizwFBVV95cUxOa1VBd0lTLXNIN1ZWWnpuTUVydFpzcmdpU2ZnRFRjVlk2djhWNk1HNi1Hd1V4Q3d4czhkOHE3TzdmQ045Wkl2bUktNURLTTdNU1ZJZGhKbDd5YnY3RXZCak5OTXZNTVM1V1lpM0F1WG9tOTJOYy1zRUY4VG8wazNTU29wRFh5clkzMnFxeWdBWUdyVk1GVmhWUDRmT3E5WTJkSmlaWFJWYk5RUXQ3QnRiTWUyRE81T0d1ODhYSDJEM0FTNUxBZXFmbGtoX3F4SkE?oc=5
+            - generic [ref=e132]: Reuters
+            - generic [ref=e133]:
+              - heading "US carries out fresh strikes against Iran after tanker struck in Hormuz, escalating hostilities - Reuters" [level=3] [ref=e134]
+              - paragraph [ref=e135]: US carries out fresh strikes against Iran after tanker struck in Hormuz, escalating hostilities Reuters
+              - time [ref=e137]: 27 de jun. de 2026
+          - link "Por que as ações de IA caíram e arrastaram outras apostas de Wall Street" [ref=e138] [cursor=pointer]:
+            - /url: https://investnews.com.br/investimentos/por-que-as-acoes-de-ia-cairam-e-arrastaram-outras-apostas-de-wall-street/
+            - generic [ref=e139]: InvestNews
+            - generic [ref=e140]:
+              - heading "Por que as ações de IA caíram e arrastaram outras apostas de Wall Street" [level=3] [ref=e141]
+              - paragraph [ref=e142]: <![CDATA[A saída de investidores de fabricantes de chips atingiu fundos ligados à SpaceX, ao Bitcoin e a ações de tecnologia]]>
+              - time [ref=e144]: 26 de jun. de 2026
+          - link "Tanker struck in Hormuz as Iran, US trade attacks in worst escalation since peace deal - Reuters" [ref=e145] [cursor=pointer]:
+            - /url: https://news.google.com/rss/articles/CBMiuwFBVV95cUxOamVFR0VfZVlNU01BWjNWakdNczVUSHAzNWFlM0J3MGV1b0ZmbldmdnhQUHVpLTNabjVZSG5tSDJ0RDlQREk0emJnT3ZGbjFEZjVpTEt2UDgxOXpMdWV3dTIzX1ZtQVNpeUdDRVplMkUxd0FVNzNPTEFwZ3BVSUo4SG1BcHFDeEdYS2tIM3RUaWpZNEtyeWlub0h5c29pNjJmdDZ6Y2tha2hKWkNGa3Y0Y2JNYnk4ZWJuUlk4?oc=5
+            - generic [ref=e146]: Reuters
+            - generic [ref=e147]:
+              - heading "Tanker struck in Hormuz as Iran, US trade attacks in worst escalation since peace deal - Reuters" [level=3] [ref=e148]
+              - paragraph [ref=e149]: Tanker struck in Hormuz as Iran, US trade attacks in worst escalation since peace deal Reuters
+              - time [ref=e151]: 27 de jun. de 2026
+          - link "O que vai acontecer com as debêntures e CRAs da Braskem agora, com a proteção contra credores?" [ref=e152] [cursor=pointer]:
+            - /url: https://investnews.com.br/investimentos/o-que-vai-acontecer-com-as-debentures-e-cras-da-braskem-agora-com-protecao-contra-credores/
+            - generic [ref=e153]: InvestNews
+            - generic [ref=e154]:
+              - heading "O que vai acontecer com as debêntures e CRAs da Braskem agora, com a proteção contra credores?" [level=3] [ref=e155]
+              - paragraph [ref=e156]: <![CDATA[Tutela cautelar pedida pela Braskem "congela" pagamentos a credores por dois meses]]>
+              - time [ref=e158]: 26 de jun. de 2026
+          - link "Hezbollah rejects US-brokered Israel-Lebanon security deal as 'surrender' - Reuters" [ref=e159] [cursor=pointer]:
+            - /url: https://news.google.com/rss/articles/CBMivAFBVV95cUxNMUlLNE8zdUhsWi1UT2xqU2F4aFdsNlpQUzlUdUlMQ19wNXFJaEpibm9ZVXlsS09xd3llRXYtd09uX2NKNzBIX0lHNlRVS2owX3pFcjlXcUU5YXNJeDRkbWNacXBaa0tSdjlCaW5BV0RJbDhXQU13ZWtWM0lHd3Y4bE43V3E3eEhlenlVc204MHZwOE5aOGFscmdvTUFMV2FpTUtPWjlZS2VEMEJfVTJWS1cycXA1RVFWMWszUg?oc=5
+            - generic [ref=e160]: Reuters
+            - generic [ref=e161]:
+              - heading "Hezbollah rejects US-brokered Israel-Lebanon security deal as 'surrender' - Reuters" [level=3] [ref=e162]
+              - paragraph [ref=e163]: Hezbollah rejects US-brokered Israel-Lebanon security deal as 'surrender' Reuters
+              - time [ref=e165]: 27 de jun. de 2026
+          - link "BC decreta liquidação extrajudicial da Sefer Investimentos, ligada ao caso Master" [ref=e166] [cursor=pointer]:
+            - /url: https://investnews.com.br/negocios/bc-decreta-liquidacao-extrajudicial-da-sefer-investimentos-ligada-ao-caso-master/
+            - generic [ref=e167]: InvestNews
+            - generic [ref=e168]:
+              - heading "BC decreta liquidação extrajudicial da Sefer Investimentos, ligada ao caso Master" [level=3] [ref=e169]
+              - paragraph [ref=e170]: <![CDATA[A Sefer é a oitava empresa ligada ao ecossistema do Banco Master a ser liquidada pelo Banco Central desde novembro de 2025]]>
+              - time [ref=e172]: 26 de jun. de 2026
+      - region "Dividendos e proventos" [ref=e173]:
+        - generic [ref=e174]:
+          - generic [ref=e175]:
+            - heading "Agenda de Dividendos" [level=2] [ref=e176]
+            - link "Ver agenda completa" [ref=e177] [cursor=pointer]:
+              - /url: /proventos/agenda
+          - table [ref=e179]:
+            - rowgroup [ref=e180]:
+              - row "Ativo Tipo Data Com Pagamento Valor (R$) Yield" [ref=e181]:
+                - columnheader "Ativo" [ref=e182]
+                - columnheader "Tipo" [ref=e183]
+                - columnheader "Data Com" [ref=e184]
+                - columnheader "Pagamento" [ref=e185]
+                - columnheader "Valor (R$)" [ref=e186]
+                - columnheader "Yield" [ref=e187]
+            - rowgroup [ref=e188]:
+              - row "BB BBAS3 JCP 12/06/2026 30/06/2026 1,5000 1,2%" [ref=e189]:
+                - cell "BB BBAS3" [ref=e190]:
+                  - generic [ref=e191]:
+                    - generic [ref=e192]: BB
+                    - generic [ref=e193]: BBAS3
+                - cell "JCP" [ref=e194]:
+                  - generic [ref=e195]: JCP
+                - cell "12/06/2026" [ref=e196]
+                - cell "30/06/2026" [ref=e197]
+                - cell "1,5000" [ref=e198]
+                - cell "1,2%" [ref=e199]
+              - row "IT ITUB4 Dividendo 10/06/2026 25/06/2026 0,8500 0,8%" [ref=e200]:
+                - cell "IT ITUB4" [ref=e201]:
+                  - generic [ref=e202]:
+                    - generic [ref=e203]: IT
+                    - generic [ref=e204]: ITUB4
+                - cell "Dividendo" [ref=e205]:
+                  - generic [ref=e206]: Dividendo
+                - cell "10/06/2026" [ref=e207]
+                - cell "25/06/2026" [ref=e208]
+                - cell "0,8500" [ref=e209]
+                - cell "0,8%" [ref=e210]
+              - row "EG EGIE3 Dividendo 05/06/2026 20/06/2026 1,2000 1,5%" [ref=e211]:
+                - cell "EG EGIE3" [ref=e212]:
+                  - generic [ref=e213]:
+                    - generic [ref=e214]: EG
+                    - generic [ref=e215]: EGIE3
+                - cell "Dividendo" [ref=e216]:
+                  - generic [ref=e217]: Dividendo
+                - cell "05/06/2026" [ref=e218]
+                - cell "20/06/2026" [ref=e219]
+                - cell "1,2000" [ref=e220]
+                - cell "1,5%" [ref=e221]
+        - generic [ref=e222]:
+          - heading "Últimas sobre Proventos" [level=2] [ref=e224]
+          - generic [ref=e225]:
+            - link "InvestNews BB Seguridade aprova R$ 3,85 bilhões em dividendos referentes ao primeiro semestre Há 3 dias" [ref=e226] [cursor=pointer]:
+              - /url: https://investnews.com.br/investimentos/bb-seguridade-dividendos-1s-26/
+              - generic [ref=e227]: InvestNews
+              - heading "BB Seguridade aprova R$ 3,85 bilhões em dividendos referentes ao primeiro semestre" [level=3] [ref=e228]
+              - generic [ref=e229]: Há 3 dias
+            - link "CNBC JPMorgan Chase unveils $50 billion buyback, Goldman Sachs raises dividend after Fed stress test Há 3 dias" [ref=e230] [cursor=pointer]:
+              - /url: https://www.cnbc.com/2026/06/24/jpmorgan-goldman-sachs-fed-stress-test.html
+              - generic [ref=e231]: CNBC
+              - heading "JPMorgan Chase unveils $50 billion buyback, Goldman Sachs raises dividend after Fed stress test" [level=3] [ref=e232]
+              - generic [ref=e233]: Há 3 dias
+      - generic [ref=e234]:
+        - generic [ref=e235]:
+          - heading "Ferramentas Analíticas" [level=2] [ref=e236]
+          - paragraph [ref=e237]: Tudo que você precisa para analisar e gerenciar seus investimentos
+        - generic [ref=e238]:
+          - link "query_stats Screener Avançado Filtre ações e FIIs com 200+ indicadores Acessar →" [ref=e239] [cursor=pointer]:
+            - /url: /ferramentas/screener
+            - generic [ref=e240]: query_stats
+            - heading "Screener Avançado" [level=3] [ref=e241]
+            - paragraph [ref=e242]: Filtre ações e FIIs com 200+ indicadores
+            - generic [ref=e243]: Acessar →
+          - link "pie_chart Simulador de Carteira Teste estratégias de alocação Acessar →" [ref=e244] [cursor=pointer]:
+            - /url: /ferramentas/simulador
+            - generic [ref=e245]: pie_chart
+            - heading "Simulador de Carteira" [level=3] [ref=e246]
+            - paragraph [ref=e247]: Teste estratégias de alocação
+            - generic [ref=e248]: Acessar →
+          - link "balance Calculadora de IR Automatize apuração de lucros/prejuízos Acessar →" [ref=e249] [cursor=pointer]:
+            - /url: /ferramentas/calculadora-ir
+            - generic [ref=e250]: balance
+            - heading "Calculadora de IR" [level=3] [ref=e251]
+            - paragraph [ref=e252]: Automatize apuração de lucros/prejuízos
+            - generic [ref=e253]: Acessar →
+          - link "candlestick_chart Gráficos Interativos Análise técnica avançada Acessar →" [ref=e254] [cursor=pointer]:
+            - /url: /ferramentas/graficos
+            - generic [ref=e255]: candlestick_chart
+            - heading "Gráficos Interativos" [level=3] [ref=e256]
+            - paragraph [ref=e257]: Análise técnica avançada
+            - generic [ref=e258]: Acessar →
+          - link "price_change Comparador de Ações Compare empresas lado a lado Acessar →" [ref=e259] [cursor=pointer]:
+            - /url: /ferramentas/comparador
+            - generic [ref=e260]: price_change
+            - heading "Comparador de Ações" [level=3] [ref=e261]
+            - paragraph [ref=e262]: Compare empresas lado a lado
+            - generic [ref=e263]: Acessar →
+          - link "notifications_active Central de Alertas Notificações de preço-alvo Acessar →" [ref=e264] [cursor=pointer]:
+            - /url: /ferramentas/alertas
+            - generic [ref=e265]: notifications_active
+            - heading "Central de Alertas" [level=3] [ref=e266]
+            - paragraph [ref=e267]: Notificações de preço-alvo
+            - generic [ref=e268]: Acessar →
+        - link "grid_view Ver todas as ferramentas" [ref=e270] [cursor=pointer]:
+          - /url: /ferramentas
+          - generic [ref=e271]: grid_view
+          - text: Ver todas as ferramentas
+      - generic [ref=e273]:
+        - generic [ref=e274]:
+          - generic [ref=e275]: psychology
+          - generic [ref=e276]:
+            - heading "Qual é o seu Perfil de Investidor?" [level=2] [ref=e277]
+            - paragraph [ref=e278]: Descubra seu perfil de risco e receba recomendações personalizadas
+        - generic [ref=e279]:
+          - paragraph [ref=e280]: Por quanto tempo você pretende manter seus investimentos?
+          - generic [ref=e281]:
+            - button "Menos de 1 ano" [ref=e282] [cursor=pointer]
+            - button "De 1 a 5 anos" [ref=e283] [cursor=pointer]
+            - button "Mais de 5 anos" [ref=e284] [cursor=pointer]
+        - generic [ref=e285]:
+          - generic [ref=e286]: Pergunta 1 de 5
+          - button "Próxima" [disabled] [ref=e287]
+      - generic [ref=e288]:
+        - generic [ref=e289]:
+          - generic [ref=e290]:
+            - heading "Cursos B3 Educação" [level=2] [ref=e291]
+            - paragraph [ref=e292]: Cursos oficiais da B3 para todos os níveis
+          - link "Ver todos" [ref=e293] [cursor=pointer]:
+            - /url: /cursos
+        - generic [ref=e294]:
+          - link "trending_up Iniciante Primeiros Passos na Renda Variável Entenda o que é renda variável, como funciona a bolsa de valores e dê os primeiros passos na sua jornada como investidor. schedule 2h Acessar arrow_forward" [ref=e295] [cursor=pointer]:
+            - /url: https://edu.b3.com.br/cursos/primeiros-passos-renda-variavel
+            - generic [ref=e297]:
+              - generic [ref=e298]:
+                - generic [ref=e300]: trending_up
+                - generic [ref=e301]: Iniciante
+              - heading "Primeiros Passos na Renda Variável" [level=3] [ref=e302]
+              - paragraph [ref=e303]: Entenda o que é renda variável, como funciona a bolsa de valores e dê os primeiros passos na sua jornada como investidor.
+              - generic [ref=e304]:
+                - generic [ref=e305]:
+                  - generic [ref=e306]: schedule
+                  - text: 2h
+                - generic [ref=e307]:
+                  - text: Acessar
+                  - generic [ref=e308]: arrow_forward
+          - link "trending_up Iniciante Como Investir em Ações Aprenda a analisar e selecionar ações, entenda os direitos dos acionistas e como funciona a distribuição de dividendos. schedule 3h Acessar arrow_forward" [ref=e309] [cursor=pointer]:
+            - /url: https://edu.b3.com.br/cursos/como-investir-acoes
+            - generic [ref=e311]:
+              - generic [ref=e312]:
+                - generic [ref=e314]: trending_up
+                - generic [ref=e315]: Iniciante
+              - heading "Como Investir em Ações" [level=3] [ref=e316]
+              - paragraph [ref=e317]: Aprenda a analisar e selecionar ações, entenda os direitos dos acionistas e como funciona a distribuição de dividendos.
+              - generic [ref=e318]:
+                - generic [ref=e319]:
+                  - generic [ref=e320]: schedule
+                  - text: 3h
+                - generic [ref=e321]:
+                  - text: Acessar
+                  - generic [ref=e322]: arrow_forward
+          - link "domain Iniciante Fundos Imobiliários (FIIs) Descubra como investir no mercado imobiliário por meio dos FIIs, entenda os tipos de fundos e como avaliar o yield. schedule 2h30 Acessar arrow_forward" [ref=e323] [cursor=pointer]:
+            - /url: https://edu.b3.com.br/cursos/fundos-imobiliarios
+            - generic [ref=e325]:
+              - generic [ref=e326]:
+                - generic [ref=e328]: domain
+                - generic [ref=e329]: Iniciante
+              - heading "Fundos Imobiliários (FIIs)" [level=3] [ref=e330]
+              - paragraph [ref=e331]: Descubra como investir no mercado imobiliário por meio dos FIIs, entenda os tipos de fundos e como avaliar o yield.
+              - generic [ref=e332]:
+                - generic [ref=e333]:
+                  - generic [ref=e334]: schedule
+                  - text: 2h30
+                - generic [ref=e335]:
+                  - text: Acessar
+                  - generic [ref=e336]: arrow_forward
+          - link "trending_up Intermediário Análise Fundamentalista Aprenda a ler demonstrativos financeiros, calcular múltiplos de valuation (P/L, P/VP, EV/EBITDA) e identificar empresas de qualidade. schedule 4h Acessar arrow_forward" [ref=e337] [cursor=pointer]:
+            - /url: https://edu.b3.com.br/cursos/analise-fundamentalista
+            - generic [ref=e339]:
+              - generic [ref=e340]:
+                - generic [ref=e342]: trending_up
+                - generic [ref=e343]: Intermediário
+              - heading "Análise Fundamentalista" [level=3] [ref=e344]
+              - paragraph [ref=e345]: Aprenda a ler demonstrativos financeiros, calcular múltiplos de valuation (P/L, P/VP, EV/EBITDA) e identificar empresas de qualidade.
+              - generic [ref=e346]:
+                - generic [ref=e347]:
+                  - generic [ref=e348]: schedule
+                  - text: 4h
+                - generic [ref=e349]:
+                  - text: Acessar
+                  - generic [ref=e350]: arrow_forward
+      - generic [ref=e351]:
+        - generic [ref=e352]:
+          - generic [ref=e353]:
+            - heading "Mercado Cripto" [level=2] [ref=e354]
+            - link "Painel completo" [ref=e355] [cursor=pointer]:
+              - /url: /mercado/cripto
+          - generic [ref=e356]:
+            - generic [ref=e357]:
+              - generic [ref=e358]:
+                - generic [ref=e359]:
+                  - generic [ref=e360]: ₿
+                  - generic [ref=e361]: BTCBitcoin
+                - generic [ref=e362]:
+                  - generic [ref=e363]: trending_up
+                  - text: +1,45%
+              - paragraph [ref=e364]: $ 68.234,00
+              - paragraph [ref=e365]: "Vol 24h: 32B"
+            - generic [ref=e366]:
+              - generic [ref=e367]:
+                - generic [ref=e368]:
+                  - generic [ref=e369]: Ξ
+                  - generic [ref=e370]: ETHEthereum
+                - generic [ref=e371]:
+                  - generic [ref=e372]: trending_up
+                  - text: +2,10%
+              - paragraph [ref=e373]: $ 3.450,20
+              - paragraph [ref=e374]: "Vol 24h: 18B"
+            - generic [ref=e375]:
+              - generic [ref=e376]:
+                - generic [ref=e377]:
+                  - generic [ref=e378]: ₮
+                  - generic [ref=e379]: USDTTether
+                - generic [ref=e380]:
+                  - generic [ref=e381]: remove
+                  - text: 0,00%
+              - paragraph [ref=e382]: $ 1,00
+              - paragraph [ref=e383]: "Vol 24h: 45B"
+            - generic [ref=e384]:
+              - generic [ref=e385]:
+                - generic [ref=e386]:
+                  - generic [ref=e387]: S
+                  - generic [ref=e388]: SOLSolana
+                - generic [ref=e389]:
+                  - generic [ref=e390]: trending_down
+                  - text: "-1,24%"
+              - paragraph [ref=e391]: $ 145,80
+              - paragraph [ref=e392]: "Vol 24h: 4,2B"
+        - generic [ref=e393]:
+          - heading "Radar Cripto" [level=2] [ref=e394]
+          - generic [ref=e395]:
+            - generic [ref=e396]:
+              - link "27 de jun. Cointelegraph Fidelity rebuts claims Bitcoin becomes less secure after halvings" [ref=e397] [cursor=pointer]:
+                - /url: https://cointelegraph.com/news/fidelity-bitcoin-long-term-security-halvings-report?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound
+                - generic [ref=e398]:
+                  - time [ref=e399]: 27 de jun.
+                  - generic [ref=e400]: Cointelegraph
+                - paragraph [ref=e401]: Fidelity rebuts claims Bitcoin becomes less secure after halvings
+              - link "27 de jun. Cointelegraph Bitcoin faces fresh capitulation risk as 50K BTC moved at a loss" [ref=e402] [cursor=pointer]:
+                - /url: https://cointelegraph.com/markets/bitcoin-faces-fresh-capitulation-risk-as-50k-btc-moves-at-a-loss?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound
+                - generic [ref=e403]:
+                  - time [ref=e404]: 27 de jun.
+                  - generic [ref=e405]: Cointelegraph
+                - paragraph [ref=e406]: Bitcoin faces fresh capitulation risk as 50K BTC moved at a loss
+              - link "27 de jun. CoinDesk Why a selloff in gold and silver is dragging bitcoin down" [ref=e407] [cursor=pointer]:
+                - /url: https://www.coindesk.com/markets/2026/06/27/why-a-selloff-in-gold-and-silver-is-dragging-bitcoin-down
+                - generic [ref=e408]:
+                  - time [ref=e409]: 27 de jun.
+                  - generic [ref=e410]: CoinDesk
+                - paragraph [ref=e411]: Why a selloff in gold and silver is dragging bitcoin down
+              - link "27 de jun. Cointelegraph DCG-backed Yuma launches fund offering institutional exposure to Bittensor" [ref=e412] [cursor=pointer]:
+                - /url: https://cointelegraph.com/news/yuma-bittensor-fund-institutional-tao-decentralized-ai?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound
+                - generic [ref=e413]:
+                  - time [ref=e414]: 27 de jun.
+                  - generic [ref=e415]: Cointelegraph
+                - paragraph [ref=e416]: DCG-backed Yuma launches fund offering institutional exposure to Bittensor
+            - generic [ref=e417]:
+              - heading "trending_up Em alta" [level=3] [ref=e418]:
+                - generic [ref=e419]: trending_up
+                - text: Em alta
+              - generic [ref=e420]:
+                - generic [ref=e421]:
+                  - generic [ref=e422]: PEPE
+                  - generic [ref=e423]:
+                    - generic [ref=e424]: trending_up
+                    - text: +15,2%
+                - generic [ref=e425]:
+                  - generic [ref=e426]: WIF
+                  - generic [ref=e427]:
+                    - generic [ref=e428]: trending_up
+                    - text: +8,4%
+                - generic [ref=e429]:
+                  - generic [ref=e430]: ONDO
+                  - generic [ref=e431]:
+                    - generic [ref=e432]: trending_up
+                    - text: +5,1%
+                - generic [ref=e433]:
+                  - generic [ref=e434]: FET
+                  - generic [ref=e435]:
+                    - generic [ref=e436]: trending_down
+                    - text: "-2,3%"
+      - generic [ref=e437]:
+        - generic [ref=e438]:
+          - generic [ref=e439]: menu_book
+          - heading "Glossário de Indicadores" [level=2] [ref=e440]
+        - generic [ref=e441]:
+          - group [ref=e442]:
+            - generic "P/L (Preço/Lucro) expand_more" [ref=e443] [cursor=pointer]:
+              - generic [ref=e444]: P/L (Preço/Lucro)
+              - generic [ref=e445]: expand_more
+          - group [ref=e446]:
+            - generic "DY (Dividend Yield) expand_more" [ref=e447] [cursor=pointer]:
+              - generic [ref=e448]: DY (Dividend Yield)
+              - generic [ref=e449]: expand_more
+          - group [ref=e450]:
+            - generic "P/VP (Preço/Valor Patrimonial) expand_more" [ref=e451] [cursor=pointer]:
+              - generic [ref=e452]: P/VP (Preço/Valor Patrimonial)
+              - generic [ref=e453]: expand_more
+          - group [ref=e454]:
+            - generic "Vacância expand_more" [ref=e455] [cursor=pointer]:
+              - generic [ref=e456]: Vacância
+              - generic [ref=e457]: expand_more
+          - group [ref=e458]:
+            - generic "Mkt Cap (Valor de Mercado) expand_more" [ref=e459] [cursor=pointer]:
+              - generic [ref=e460]: Mkt Cap (Valor de Mercado)
+              - generic [ref=e461]: expand_more
+          - group [ref=e462]:
+            - generic "P/E (Price to Earnings) expand_more" [ref=e463] [cursor=pointer]:
+              - generic [ref=e464]: P/E (Price to Earnings)
+              - generic [ref=e465]: expand_more
+    - contentinfo [ref=e466]:
+      - generic [ref=e467]:
+        - generic [ref=e468]:
+          - generic [ref=e469]:
+            - generic [ref=e470]:
+              - img [ref=e471]
+              - generic [ref=e477]: databolsa
+            - paragraph [ref=e478]: Acompanhamento de patrimônio em investimentos com lançamento manual de operações e consolidação em BRL.
+          - generic [ref=e479]:
+            - heading "Mercado" [level=3] [ref=e480]
+            - list [ref=e481]:
+              - listitem [ref=e482]:
+                - link "Ações" [ref=e483] [cursor=pointer]:
+                  - /url: /?type=STOCK_BR
+              - listitem [ref=e484]:
+                - link "FIIs" [ref=e485] [cursor=pointer]:
+                  - /url: /?type=FII
+              - listitem [ref=e486]:
+                - link "ETFs" [ref=e487] [cursor=pointer]:
+                  - /url: /?type=ETF
+              - listitem [ref=e488]:
+                - link "BDRs" [ref=e489] [cursor=pointer]:
+                  - /url: /?type=BDR
+              - listitem [ref=e490]:
+                - link "Crypto" [ref=e491] [cursor=pointer]:
+                  - /url: /?type=CRYPTO
+              - listitem [ref=e492]:
+                - link "Stocks US" [ref=e493] [cursor=pointer]:
+                  - /url: /?type=STOCK_US
+          - generic [ref=e494]:
+            - heading "Ferramentas" [level=3] [ref=e495]
+            - list [ref=e496]:
+              - listitem [ref=e497]:
+                - link "Conversor de Moedas" [ref=e498] [cursor=pointer]:
+                  - /url: /ferramentas
+              - listitem [ref=e499]:
+                - link "Simulador" [ref=e500] [cursor=pointer]:
+                  - /url: /ferramentas
+              - listitem [ref=e501]:
+                - link "Calculadora IR" [ref=e502] [cursor=pointer]:
+                  - /url: /ferramentas
+              - listitem [ref=e503]:
+                - link "Análise de Índices" [ref=e504] [cursor=pointer]:
+                  - /url: /ferramentas
+          - generic [ref=e505]:
+            - heading "Institucional" [level=3] [ref=e506]
+            - list [ref=e507]:
+              - listitem [ref=e508]:
+                - link "Termos de Uso" [ref=e509] [cursor=pointer]:
+                  - /url: /termos
+              - listitem [ref=e510]:
+                - link "Privacidade" [ref=e511] [cursor=pointer]:
+                  - /url: /privacidade
+              - listitem [ref=e512]:
+                - link "Compliance" [ref=e513] [cursor=pointer]:
+                  - /url: /compliance
+              - listitem [ref=e514]:
+                - link "Ajuda" [ref=e515] [cursor=pointer]:
+                  - /url: /ajuda
+        - generic [ref=e516]:
+          - paragraph [ref=e517]: © 2026 databolsa. Todos os direitos reservados.
+          - paragraph [ref=e518]: "Aviso: O conteúdo apresentado neste site tem caráter meramente informativo e educacional, não constituindo recomendação de investimento."
+  - alert [ref=e519]

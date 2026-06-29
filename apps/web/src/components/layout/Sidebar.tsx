@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/components/ui/cn';
 import { LogoutButton } from './LogoutButton';
+import { BrandLogo } from './BrandLogo';
 
 interface NavItem {
   href: string;
@@ -30,7 +31,7 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="flex h-16 items-center px-6">
-        <span className="font-mono text-headline-md font-bold text-primary">databolsa</span>
+        <BrandLogo textClassName="font-mono text-headline-md font-bold" />
       </div>
 
       {/* Nav */}

@@ -57,20 +57,20 @@ export function PriceHistoryChart({ series, ticker }: PriceHistoryChartProps) {
       <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
         <defs>
           <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#2756A4" stopOpacity={0.15} />
-            <stop offset="95%" stopColor="#2756A4" stopOpacity={0} />
+            <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.15} />
+            <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #e2e8f0)" />
         <XAxis
           dataKey="date"
           tickFormatter={formatDate}
-          tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--color-content-muted, #6b7280)' }}
+          tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--color-text-muted, #6b7280)' }}
           interval="preserveStartEnd"
         />
         <YAxis
           tickFormatter={formatPrice}
-          tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--color-content-muted, #6b7280)' }}
+          tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--color-text-muted, #6b7280)' }}
           width={72}
         />
         <Tooltip
@@ -95,7 +95,7 @@ export function PriceHistoryChart({ series, ticker }: PriceHistoryChartProps) {
         <Area
           type="monotone"
           dataKey="close"
-          stroke="#2756A4"
+          stroke="var(--color-primary)"
           strokeWidth={2}
           fill="url(#priceGradient)"
           dot={false}

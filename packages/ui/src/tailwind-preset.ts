@@ -60,6 +60,10 @@ const colors: TailwindTheme['colors'] = {
     hover: 'var(--color-primary-hover)',
   },
   accent: 'var(--color-accent)',
+  secondary: {
+    DEFAULT: 'var(--color-secondary)',
+    hover: 'var(--color-secondary-hover)',
+  },
   success: 'var(--color-success)',
   danger: 'var(--color-danger)',
   warning: 'var(--color-warning)',
@@ -120,7 +124,14 @@ const preset: Config = {
       fontSize: typography.fontSize,
       fontWeight: stringifyValues(typography.fontWeight),
       lineHeight: stringifyValues(typography.lineHeight),
-      spacing: spacing.scale,
+      spacing: {
+        ...spacing.scale,
+        'margin-mobile': '1rem',
+        'margin-desktop': '2rem',
+      },
+      maxWidth: {
+        'max-width': '1280px',
+      },
       borderRadius: radius,
       boxShadow: shadow,
       screens: breakpoint,

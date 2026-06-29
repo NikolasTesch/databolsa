@@ -48,6 +48,8 @@
   --color-primary: #2756A4;
   --color-primary-hover: #234080;
   --color-accent: #4EC3E4;
+  --color-secondary: #4EC3E4;
+  --color-secondary-hover: #4EC3E4;
   --color-focus-ring: #2756A4;
   --color-success: #16A34A;
   --color-danger: #DC2626;
@@ -84,6 +86,8 @@
   --color-primary: #adc6ff;
   --color-primary-hover: #d8e2ff;
   --color-accent: #4edea3;
+  --color-secondary: #4edea3;
+  --color-secondary-hover: #4edea3;
   --color-focus-ring: #adc6ff;
   --color-success: #22C55E;
   --color-danger: #F87171;

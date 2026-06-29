@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BrandLogo } from './BrandLogo';
 
 const FOOTER_LINKS = {
   Mercado: [
@@ -33,7 +34,7 @@ export function PublicFooter() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
-            <span className="text-headline-md font-bold text-primary">databolsa</span>
+            <BrandLogo textClassName="text-headline-md font-bold" />
             <p className="mt-2 text-body-sm text-on-surface-variant max-w-xs">
               Acompanhamento de patrimônio em investimentos com lançamento manual de operações e consolidação em BRL.
             </p>

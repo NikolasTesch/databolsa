@@ -38,6 +38,8 @@ function semanticVars(mode) {
     '--color-primary': s.primary,
     '--color-primary-hover': s.primaryHover,
     '--color-accent': s.accent,
+    '--color-secondary': s.secondary ?? s.accent,
+    '--color-secondary-hover': s.secondaryHover ?? s.accent,
     '--color-focus-ring': s.focusRing,
     '--color-success': s.success,
     '--color-danger': s.danger,
