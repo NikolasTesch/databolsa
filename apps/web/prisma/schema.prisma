@@ -119,7 +119,7 @@ model Asset {
   user         User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
   transactions Transaction[]
 
-  @@index([user_id, ticker])
+  @@unique([user_id, ticker])
   @@map("assets")
 }
 

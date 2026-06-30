@@ -4,11 +4,12 @@ import { Decimal } from 'decimal.js';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth/get-user';
 import { evaluateAlerts } from '@/lib/alerts/alert.service';
+import { jsonError } from '@/lib/http/errors';
 
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   // Avaliação lazy: verifica alertas ao listar (ADR-0010)
@@ -35,14 +36,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   let body: { asset_ticker?: unknown; condition?: unknown; target_price?: unknown };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'INVALID_INPUT' }, { status: 422 });
+    return jsonError('INVALID_INPUT', 'Parâmetros inválidos', 422);
   }
 
   const { asset_ticker, condition, target_price } = body;
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     (condition !== 'ABOVE' && condition !== 'BELOW') ||
     target_price == null
   ) {
-    return NextResponse.json({ error: 'INVALID_INPUT' }, { status: 422 });
+    return jsonError('INVALID_INPUT', 'Parâmetros inválidos', 422);
   }
 
   let targetDecimal: Decimal;
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     targetDecimal = new Decimal(String(target_price));
     if (targetDecimal.lte(0)) throw new Error('non-positive');
   } catch {
-    return NextResponse.json({ error: 'INVALID_INPUT' }, { status: 422 });
+    return jsonError('INVALID_INPUT', 'Parâmetros inválidos', 422);
   }
 
   const alert = await prisma.priceAlert.create({

@@ -6,6 +6,7 @@ import { fetchCachedMarketValue } from '@/lib/market/market-cache';
 import { inferAssetClassForFundamentals } from '@/lib/fundamentals/fundamentals.service';
 import { CRYPTO_TICKER_MAP } from '@/lib/quotes/ticker-map';
 import { CRYPTO_ID_TO_NAME } from '@/lib/market/curated-lists';
+import { jsonError } from '@/lib/http/errors';
 
 const CRYPTO_TICKER_TO_ID: Record<string, string> = Object.fromEntries(
   Object.entries(CRYPTO_TICKER_MAP).map(([ticker, id]) => [ticker, id]),
@@ -149,7 +150,7 @@ export async function GET(
   );
 
   if (!cached) {
-    return NextResponse.json({ message: `Ativo não encontrado: ${ticker}` }, { status: 404 });
+    return jsonError('NOT_FOUND', `Ativo não encontrado: ${ticker}`, 404);
   }
 
   name = cached.name;

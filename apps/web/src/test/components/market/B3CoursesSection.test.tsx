@@ -1,13 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { B3CoursesSection } from '@/components/market/B3CoursesSection';
+import B3CoursesSection from '@/components/widgets/B3CoursesSection';
 import { B3_COURSES } from '@/lib/courses-data';
 
 describe('B3CoursesSection', () => {
-  it('TC-01: renders all configured courses (at least 6)', () => {
+  it('TC-01: renders first 4 configured courses (at least 6 in data)', () => {
     render(<B3CoursesSection />);
     expect(B3_COURSES.length).toBeGreaterThanOrEqual(6);
-    for (const course of B3_COURSES) {
+    const displayedCourses = B3_COURSES.slice(0, 4);
+    for (const course of displayedCourses) {
       expect(screen.getByText(course.title)).toBeDefined();
     }
   });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { AssetClass } from '@/types/api';
 import { searchB3Tickers } from '@/lib/market/brapi-search.adapter';
 import { CRYPTO_ID_TO_TICKER, CRYPTO_ID_TO_NAME } from '@/lib/market/curated-lists';
+import { jsonError } from '@/lib/http/errors';
 
 const CRYPTO_SEARCH: Array<{ ticker: string; name: string; assetClass: AssetClass }> = Object.entries(
   CRYPTO_ID_TO_TICKER,
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get('q')?.trim() ?? '';
 
   if (!q) {
-    return NextResponse.json({ message: 'Parâmetro q é obrigatório' }, { status: 400 });
+    return jsonError('INVALID_INPUT', 'Parâmetro q é obrigatório', 400);
   }
 
   const upper = q.toUpperCase();

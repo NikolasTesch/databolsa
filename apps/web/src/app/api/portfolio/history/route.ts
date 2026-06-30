@@ -8,7 +8,7 @@ import { jsonError } from '@/lib/http/errors';
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const targetUserId = request.nextUrl.searchParams.get('targetUserId') ?? user.id;
@@ -72,6 +72,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data_points: dataPoints }, { status: 200 });
   } catch (error) {
     console.error('[portfolio/history] Erro ao calcular histórico:', error);
-    return NextResponse.json({ message: 'Erro interno' }, { status: 500 });
+    return jsonError('INTERNAL_ERROR', 'Erro interno', 500);
   }
 }

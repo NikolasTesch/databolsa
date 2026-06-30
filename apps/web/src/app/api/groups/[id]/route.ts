@@ -6,7 +6,7 @@ import { jsonError } from '@/lib/http/errors';
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const membership = await prisma.groupMembership.findUnique({
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const group = await prisma.group.findUnique({

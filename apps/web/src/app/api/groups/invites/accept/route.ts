@@ -6,7 +6,7 @@ import { jsonError } from '@/lib/http/errors';
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   interface AcceptInviteBody {
@@ -17,13 +17,13 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: 'Payload inválido' }, { status: 400 });
+    return jsonError('INVALID_INPUT', 'Payload inválido', 400);
   }
 
   const { code } = body;
 
   if (!code || typeof code !== 'string' || code.trim().length === 0) {
-    return NextResponse.json({ message: 'Código de convite inválido' }, { status: 400 });
+    return jsonError('INVALID_INVITE_CODE', 'Código de convite inválido', 400);
   }
 
   try {

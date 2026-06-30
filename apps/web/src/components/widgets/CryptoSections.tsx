@@ -1,39 +1,11 @@
 import Link from 'next/link';
 import { fetchCryptoNews } from '@/lib/news/news.service';
 import type { NewsArticle } from '@/lib/news/news.service';
-
-interface CryptoAsset {
-  emoji: string;
-  symbol: string;
-  name: string;
-  changePercent: string;
-  changeUp: boolean;
-  price: string;
-  volume: string;
-}
-
-interface TrendingItem {
-  symbol: string;
-  changePercent: string;
-  changeUp: boolean;
-}
-
-const CRYPTO_ASSETS: CryptoAsset[] = [
-  { emoji: '₿', symbol: 'BTC', name: 'Bitcoin', changePercent: '+1,45%', changeUp: true, price: '$ 68.234,00', volume: '32B' },
-  { emoji: 'Ξ', symbol: 'ETH', name: 'Ethereum', changePercent: '+2,10%', changeUp: true, price: '$ 3.450,20', volume: '18B' },
-  { emoji: '₮', symbol: 'USDT', name: 'Tether', changePercent: '0,00%', changeUp: true, price: '$ 1,00', volume: '45B' },
-  { emoji: 'S', symbol: 'SOL', name: 'Solana', changePercent: '-1,24%', changeUp: false, price: '$ 145,80', volume: '4,2B' },
-];
-
-const TRENDING: TrendingItem[] = [
-  { symbol: 'PEPE', changePercent: '+15,2%', changeUp: true },
-  { symbol: 'WIF', changePercent: '+8,4%', changeUp: true },
-  { symbol: 'ONDO', changePercent: '+5,1%', changeUp: true },
-  { symbol: 'FET', changePercent: '-2,3%', changeUp: false },
-];
+import { getCryptoOverview } from '@/lib/market/crypto-overview';
+import type { CryptoOverviewItem } from '@/lib/market/crypto-overview';
 
 function ChangeIndicator({ percent, up }: { percent: string; up: boolean }) {
-  const isNeutral = percent === '0,00%';
+  const isNeutral = percent === '0.00%' || percent === '0,00%';
   return (
     <span
       className={`inline-flex items-center gap-0.5 text-xs font-mono font-medium ${
@@ -61,9 +33,12 @@ async function CryptoSections() {
   const { articles } = await fetchCryptoNews();
   const newsItems = articles.slice(0, 4);
   const sourceLabel = (source: string) => source || 'Cripto';
+  const overview = await getCryptoOverview();
+  const cryptoAssets = overview.assets;
+  const trending = overview.trending;
 
   return (
-    <section className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12 space-y-10">
+    <section id="cripto" className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12 space-y-10">
       {/* ── Mercado Cripto ── */}
       <div>
         <div className="flex items-center justify-between mb-5">
@@ -77,27 +52,35 @@ async function CryptoSections() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {CRYPTO_ASSETS.map((asset) => (
-            <div key={asset.symbol} className="glass-panel rounded-lg p-4">
+          {cryptoAssets.length > 0 ? cryptoAssets.map((asset) => (
+            <Link
+              key={asset.symbol}
+              href={`/ativos/${asset.symbol}?class=CRYPTO`}
+              className="glass-panel rounded-lg p-4 block cursor-pointer focus-visible:ring-2 focus-visible:ring-primary transition-shadow hover:shadow-md"
+            >
               {/* Header */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-mono">{asset.emoji}</span>
+                  <span className="text-lg font-mono">{asset.symbol === 'BTC' ? '₿' : asset.symbol === 'ETH' ? 'Ξ' : asset.symbol === 'USDT' ? '₮' : asset.symbol === 'SOL' ? 'S' : '◆'}</span>
                   <div>
                     <span className="text-sm font-semibold text-on-surface">{asset.symbol}</span>
                     <span className="text-xs text-on-surface-variant ml-1">{asset.name}</span>
                   </div>
                 </div>
-                <ChangeIndicator percent={asset.changePercent} up={asset.changeUp} />
+                <ChangeIndicator percent={asset.changePercent} up={asset.changePercent.startsWith('+')} />
               </div>
 
               {/* Price */}
               <p className="text-base font-mono font-semibold text-on-surface">{asset.price}</p>
 
               {/* Volume */}
-              <p className="text-xs text-on-surface-variant mt-1">Vol 24h: {asset.volume}</p>
-            </div>
-          ))}
+              <p className="text-xs text-on-surface-variant mt-1">Vol 24h: {asset.volume24h}</p>
+            </Link>
+          )) : (
+            <p className="col-span-4 text-sm text-on-surface-variant text-center py-8">
+              Dados de cripto indisponíveis no momento.
+            </p>
+          )}
         </div>
       </div>
 
@@ -138,15 +121,17 @@ async function CryptoSections() {
               Em alta
             </h3>
             <div className="space-y-3">
-              {TRENDING.map((item) => (
+              {trending.length > 0 ? trending.map((item) => (
                 <div
                   key={item.symbol}
                   className="flex items-center justify-between"
                 >
                   <span className="text-sm font-semibold text-on-surface">{item.symbol}</span>
-                  <ChangeIndicator percent={item.changePercent} up={item.changeUp} />
+                  <ChangeIndicator percent={item.changePercent} up={item.changePercent.startsWith('+')} />
                 </div>
-              ))}
+              )) : (
+                <p className="text-sm text-on-surface-variant">Nenhum dado disponível.</p>
+              )}
             </div>
           </div>
         </div>

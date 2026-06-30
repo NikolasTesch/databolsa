@@ -7,7 +7,7 @@ import { jsonError } from '@/lib/http/errors';
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const searchParams = request.nextUrl.searchParams;
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   interface CreateAssetBody {
@@ -66,26 +66,34 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: 'Payload inválido' }, { status: 400 });
+    return jsonError('INVALID_INPUT', 'Payload inválido', 400);
   }
 
   const { ticker, name, asset_class, currency, data_source } = body;
 
   // Validations
   if (!ticker || typeof ticker !== 'string' || ticker.trim().length === 0) {
-    return NextResponse.json({ message: 'Ticker inválido' }, { status: 400 });
+    return jsonError('INVALID_TICKER', 'Ticker inválido', 400);
   }
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
-    return NextResponse.json({ message: 'Nome inválido' }, { status: 400 });
+    return jsonError('INVALID_NAME', 'Nome inválido', 400);
   }
   if (!asset_class || !Object.values(AssetClass).includes(asset_class as AssetClass)) {
-    return NextResponse.json({ message: 'Classe de ativo inválida' }, { status: 400 });
+    return jsonError('INVALID_ASSET_CLASS', 'Classe de ativo inválida', 400);
   }
   if (!currency || !Object.values(Currency).includes(currency as Currency)) {
-    return NextResponse.json({ message: 'Moeda inválida' }, { status: 400 });
+    return jsonError('INVALID_CURRENCY', 'Moeda inválida', 400);
   }
   if (!data_source || !Object.values(DataSource).includes(data_source as DataSource)) {
-    return NextResponse.json({ message: 'Fonte de dados inválida' }, { status: 400 });
+    return jsonError('INVALID_DATA_SOURCE', 'Fonte de dados inválida', 400);
+  }
+
+  // Verifica duplicidade (RN-11: isolamento por usuário)
+  const existing = await prisma.asset.findFirst({
+    where: { user_id: user.id, ticker: ticker.toUpperCase() },
+  });
+  if (existing) {
+    return jsonError('DUPLICATE_TICKER', 'Ativo já cadastrado', 409);
   }
 
   const asset = await prisma.asset.create({

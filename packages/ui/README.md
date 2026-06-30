@@ -55,7 +55,7 @@ Importe o tema **uma vez** (ex.: `app/globals.css`):
 @import '@databolsa/ui/theme.css';
 ```
 
-Utilitárias disponíveis: `bg-surface`, `text-content-muted`, `text-profit`,
+Utilitárias disponíveis: `bg-surface`, `text-on-surface-variant`, `text-profit`,
 `bg-stale-surface`, `border-border`, `font-mono`, `rounded-lg` etc. Tema escuro
 ativa com a classe `.dark` no elemento raiz — sem rebuild.
 

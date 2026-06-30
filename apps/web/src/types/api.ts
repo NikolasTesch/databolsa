@@ -182,7 +182,8 @@ export interface AcceptInviteResponse {
 // ---- Error ----
 
 export interface ApiError {
-  statusCode: number;
-  message: string | string[];
-  error?: string;
+  message: string;
+  error: {
+    code: string;
+  };
 }

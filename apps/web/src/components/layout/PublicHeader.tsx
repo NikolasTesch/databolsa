@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { label: 'Dividendos', href: '/#dividendos' },
   { label: 'Cripto', href: '/#cripto' },
   { label: 'Ferramentas', href: '/ferramentas' },
-  { label: 'Cursos', href: '/#cursos' },
+  { label: 'Cursos', href: '/cursos' },
 ] as const;
 
 export function PublicHeader({ isAuthenticated }: PublicHeaderProps) {

@@ -14,10 +14,12 @@ beforeEach(() => {
 });
 
 describe('TC-04 — CurrencyConverter Component', () => {
-  it('renderiza o formulário com campos padrão (fiat: USD → BRL)', () => {
+  it('renderiza o formulário com campos padrão (fiat: USD → EUR)', () => {
     render(<CurrencyConverter />);
     expect(screen.getByDisplayValue('USD')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('BRL')).toBeInTheDocument();
+    // In fiat mode, 'to' select shows FIAT_OPTIONS minus 'from' (USD).
+    // BRL is not in FIAT_OPTIONS; first option rendered is EUR.
+    expect(screen.getByDisplayValue('EUR')).toBeInTheDocument();
     expect(screen.getByDisplayValue('100')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /converter/i })).toBeInTheDocument();
   });

@@ -6,18 +6,19 @@ import { getAuthUser } from '@/lib/auth/get-user';
 import { quoteService } from '@/lib/quotes/quote.service';
 import { prismaToCoreTx } from '@/lib/portfolio/tx-mapper';
 import { computePositions } from '@/lib/portfolio/positions';
+import { jsonError } from '@/lib/http/errors';
 
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   let body: { ticker?: unknown; quantity?: unknown; price?: unknown; type?: unknown; fees?: unknown };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'INVALID_INPUT' }, { status: 422 });
+    return jsonError('INVALID_INPUT', 'Parâmetros inválidos', 422);
   }
 
   const { ticker, quantity, price, type, fees } = body;
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     quantity == null ||
     price == null
   ) {
-    return NextResponse.json({ error: 'INVALID_INPUT' }, { status: 422 });
+    return jsonError('INVALID_INPUT', 'Parâmetros inválidos', 422);
   }
 
   let qtyDecimal: Decimal;
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
       throw new Error('non-positive');
     }
   } catch {
-    return NextResponse.json({ error: 'INVALID_INPUT' }, { status: 422 });
+    return jsonError('INVALID_INPUT', 'Parâmetros inválidos', 422);
   }
 
   const normalizedTicker = ticker.trim().toUpperCase();
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (!asset && type === 'SELL') {
-    return NextResponse.json({ error: 'POSITION_NOT_FOUND' }, { status: 404 });
+    return jsonError('POSITION_NOT_FOUND', 'Posição não encontrada para o ticker informado', 404);
   }
 
   const coreTxs = asset ? asset.transactions.map(prismaToCoreTx) : [];
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     if (err instanceof Error && err.message === 'SELL_EXCEEDS_POSITION') {
-      return NextResponse.json({ error: 'SELL_EXCEEDS_POSITION' }, { status: 422 });
+      return jsonError('SELL_EXCEEDS_POSITION', 'Venda excede posição atual', 422);
     }
     throw err;
   }

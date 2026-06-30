@@ -7,7 +7,7 @@ import { jsonError } from '@/lib/http/errors';
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const asset = await prisma.asset.findFirst({
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   });
 
   if (!asset) {
-    return NextResponse.json({ message: 'Ativo não encontrado' }, { status: 404 });
+    return jsonError('NOT_FOUND', 'Ativo não encontrado', 404);
   }
 
   return NextResponse.json(asset, { status: 200 });
@@ -98,7 +98,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const asset = await prisma.asset.findFirst({
@@ -109,7 +109,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   });
 
   if (!asset) {
-    return NextResponse.json({ message: 'Ativo não encontrado' }, { status: 404 });
+    return jsonError('NOT_FOUND', 'Ativo não encontrado', 404);
   }
 
   await prisma.asset.delete({

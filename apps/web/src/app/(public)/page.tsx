@@ -10,6 +10,7 @@ import InvestorProfileQuiz from '@/components/widgets/InvestorProfileQuiz';
 import B3CoursesSection from '@/components/widgets/B3CoursesSection';
 import CryptoSections from '@/components/widgets/CryptoSections';
 import GlossarySection from '@/components/widgets/GlossarySection';
+import { RevealOnScroll } from '@/components/layout/RevealOnScroll';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,45 +21,63 @@ export default async function PublicHomePage() {
       <HeroSection />
 
       {/* Market Ticker Bar */}
-      <Suspense fallback={<div className="h-32" />}>
-        <MarketTickerBar />
-      </Suspense>
+      <RevealOnScroll delay="short">
+        <Suspense fallback={<div className="h-32" />}>
+          <MarketTickerBar />
+        </Suspense>
+      </RevealOnScroll>
 
       {/* Highlights: gainers / losers */}
-      <HighlightsSection />
+      <RevealOnScroll>
+        <HighlightsSection />
+      </RevealOnScroll>
 
       {/* News */}
-      <Suspense
-        fallback={
-          <div className="flex justify-center py-12">
-            <Spinner size="md" />
-          </div>
-        }
-      >
-        <RelatedNewsSection limit={6} />
-      </Suspense>
+      <RevealOnScroll delay="short">
+        <Suspense
+          fallback={
+            <div className="flex justify-center py-12">
+              <Spinner size="md" />
+            </div>
+          }
+        >
+          <RelatedNewsSection limit={6} />
+        </Suspense>
+      </RevealOnScroll>
 
       {/* Dividends */}
-      <Suspense fallback={<div className="flex justify-center py-12"><Spinner size="md" /></div>}>
-        <DividendsSection />
-      </Suspense>
+      <RevealOnScroll>
+        <Suspense fallback={<div className="flex justify-center py-12"><Spinner size="md" /></div>}>
+          <DividendsSection />
+        </Suspense>
+      </RevealOnScroll>
 
       {/* Tools */}
-      <ToolsSection />
+      <RevealOnScroll delay="short">
+        <ToolsSection />
+      </RevealOnScroll>
 
       {/* Quiz */}
-      <InvestorProfileQuiz />
+      <RevealOnScroll>
+        <InvestorProfileQuiz />
+      </RevealOnScroll>
 
       {/* Courses */}
-      <B3CoursesSection />
+      <RevealOnScroll delay="short">
+        <B3CoursesSection />
+      </RevealOnScroll>
 
       {/* Crypto */}
-      <Suspense fallback={<div className="h-64" />}>
-        <CryptoSections />
-      </Suspense>
+      <RevealOnScroll>
+        <Suspense fallback={<div className="h-64" />}>
+          <CryptoSections />
+        </Suspense>
+      </RevealOnScroll>
 
       {/* Glossary */}
-      <GlossarySection />
+      <RevealOnScroll delay="short">
+        <GlossarySection />
+      </RevealOnScroll>
     </>
   );
 }

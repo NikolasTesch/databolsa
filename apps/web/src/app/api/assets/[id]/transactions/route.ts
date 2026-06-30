@@ -5,6 +5,7 @@ import { Decimal } from 'decimal.js';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth/get-user';
 import { prismaToCoreTx } from '@/lib/portfolio/tx-mapper';
+import { jsonError } from '@/lib/http/errors';
 
 export async function GET(
   request: NextRequest,
@@ -12,7 +13,7 @@ export async function GET(
 ) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const asset = await prisma.asset.findFirst({
@@ -20,7 +21,7 @@ export async function GET(
   });
 
   if (!asset) {
-    return NextResponse.json({ message: 'Ativo não encontrado' }, { status: 404 });
+    return jsonError('NOT_FOUND', 'Ativo não encontrado', 404);
   }
 
   const transactions = await prisma.transaction.findMany({
@@ -37,7 +38,7 @@ export async function POST(
 ) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   let body: {
@@ -50,27 +51,27 @@ export async function POST(
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: 'Payload inválido' }, { status: 400 });
+    return jsonError('INVALID_INPUT', 'Payload inválido', 400);
   }
 
   const { type, date, unit_price, quantity, fees } = body;
 
   // Validations
   if (!type || !Object.values(TransactionType).includes(type as TransactionType)) {
-    return NextResponse.json({ message: 'Tipo de transação inválido' }, { status: 400 });
+    return jsonError('INVALID_TRANSACTION_TYPE', 'Tipo de transação inválido', 400);
   }
   if (!date || isNaN(Date.parse(date as string))) {
-    return NextResponse.json({ message: 'Data inválida' }, { status: 400 });
+    return jsonError('INVALID_DATE', 'Data inválida', 400);
   }
   try {
     if (new Decimal(unit_price as string).lessThanOrEqualTo(0)) {
-      return NextResponse.json({ message: 'Preço unitário deve ser maior que zero' }, { status: 400 });
+      return jsonError('INVALID_PRICE', 'Preço unitário deve ser maior que zero', 400);
     }
     if (new Decimal(quantity as string).lessThanOrEqualTo(0)) {
-      return NextResponse.json({ message: 'Quantidade deve ser maior que zero' }, { status: 400 });
+      return jsonError('INVALID_QUANTITY', 'Quantidade deve ser maior que zero', 400);
     }
   } catch {
-    return NextResponse.json({ message: 'Valores decimais inválidos' }, { status: 400 });
+    return jsonError('INVALID_DECIMAL', 'Valores decimais inválidos', 400);
   }
 
   return prisma.$transaction(async (tx) => {
@@ -78,7 +79,7 @@ export async function POST(
       where: { id: params.id, user_id: user.id },
     });
     if (!asset) {
-      return NextResponse.json({ message: 'Ativo não encontrado' }, { status: 404 });
+      return jsonError('NOT_FOUND', 'Ativo não encontrado', 404);
     }
 
     if (type === TransactionType.SELL) {
@@ -91,10 +92,7 @@ export async function POST(
       const sellQty = new Decimal(quantity as string);
 
       if (sellQty.greaterThan(currentQty)) {
-        return NextResponse.json(
-          { message: 'Sell quantity exceeds current position' },
-          { status: 422 }
-        );
+        return jsonError('SELL_EXCEEDS_POSITION', 'Sell quantity exceeds current position', 422);
       }
     }
 

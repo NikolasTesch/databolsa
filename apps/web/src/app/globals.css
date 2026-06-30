@@ -9,6 +9,7 @@
     font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
 
   .font-mono,
@@ -137,6 +138,8 @@
 /* ─── Reduced motion ─────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
   .hero-orb-a, .hero-orb-b, .hero-orb-c,
   .hero-animate-1, .hero-animate-2, .hero-animate-3,
   .hero-animate-4, .hero-animate-5,

@@ -54,7 +54,7 @@ export default function MarketTickerBar() {
   if (!indices || indices.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop" aria-label="Cotações de mercado">
+    <section className="mx-auto mt-6 max-w-max-width px-margin-mobile md:mt-8 md:px-margin-desktop" aria-label="Cotações de mercado">
       <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar snap-x snap-mandatory">
         {indices.map((idx) => {
           const trend = detectTrend(idx.changePercent);

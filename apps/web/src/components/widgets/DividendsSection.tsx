@@ -1,42 +1,8 @@
 import Link from 'next/link';
 import { fetchDividendsNews } from '@/lib/news/news.service';
 import type { NewsArticle } from '@/lib/news/news.service';
-
-interface DividendRow {
-  ticker: string;
-  type: string;
-  dateCom: string;
-  payment: string;
-  value: string;
-  yieldPct: string;
-}
-
-const DIVIDEND_DATA: DividendRow[] = [
-  {
-    ticker: 'BBAS3',
-    type: 'JCP',
-    dateCom: '12/06/2026',
-    payment: '30/06/2026',
-    value: '1,5000',
-    yieldPct: '1,2%',
-  },
-  {
-    ticker: 'ITUB4',
-    type: 'Dividendo',
-    dateCom: '10/06/2026',
-    payment: '25/06/2026',
-    value: '0,8500',
-    yieldPct: '0,8%',
-  },
-  {
-    ticker: 'EGIE3',
-    type: 'Dividendo',
-    dateCom: '05/06/2026',
-    payment: '20/06/2026',
-    value: '1,2000',
-    yieldPct: '1,5%',
-  },
-];
+import { getDividendsAgenda } from '@/lib/market/dividends-agenda';
+import type { AgendaItem } from '@/lib/market/dividends-agenda';
 
 function getTickerInitials(ticker: string): string {
   // Return first 2 characters for the circle
@@ -56,9 +22,12 @@ function formatTimeAgo(publishedAt: string): string {
 export default async function DividendsSection() {
   const { articles } = await fetchDividendsNews();
   const newsItems = articles.slice(0, 4);
+  const agenda = await getDividendsAgenda();
+  const rows = agenda.slice(0, 5);
 
   return (
     <section
+      id="dividendos"
       className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-10"
       aria-label="Dividendos e proventos"
     >
@@ -89,20 +58,24 @@ export default async function DividendsSection() {
               </tr>
             </thead>
             <tbody>
-              {DIVIDEND_DATA.map((row) => (
+              {rows.length > 0 ? rows.map((row) => (
                 <tr
                   key={row.ticker}
-                  className="border-b border-border/50 last:border-b-0 hover:bg-surface-muted/50 transition-colors"
+                  className="border-b border-border/50 last:border-b-0 hover:bg-surface-muted/50 transition-colors cursor-pointer focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary rounded"
                 >
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2.5">
+                    <Link
+                      href={`/ativos/${row.ticker}?class=STOCK_BR`}
+                      className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-surface-muted font-mono text-xs font-semibold text-on-surface">
                         {getTickerInitials(row.ticker)}
                       </div>
-                      <span className="font-mono text-sm font-semibold text-on-surface">
+                      <span className="font-mono text-sm font-semibold text-on-surface hover:text-primary transition-colors">
                         {row.ticker}
                       </span>
-                    </div>
+                    </Link>
                   </td>
                   <td className="px-4 py-3">
                     <span
@@ -128,7 +101,13 @@ export default async function DividendsSection() {
                     {row.yieldPct}
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-center text-sm text-on-surface-variant">
+                    Nenhum dividendo disponível no momento.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

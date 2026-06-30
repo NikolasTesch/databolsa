@@ -3,17 +3,17 @@ import { BrandLogo } from './BrandLogo';
 
 const FOOTER_LINKS = {
   Mercado: [
-    { label: 'Ações', href: '/?type=STOCK_BR' },
-    { label: 'FIIs', href: '/?type=FII' },
-    { label: 'ETFs', href: '/?type=ETF' },
-    { label: 'BDRs', href: '/?type=BDR' },
-    { label: 'Crypto', href: '/?type=CRYPTO' },
-    { label: 'Stocks US', href: '/?type=STOCK_US' },
+    { label: 'Ações', href: '/ativos?classe=STOCK_BR' },
+    { label: 'FIIs', href: '/ativos?classe=FII' },
+    { label: 'ETFs', href: '/ativos?classe=ETF' },
+    { label: 'BDRs', href: '/ativos?classe=BDR' },
+    { label: 'Crypto', href: '/ativos?classe=CRYPTO' },
+    { label: 'Stocks US', href: '/ativos?classe=STOCK_US' },
   ],
   Ferramentas: [
-    { label: 'Conversor de Moedas', href: '/ferramentas' },
-    { label: 'Simulador', href: '/ferramentas' },
-    { label: 'Calculadora IR', href: '/ferramentas' },
+    { label: 'Conversor de Moedas', href: '/ferramentas#conversor' },
+    { label: 'Simulador', href: '/ferramentas#simulador' },
+    { label: 'Calculadora IR', href: '/ferramentas#calculadora-ir' },
     { label: 'Análise de Índices', href: '/ferramentas' },
   ],
   Institucional: [

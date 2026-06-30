@@ -9,6 +9,7 @@ import { NextRequest } from 'next/server';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Decimal } from 'decimal.js';
 import prisma from '@/lib/prisma';
+import { GroupMemberRole } from '@prisma/client';
 
 // ---------------------------------------------------------------------------
 // Mocks globais
@@ -75,8 +76,9 @@ async function makeAuthRequest(
   options: RequestInit = {},
 ): Promise<NextRequest> {
   const token = await signAccessToken({ sub: 'user-1', email: 'test@test.com' });
+  const { signal: _signal, ...restOptions } = options;
   return new NextRequest(url, {
-    ...options,
+    ...restOptions,
     headers: {
       ...(options.headers as Record<string, string> ?? {}),
       Authorization: `Bearer ${token}`,
@@ -99,23 +101,23 @@ function makeStubGroup(overrides: Record<string, any> = {}) {
   };
 }
 
-function makeStubMembership(overrides: Record<string, any> = {}) {
+function makeStubMembership(overrides: Record<string, any> = {}): any {
   return {
     id: 'membership-1',
     group_id: 'group-1',
     user_id: 'user-1',
-    role: 'LEADER',
+    role: 'LEADER' as GroupMemberRole,
     joined_at: new Date('2026-06-17'),
     ...overrides,
   };
 }
 
-function makeStubInvite(overrides: Record<string, any> = {}) {
+function makeStubInvite(overrides: Record<string, any> = {}): any {
   return {
     id: 'invite-1',
     group_id: 'group-1',
     code: 'abc-123-uuid',
-    role: 'MEMBER',
+    role: 'MEMBER' as GroupMemberRole,
     created_by: 'user-1',
     expires_at: null,
     max_uses: null,
@@ -198,7 +200,7 @@ describe('GET /api/groups', () => {
     vi.mocked(prisma.groupMembership.findMany).mockResolvedValue([
       {
         group_id: 'group-1',
-        role: 'LEADER',
+        role: 'LEADER' as GroupMemberRole,
         joined_at: new Date('2026-06-17'),
         group: {
           id: 'group-1',
@@ -208,10 +210,10 @@ describe('GET /api/groups', () => {
           created_at: new Date('2026-06-17'),
           _count: { memberships: 3 },
         },
-      },
+      } as any,
       {
         group_id: 'group-2',
-        role: 'MEMBER',
+        role: 'MEMBER' as GroupMemberRole,
         joined_at: new Date('2026-06-17'),
         group: {
           id: 'group-2',
@@ -221,7 +223,7 @@ describe('GET /api/groups', () => {
           created_at: new Date('2026-06-17'),
           _count: { memberships: 5 },
         },
-      },
+      } as any,
     ]);
 
     const req = await makeAuthRequest('http://localhost:3000/api/groups');
@@ -630,15 +632,15 @@ describe('DELETE /api/groups/[id]/members/[userId]', () => {
   it('líder remove membro com sucesso', async () => {
     vi.mocked(prisma.group.findUnique).mockResolvedValue(makeStubGroup());
     // Requisitante é LEADER
-    vi.mocked(prisma.groupMembership.findUnique).mockImplementation(async ({ where }: any) => {
+    vi.mocked(prisma.groupMembership.findUnique).mockImplementation((async ({ where }: any) => {
       if (where.group_id_user_id?.user_id === 'user-1') {
-        return makeStubMembership({ user_id: 'user-1', role: 'LEADER' });
+        return makeStubMembership({ user_id: 'user-1', role: 'LEADER' as GroupMemberRole });
       }
       if (where.group_id_user_id?.user_id === 'user-2') {
-        return makeStubMembership({ user_id: 'user-2', role: 'MEMBER' });
+        return makeStubMembership({ user_id: 'user-2', role: 'MEMBER' as GroupMemberRole });
       }
       return null;
-    });
+    }) as any);
     vi.mocked(prisma.groupMembership.delete).mockResolvedValue(makeStubMembership());
 
     const req = await makeAuthRequest(
@@ -655,15 +657,15 @@ describe('DELETE /api/groups/[id]/members/[userId]', () => {
   it('não-líder não pode remover outro membro (403)', async () => {
     vi.mocked(prisma.group.findUnique).mockResolvedValue(makeStubGroup());
     // Requisitante é MEMBER
-    vi.mocked(prisma.groupMembership.findUnique).mockImplementation(async ({ where }: any) => {
+    vi.mocked(prisma.groupMembership.findUnique).mockImplementation((async ({ where }: any) => {
       if (where.group_id_user_id?.user_id === 'user-1') {
-        return makeStubMembership({ user_id: 'user-1', role: 'MEMBER' });
+        return makeStubMembership({ user_id: 'user-1', role: 'MEMBER' as GroupMemberRole });
       }
       if (where.group_id_user_id?.user_id === 'user-3') {
-        return makeStubMembership({ user_id: 'user-3', role: 'MEMBER' });
+        return makeStubMembership({ user_id: 'user-3', role: 'MEMBER' as GroupMemberRole });
       }
       return null;
-    });
+    }) as any);
 
     const req = await makeAuthRequest(
       'http://localhost:3000/api/groups/group-1/members/user-3',
@@ -675,15 +677,15 @@ describe('DELETE /api/groups/[id]/members/[userId]', () => {
 
   it('líder não pode remover outro líder (400)', async () => {
     vi.mocked(prisma.group.findUnique).mockResolvedValue(makeStubGroup());
-    vi.mocked(prisma.groupMembership.findUnique).mockImplementation(async ({ where }: any) => {
+    vi.mocked(prisma.groupMembership.findUnique).mockImplementation((async ({ where }: any) => {
       if (where.group_id_user_id?.user_id === 'user-1') {
-        return makeStubMembership({ user_id: 'user-1', role: 'LEADER' });
+        return makeStubMembership({ user_id: 'user-1', role: 'LEADER' as GroupMemberRole });
       }
       if (where.group_id_user_id?.user_id === 'user-2') {
-        return makeStubMembership({ user_id: 'user-2', role: 'LEADER' });
+        return makeStubMembership({ user_id: 'user-2', role: 'LEADER' as GroupMemberRole });
       }
       return null;
-    });
+    }) as any);
 
     const req = await makeAuthRequest(
       'http://localhost:3000/api/groups/group-1/members/user-2',
@@ -705,7 +707,7 @@ describe('GET /api/portfolio/summary cross-user', () => {
   it('AC-05: líder vê carteira de membro com targetUserId', async () => {
     // assertCanViewPortfolio chama groupMembership.findMany para verificar se viewer é LEADER
     vi.mocked(prisma.groupMembership.findMany).mockResolvedValue([
-      { group_id: 'group-1' },
+      { group_id: 'group-1' } as any,
     ]);
     vi.mocked(prisma.groupMembership.findFirst).mockResolvedValue(
       makeStubMembership({ user_id: 'user-2', role: 'MEMBER' }),

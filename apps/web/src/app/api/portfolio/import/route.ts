@@ -110,7 +110,7 @@ function validateTimeline(
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   // S-4: rejeitar antes de ler o body se Content-Length já ultrapassar 1 MB
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     const form = await request.formData();
     const file = form.get('file');
     if (!file || typeof file === 'string') {
-      return NextResponse.json({ error: 'INVALID_INPUT', message: 'Campo file ausente' }, { status: 422 });
+      return jsonError('INVALID_INPUT', 'Campo file ausente', 422);
     }
     csvContent = await (file as File).text();
   } else if (contentType.includes('application/json')) {
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!csvContent.trim()) {
-    return NextResponse.json({ error: 'INVALID_INPUT', message: 'CSV vazio' }, { status: 422 });
+    return jsonError('INVALID_INPUT', 'CSV vazio', 422);
   }
 
   // Parse do CSV
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (parseErrors.length > 0 && rows.length === 0) {
-    return NextResponse.json({ error: 'PARSE_ERROR', parse_errors: parseErrors }, { status: 422 });
+    return NextResponse.json({ message: 'Erro ao processar CSV', error: { code: 'PARSE_ERROR' }, parse_errors: parseErrors }, { status: 422 });
   }
 
   // Busca transações existentes do usuário para validação RN-02
@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
 
   // Commit: persiste em transação atômica (RN-11)
   if (validRows.length === 0) {
-    return NextResponse.json({ error: 'NO_VALID_ROWS', errors: allErrors }, { status: 422 });
+    return NextResponse.json({ message: 'Nenhuma linha válida para importar', error: { code: 'NO_VALID_ROWS' }, errors: allErrors }, { status: 422 });
   }
 
   const assetIdByTicker = new Map(existingAssets.map((a) => [a.ticker, a.id]));

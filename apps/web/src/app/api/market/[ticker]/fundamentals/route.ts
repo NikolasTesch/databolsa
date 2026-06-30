@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { inferAssetClassForFundamentals, getFundamentals } from '@/lib/fundamentals/fundamentals.service';
 import type { AssetClass } from '@/types/api';
+import { jsonError } from '@/lib/http/errors';
 
 export async function GET(
   req: NextRequest,
@@ -22,6 +23,6 @@ export async function GET(
     });
   } catch (err) {
     console.error(`[api] /market/${ticker}/fundamentals error: ${String(err)}`);
-    return NextResponse.json({ message: `Ativo não encontrado: ${ticker}` }, { status: 404 });
+    return jsonError('NOT_FOUND', `Ativo não encontrado: ${ticker}`, 404);
   }
 }

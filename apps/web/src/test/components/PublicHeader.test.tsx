@@ -25,18 +25,20 @@ describe('PublicHeader', () => {
     expect(screen.queryByText('Criar conta')).toBeNull();
   });
 
-  it('renderiza logo "DataBolsa" com link para /', () => {
+  it('renderiza logo "databolsa" com link para /', () => {
     const { container } = render(<PublicHeader isAuthenticated={false} />);
     const logoLink = container.querySelector('a[href="/"]');
-    expect(logoLink?.textContent).toContain('DataBolsa');
+    expect(logoLink?.textContent).toContain('databolsa');
   });
 
-  it('tem a navbar com links de classes de ativo', () => {
+  it('tem a navbar com links de navegação', () => {
     render(<PublicHeader isAuthenticated={false} />);
-    expect(screen.getByText('Ações')).toBeInTheDocument();
-    expect(screen.getByText('FIIs')).toBeInTheDocument();
-    expect(screen.getByText('Crypto')).toBeInTheDocument();
-    expect(screen.getByText('Stocks US')).toBeInTheDocument();
+    expect(screen.getByText('Início')).toBeInTheDocument();
+    expect(screen.getByText('Mercados')).toBeInTheDocument();
+    expect(screen.getByText('Dividendos')).toBeInTheDocument();
+    expect(screen.getByText('Cripto')).toBeInTheDocument();
+    expect(screen.getByText('Ferramentas')).toBeInTheDocument();
+    expect(screen.getByText('Cursos')).toBeInTheDocument();
   });
 
   it('link "Entrar" aponta para /login', () => {

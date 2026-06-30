@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcryptjs from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/lib/auth/jwt';
+import { jsonError } from '@/lib/http/errors';
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -27,12 +28,12 @@ export async function POST(request: NextRequest) {
   }
 
   if (!refreshToken) {
-    return NextResponse.json({ message: 'Refresh token não fornecido' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Refresh token não fornecido', 401);
   }
 
   const payload = await verifyRefreshToken(refreshToken);
   if (!payload) {
-    return NextResponse.json({ message: 'Token inválido ou expirado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Token inválido ou expirado', 401);
   }
 
   const user = await prisma.user.findUnique({
@@ -40,12 +41,12 @@ export async function POST(request: NextRequest) {
   });
 
   if (!user || !user.refresh_token_hash) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const valid = await bcryptjs.compare(refreshToken, user.refresh_token_hash);
   if (!valid) {
-    return NextResponse.json({ message: 'Token inválido ou expirado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Token inválido ou expirado', 401);
   }
 
   const access_token = await signAccessToken({ sub: user.id, email: user.email });

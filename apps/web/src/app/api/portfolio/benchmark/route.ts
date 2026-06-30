@@ -58,7 +58,7 @@ async function fetchBenchmarkSeries(
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const targetUserId = request.nextUrl.searchParams.get('targetUserId') ?? user.id;
@@ -75,10 +75,10 @@ export async function GET(request: NextRequest) {
   const benchmark = (searchParams.get('benchmark') ?? 'IBOVESPA') as BenchmarkId;
 
   if (!VALID_PERIODS.includes(period)) {
-    return NextResponse.json({ error: 'period inválido. Use: ' + VALID_PERIODS.join('|') }, { status: 422 });
+    return jsonError('INVALID_PERIOD', 'Período inválido. Use: ' + VALID_PERIODS.join('|'), 422);
   }
   if (!VALID_BENCHMARKS.includes(benchmark)) {
-    return NextResponse.json({ error: 'benchmark inválido. Use: ' + VALID_BENCHMARKS.join('|') }, { status: 422 });
+    return jsonError('INVALID_BENCHMARK', 'Benchmark inválido. Use: ' + VALID_BENCHMARKS.join('|'), 422);
   }
 
   // Busca ativos do usuário com posições (RN-11)

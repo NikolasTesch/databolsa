@@ -20,10 +20,10 @@ describe('TrendBadge (TC-08)', () => {
     expect(badge?.className).toContain('text-loss');
   });
 
-  it('aplica classe text-content-muted para zero', () => {
+  it('aplica classe text-on-surface-variant para zero', () => {
     const { container } = render(<TrendBadge value="0" />);
     const badge = container.querySelector('span');
-    expect(badge?.className).toContain('text-content-muted');
+    expect(badge?.className).toContain('text-on-surface-variant');
   });
 
   it('exibe + antes do valor positivo sem prefixo', () => {

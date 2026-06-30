@@ -82,7 +82,7 @@ export async function DELETE(
 ) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const alert = await prisma.priceAlert.findUnique({
@@ -90,7 +90,7 @@ export async function DELETE(
   });
 
   if (!alert || alert.user_id !== user.id) {
-    return NextResponse.json({ message: 'Alerta não encontrado' }, { status: 404 });
+    return jsonError('NOT_FOUND', 'Alerta não encontrado', 404);
   }
 
   await prisma.priceAlert.delete({ where: { id: params.id } });

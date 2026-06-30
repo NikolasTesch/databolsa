@@ -9,6 +9,7 @@ interface AssetItem {
   name: string;
   price: string;
   changePercent: string;
+  assetClass?: string;
 }
 
 interface HighlightItem {
@@ -32,11 +33,14 @@ const ASSET_CLASSES = [
   { label: 'Cripto', key: 'CRYPTO' },
 ] as const;
 
-function AssetCard({ ticker, name, price, changePercent }: AssetItem) {
+function AssetCard({ ticker, name, price, changePercent, assetClass }: AssetItem) {
   const isPositive = changePercent.startsWith('+');
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3 hover:bg-surface-muted transition-colors">
+    <Link
+      href={`/ativos/${ticker}?class=${assetClass ?? 'STOCK_BR'}`}
+      className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3 hover:bg-surface-muted transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-primary"
+    >
       {/* Ticker circle */}
       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-surface-muted font-mono text-xs font-semibold text-on-surface">
         {ticker.slice(0, 2)}
@@ -61,7 +65,7 @@ function AssetCard({ ticker, name, price, changePercent }: AssetItem) {
       >
         {changePercent}
       </span>
-    </div>
+    </Link>
   );
 }
 
@@ -84,6 +88,7 @@ export default function HighlightsSection() {
 
   return (
     <section
+      id="mercados"
       className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-10"
       aria-label="Destaques do mercado"
     >
@@ -143,7 +148,7 @@ export default function HighlightsSection() {
                 <h3 className="text-base font-semibold text-on-surface">Maiores Altas</h3>
               </div>
               <Link
-                href={`/ativos?sort=change`}
+                href={`/ativos?classe=STOCK_BR&sort=change`}
                 className="text-sm text-primary hover:underline"
               >
                 Ver todos
@@ -152,7 +157,7 @@ export default function HighlightsSection() {
 
             <div className="flex flex-col gap-3">
               {gainers.length > 0 ? gainers.map((asset) => (
-                <AssetCard key={asset.ticker} ticker={asset.ticker} name={asset.name} price={asset.price} changePercent={asset.changePercent} />
+                <AssetCard key={asset.ticker} ticker={asset.ticker} name={asset.name} price={asset.price} changePercent={asset.changePercent} assetClass={data?.type ?? 'STOCK_BR'} />
               )) : (
                 <p className="text-sm text-on-surface-variant py-4 text-center">Nenhum dado disponível.</p>
               )}
@@ -178,7 +183,7 @@ export default function HighlightsSection() {
 
             <div className="flex flex-col gap-3">
               {losers.length > 0 ? losers.map((asset) => (
-                <AssetCard key={asset.ticker} ticker={asset.ticker} name={asset.name} price={asset.price} changePercent={asset.changePercent} />
+                <AssetCard key={asset.ticker} ticker={asset.ticker} name={asset.name} price={asset.price} changePercent={asset.changePercent} assetClass={data?.type ?? 'STOCK_BR'} />
               )) : (
                 <p className="text-sm text-on-surface-variant py-4 text-center">Nenhum dado disponível.</p>
               )}

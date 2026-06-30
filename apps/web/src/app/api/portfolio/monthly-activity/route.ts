@@ -8,7 +8,7 @@ import { jsonError } from '@/lib/http/errors';
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const targetUserId = request.nextUrl.searchParams.get('targetUserId') ?? user.id;
@@ -109,6 +109,6 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.warn('[portfolio/monthly-activity] Erro ao agregar atividade mensal:', error);
-    return NextResponse.json({ message: 'Erro interno' }, { status: 500 });
+    return jsonError('INTERNAL_ERROR', 'Erro interno', 500);
   }
 }

@@ -56,13 +56,44 @@ jobs:
       - name: Test — packages/ui
         run: pnpm --filter "@databolsa/ui" test
 
+      - name: Check Flutter tokens are in sync
+        run: pnpm --filter @databolsa/ui tokens:dart:check
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Test — Web (Vitest, jsdom)
+  # ─────────────────────────────────────────────────────────────────────────────
+  test-web:
+    name: Test — Web
+    runs-on: ubuntu-latest
+    needs: [test-ui]
+    env:
+      JWT_REFRESH_SECRET: test-jwt-refresh-secret-32chars!!
+      JWT_SECRET: test-access-secret-different-32chars!!
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test — Web
+        run: pnpm --filter web test
+
   # ─────────────────────────────────────────────────────────────────────────────
   # Build — Web (next build)
   # ─────────────────────────────────────────────────────────────────────────────
   build-web:
     name: Build — Web
     runs-on: ubuntu-latest
-    needs: [test-ui]
+    needs: [test-ui, test-web]
     env:
       API_URL: http://localhost:3000
     steps:
@@ -114,3 +145,25 @@ jobs:
 
       - name: Validate spec JSON files
         run: pnpm run validate-specs
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Test — Mobile (Flutter, optional)
+  # ─────────────────────────────────────────────────────────────────────────────
+  test-mobile:
+    name: Test — Mobile (optional)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Test — Mobile
+        working-directory: apps/mobile
+        run: flutter test

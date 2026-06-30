@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Decimal } from 'decimal.js';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth/get-user';
+import { jsonError } from '@/lib/http/errors';
 
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const dbUser = await prisma.user.findUnique({
@@ -22,14 +23,14 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   let body: { monthly_income_goal?: unknown };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'INVALID_INPUT' }, { status: 422 });
+    return jsonError('INVALID_INPUT', 'Payload inválido', 422);
   }
 
   const { monthly_income_goal } = body;
@@ -46,10 +47,10 @@ export async function PATCH(request: NextRequest) {
   try {
     goalDecimal = new Decimal(String(monthly_income_goal));
     if (goalDecimal.lt(0)) {
-      return NextResponse.json({ error: 'INVALID_INPUT', message: 'Meta não pode ser negativa' }, { status: 422 });
+      return jsonError('INVALID_INPUT', 'Meta não pode ser negativa', 422);
     }
   } catch {
-    return NextResponse.json({ error: 'INVALID_INPUT' }, { status: 422 });
+    return jsonError('INVALID_INPUT', 'Valor inválido para meta mensal', 422);
   }
 
   await prisma.user.update({

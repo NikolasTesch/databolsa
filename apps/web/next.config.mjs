@@ -19,6 +19,7 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
+  output: 'standalone',
   transpilePackages: ['@databolsa/ui'],
   async headers() {
     return [

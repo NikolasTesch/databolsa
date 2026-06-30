@@ -26,7 +26,7 @@ interface PositionItem {
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const targetUserId = request.nextUrl.searchParams.get('targetUserId') ?? user.id;

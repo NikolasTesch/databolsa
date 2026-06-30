@@ -51,20 +51,17 @@ describe('TC-03 — NewsCard Component', () => {
     expect(link).toHaveAttribute('href', 'https://bloomberg.com/petr4');
   });
 
-  it('exibe imagem quando imageUrl é fornecida', () => {
+  it('exibe source e data formatada quando tem imagem (imageUrl fornecida)', () => {
     render(<NewsCard article={ARTICLE_WITH_IMAGE} />);
-    const img = screen.getByRole('presentation', { hidden: true }) as HTMLImageElement;
-    // img has aria-hidden="true" so we query it differently
-    const imgs = document.querySelectorAll('img');
-    expect(imgs.length).toBeGreaterThan(0);
-    expect(imgs[0].src).toContain('example.com/img.jpg');
+    // Component no longer renders images; verify source and date are shown
+    expect(screen.getByText('Bloomberg')).toBeInTheDocument();
+    expect(screen.getByText(/14 de jun\. de 2026/)).toBeInTheDocument();
   });
 
-  it('exibe placeholder SVG data URI quando imageUrl é null', () => {
+  it('exibe source e data formatada sem imagem (imageUrl null)', () => {
     render(<NewsCard article={ARTICLE_WITHOUT_IMAGE} />);
-    const imgs = document.querySelectorAll('img');
-    expect(imgs.length).toBeGreaterThan(0);
-    expect(imgs[0].src).toContain('data:image/svg+xml');
+    expect(screen.getByText('Reuters')).toBeInTheDocument();
+    expect(screen.getByText(/13 de jun\. de 2026/)).toBeInTheDocument();
   });
 
   it('tem aria-label com o título do artigo', () => {

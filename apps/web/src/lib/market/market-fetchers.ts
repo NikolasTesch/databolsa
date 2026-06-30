@@ -6,6 +6,7 @@ export interface MarketQuote {
   name: string;
   changePercent: string | null;
   changeValue: string | null;
+  volume24h?: Decimal;
 }
 
 let tokenWarned = false;
@@ -44,7 +45,7 @@ export async function fetchCoinGeckoMulti(
   coinIds: string[],
 ): Promise<Record<string, MarketQuote>> {
   const ids = coinIds.join(',');
-  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=brl&include_24hr_change=true`;
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=brl&include_24hr_change=true&include_24hr_vol=true`;
   const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
   if (!response.ok) throw new Error(`CoinGecko returned ${response.status}`);
   const data = await response.json();
@@ -59,6 +60,9 @@ export async function fetchCoinGeckoMulti(
           ? String(data[id].brl_24h_change)
           : null,
         changeValue: null,
+        volume24h: data[id].brl_24h_vol != null
+          ? new Decimal(String(data[id].brl_24h_vol))
+          : undefined,
       };
     }
   }

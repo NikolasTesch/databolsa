@@ -10,7 +10,7 @@ const VALID_ROLES: GroupMemberRole[] = ['LEADER', 'MEMBER'];
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const membership = await prisma.groupMembership.findUnique({
@@ -36,20 +36,20 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: 'Payload inválido' }, { status: 400 });
+    return jsonError('INVALID_INPUT', 'Payload inválido', 400);
   }
 
   const inviteRole = body.role ?? 'MEMBER';
   if (!VALID_ROLES.includes(inviteRole as GroupMemberRole)) {
-    return NextResponse.json({ message: 'Papel inválido' }, { status: 400 });
+    return jsonError('INVALID_ROLE', 'Papel inválido', 400);
   }
 
   if (body.expires_in_days !== undefined && (typeof body.expires_in_days !== 'number' || body.expires_in_days <= 0)) {
-    return NextResponse.json({ message: 'expires_in_days deve ser um número positivo' }, { status: 400 });
+    return jsonError('INVALID_EXPIRATION', 'expires_in_days deve ser um número positivo', 400);
   }
 
   if (body.max_uses !== undefined && (typeof body.max_uses !== 'number' || body.max_uses <= 0)) {
-    return NextResponse.json({ message: 'max_uses deve ser um número positivo' }, { status: 400 });
+    return jsonError('INVALID_MAX_USES', 'max_uses deve ser um número positivo', 400);
   }
 
   const expiresAt = body.expires_in_days

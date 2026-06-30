@@ -3,6 +3,7 @@ import bcryptjs from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import { signAccessToken, signRefreshToken } from '@/lib/auth/jwt';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { jsonError } from '@/lib/http/errors';
 
 const REGISTER_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
 
@@ -30,12 +31,12 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: 'Payload inválido' }, { status: 400 });
+    return jsonError('INVALID_INPUT', 'Payload inválido', 400);
   }
 
   const { email, password } = body;
   if (!email || !password) {
-    return NextResponse.json({ message: 'Email e senha são obrigatórios' }, { status: 400 });
+    return jsonError('INVALID_INPUT', 'Email e senha são obrigatórios', 400);
   }
 
   const existing = await prisma.user.findUnique({
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (existing) {
-    return NextResponse.json({ message: 'Email já cadastrado' }, { status: 400 });
+    return jsonError('DUPLICATE_EMAIL', 'Email já cadastrado', 409);
   }
 
   const password_hash = await bcryptjs.hash(password, 10);

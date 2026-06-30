@@ -6,7 +6,7 @@ import { jsonError } from '@/lib/http/errors';
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   const memberships = await prisma.groupMembership.findMany({
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    return jsonError('UNAUTHORIZED', 'Não autorizado', 401);
   }
 
   interface CreateGroupBody {
@@ -47,13 +47,13 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: 'Payload inválido' }, { status: 400 });
+    return jsonError('INVALID_INPUT', 'Payload inválido', 400);
   }
 
   const { name, description } = body;
 
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
-    return NextResponse.json({ message: 'Nome do grupo não pode estar vazio' }, { status: 400 });
+    return jsonError('INVALID_NAME', 'Nome do grupo não pode estar vazio', 400);
   }
 
   const result = await prisma.$transaction(async (tx) => {

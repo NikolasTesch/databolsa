@@ -57,7 +57,7 @@ describe('IndicatorGrid — TC-07', () => {
     expect(screen.queryByText(/ROE/)).not.toBeInTheDocument();
 
     // Labels que DEVEM aparecer para crypto
-    expect(screen.getByText('Market Cap')).toBeInTheDocument();
+    expect(screen.getByText('Valor de Mercado')).toBeInTheDocument();
     expect(screen.getByText('Vol. 24h')).toBeInTheDocument();
     expect(screen.getByText('Var. 7d (%)')).toBeInTheDocument();
   });
