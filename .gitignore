@@ -40,3 +40,7 @@ Thumbs.db
 
 # Turborepo
 .turbo/
+
+# AI Agents / Codex
+.agents/
+.codex/
