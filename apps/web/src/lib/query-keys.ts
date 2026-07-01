@@ -12,6 +12,14 @@ export const queryKeys = {
       ['portfolio', 'history', targetUserId] as const,
     monthlyActivity: (targetUserId?: string) =>
       ['portfolio', 'monthly-activity', targetUserId] as const,
+    dividends: (targetUserId?: string) =>
+      ['portfolio', 'dividends', targetUserId] as const,
+    dividendProjection: (targetUserId?: string) =>
+      ['portfolio', 'dividends', 'projection', targetUserId] as const,
+    allocation: (targetUserId?: string) =>
+      ['portfolio', 'allocation', targetUserId] as const,
+    benchmark: (benchmark: string, period: string, targetUserId?: string) =>
+      ['portfolio', 'benchmark', benchmark, period, targetUserId] as const,
   },
   assets: {
     all: ['assets'] as const,

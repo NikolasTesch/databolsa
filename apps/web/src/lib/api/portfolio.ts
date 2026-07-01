@@ -1,5 +1,13 @@
 import { apiFetch } from './client';
-import type { PortfolioSummaryDto, PortfolioHistoryDto, MonthlyActivityDto } from '@/types/api';
+import type {
+  PortfolioSummaryDto,
+  PortfolioHistoryDto,
+  MonthlyActivityDto,
+  AllocationResponse,
+  BenchmarkResponse,
+  DividendsResponse,
+  DividendProjectionResponse,
+} from '@/types/api';
 
 export async function getPortfolioSummary(targetUserId?: string): Promise<PortfolioSummaryDto> {
   const params = targetUserId ? `?targetUserId=${encodeURIComponent(targetUserId)}` : '';
@@ -14,4 +22,29 @@ export async function getPortfolioHistory(targetUserId?: string): Promise<Portfo
 export async function getMonthlyActivity(targetUserId?: string): Promise<MonthlyActivityDto> {
   const params = targetUserId ? `?targetUserId=${encodeURIComponent(targetUserId)}` : '';
   return apiFetch<MonthlyActivityDto>(`/portfolio/monthly-activity${params}`);
+}
+
+export async function getBenchmark(
+  benchmark: string,
+  period: string,
+  targetUserId?: string,
+): Promise<BenchmarkResponse> {
+  const params = new URLSearchParams({ benchmark, period });
+  if (targetUserId) params.set('targetUserId', targetUserId);
+  return apiFetch<BenchmarkResponse>(`/portfolio/benchmark?${params}`);
+}
+
+export async function getDividends(targetUserId?: string): Promise<DividendsResponse> {
+  const params = targetUserId ? `?targetUserId=${encodeURIComponent(targetUserId)}` : '';
+  return apiFetch<DividendsResponse>(`/portfolio/dividends${params}`);
+}
+
+export async function getDividendProjection(targetUserId?: string): Promise<DividendProjectionResponse> {
+  const params = targetUserId ? `?targetUserId=${encodeURIComponent(targetUserId)}` : '';
+  return apiFetch<DividendProjectionResponse>(`/portfolio/dividends/projection${params}`);
+}
+
+export async function getAllocation(targetUserId?: string): Promise<AllocationResponse> {
+  const params = targetUserId ? `?targetUserId=${encodeURIComponent(targetUserId)}` : '';
+  return apiFetch<AllocationResponse>(`/portfolio/allocation${params}`);
 }
