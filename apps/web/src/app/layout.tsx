@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import { Providers } from './providers';
 import './globals.css';
 
@@ -53,6 +54,7 @@ export default function RootLayout({
       </head>
       <body className="bg-background text-on-surface font-sans min-h-screen">
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
