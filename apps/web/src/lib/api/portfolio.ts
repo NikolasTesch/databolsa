@@ -48,3 +48,8 @@ export async function getAllocation(targetUserId?: string): Promise<AllocationRe
   const params = targetUserId ? `?targetUserId=${encodeURIComponent(targetUserId)}` : '';
   return apiFetch<AllocationResponse>(`/portfolio/allocation${params}`);
 }
+
+export async function getAportesComparativo(targetUserId?: string): Promise<{ by_year: Record<string, Record<string, string>> }> {
+  const params = targetUserId ? `?targetUserId=${encodeURIComponent(targetUserId)}` : '';
+  return apiFetch<{ by_year: Record<string, Record<string, string>> }>(`/portfolio/aportes${params}`);
+}
