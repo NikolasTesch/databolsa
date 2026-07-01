@@ -25,6 +25,10 @@ const makePosition = (overrides: Partial<PositionSummaryDto> = {}): PositionSumm
   alocacao_pct: '23.33',
   is_stale: false,
   current_price_brl: '35.00',
+  total_dividends_brl: '0.00',
+  total_return_brl: '500.00',
+  total_return_pct: '16.67',
+  yield_on_cost_pct: '0.00',
   ...overrides,
 });
 

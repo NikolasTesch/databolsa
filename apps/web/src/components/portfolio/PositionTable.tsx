@@ -47,6 +47,8 @@ export function PositionTable({ positions }: PositionTableProps) {
             <th className="px-4 py-3 text-right">Valor Atual</th>
             <th className="px-4 py-3 text-right">P/L (R$)</th>
             <th className="px-4 py-3 text-right">P/L (%)</th>
+            <th className="px-4 py-3 text-right">Yield</th>
+            <th className="px-4 py-3 text-right">Retorno Total</th>
             <th className="px-4 py-3 text-right">Alocação</th>
           </tr>
         </thead>
@@ -103,6 +105,16 @@ export function PositionTable({ positions }: PositionTableProps) {
                   })}
                 >
                   {pos.lucro_prejuizo_pct !== null ? formatPct(pos.lucro_prejuizo_pct) : '—'}
+                </td>
+                <td className="px-4 py-3 text-right font-mono tabular-nums text-on-surface">
+                  {formatPct(pos.yield_on_cost_pct)}
+                </td>
+                <td className={cn('px-4 py-3 text-right font-mono tabular-nums', {
+                  'text-profit': plSign === 'positive',
+                  'text-loss': plSign === 'negative',
+                  'text-neutralChange': plSign === 'neutral',
+                })}>
+                  {pos.total_return_brl ? formatPLBRL(pos.total_return_brl) : '—'}
                 </td>
                 <td className="px-4 py-3 text-right font-mono tabular-nums text-on-surface">
                   {pos.alocacao_pct !== null ? formatAllocationPct(pos.alocacao_pct) : '—'}

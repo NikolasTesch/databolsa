@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Decimal } from 'decimal.js';
 import type { PositionSummaryDto } from '@/types/api';
-import { formatBRL, formatQty, formatAllocationPct, getValueSign } from '@/lib/format';
+import { formatBRL, formatQty, formatAllocationPct, formatPct, formatPLBRL, getValueSign } from '@/lib/format';
 import { StaleBadge } from './StaleBadge';
 import { cn } from '@/components/ui/cn';
 
@@ -49,6 +49,8 @@ export function DetailedPositionTable({ positions }: Props) {
             <th className="pb-2 pr-4 text-right">Patrimônio</th>
             <th className="pb-2 pr-4 text-right">P/L R$</th>
             <th className="pb-2 pr-4 text-right">P/L %</th>
+            <th className="pb-2 pr-4 text-right">Yield</th>
+            <th className="pb-2 text-right">Retorno Total</th>
             <th className="pb-2 text-right">% Carteira</th>
           </tr>
         </thead>
@@ -98,6 +100,12 @@ export function DetailedPositionTable({ positions }: Props) {
                   {pos.lucro_prejuizo_pct
                     ? `${new Decimal(pos.lucro_prejuizo_pct).toFixed(2).replace('.', ',')}%`
                     : '—'}
+                </td>
+                <td className="py-3 pr-4 text-right font-mono text-green-600">
+                  {formatPct(pos.yield_on_cost_pct)}
+                </td>
+                <td className={cn('py-3 pr-4 text-right font-mono', signClass(pos.total_return_brl))}>
+                  {pos.total_return_brl ? formatPLBRL(pos.total_return_brl) : '—'}
                 </td>
                 <td className="py-3 text-right font-mono text-on-surface-variant">
                   {pos.alocacao_pct ? formatAllocationPct(pos.alocacao_pct) : '—'}

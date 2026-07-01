@@ -41,6 +41,10 @@ describe('PositionTable com is_stale', () => {
     alocacao_pct: '60.00',
     is_stale: true,
     current_price_brl: '90.00',
+    total_dividends_brl: '0.00',
+    total_return_brl: '-100.00',
+    total_return_pct: '-10.00',
+    yield_on_cost_pct: '0.00',
   };
 
   it('exibe o StaleBadge para posição com is_stale=true', () => {
