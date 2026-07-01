@@ -53,3 +53,38 @@ export async function getAportesComparativo(targetUserId?: string): Promise<{ by
   const params = targetUserId ? `?targetUserId=${encodeURIComponent(targetUserId)}` : '';
   return apiFetch<{ by_year: Record<string, Record<string, string>> }>(`/portfolio/aportes${params}`);
 }
+
+export async function listWatch(): Promise<{
+  watches: {
+    id: string;
+    ticker: string;
+    name: string | null;
+    asset_class: string;
+    current_price_brl: string | null;
+    price_change_pct: string | null;
+    added_at: string;
+  }[];
+}> {
+  return apiFetch('/portfolio/watch');
+}
+
+export async function addWatch(data: {
+  ticker: string;
+  name?: string;
+  asset_class?: string;
+}): Promise<{
+  id: string;
+  ticker: string;
+  name: string | null;
+  asset_class: string;
+  added_at: string;
+}> {
+  return apiFetch('/portfolio/watch', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function removeWatch(id: string): Promise<void> {
+  await apiFetch(`/portfolio/watch/${id}`, { method: 'DELETE' });
+}
