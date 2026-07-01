@@ -18,6 +18,7 @@ const navItems: NavItem[] = [
   { href: '/portfolio', label: 'Portfólio', icon: 'pie_chart' },
   { href: '/portfolio/groups', label: 'Grupos', icon: 'groups' },
   { href: '/assets', label: 'Ativos', icon: 'account_balance' },
+  { href: '/wishlist', label: 'Watchlist', icon: 'star' },
 ];
 
 interface SidebarContentProps {
