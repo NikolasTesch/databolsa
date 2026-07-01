@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
-import { formatBRL } from '@/lib/format';
+import { formatBRL, formatPLBRL } from '@/lib/format';
 import type { PortfolioSummaryDto } from '@/types/api';
 
 interface SummaryCardsProps {
@@ -68,7 +68,7 @@ export function SummaryCards({ data }: SummaryCardsProps) {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="grid gap-4 sm:grid-cols-2"
+      className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
     >
       <motion.div variants={cardVariants}>
         <Card>
@@ -93,6 +93,49 @@ export function SummaryCards({ data }: SummaryCardsProps) {
               ? `${data.positions.filter((p) => p.is_stale).length} com cotação desatualizada`
               : 'Todas as cotações atualizadas'}
           </p>
+        </Card>
+      </motion.div>
+
+      <motion.div variants={cardVariants}>
+        <Card>
+          <p className="text-sm font-medium text-on-surface-variant">Yield on Cost Médio</p>
+          <p className="mt-1 font-mono text-2xl font-semibold tabular-nums">
+            {(() => {
+              const totalDivs = data.positions.reduce(
+                (sum, p) => sum + parseFloat(p.total_dividends_brl || '0'), 0,
+              );
+              const totalInv = data.positions.reduce(
+                (sum, p) => sum + parseFloat(p.invested_value), 0,
+              );
+              if (totalInv <= 0 || totalDivs <= 0) return '—';
+              return `${((totalDivs / totalInv) * 100).toFixed(2)}%`;
+            })()}
+          </p>
+          <p className="mt-1 text-xs text-outline">Dividendos / Capital Investido</p>
+        </Card>
+      </motion.div>
+
+      <motion.div variants={cardVariants}>
+        <Card>
+          <p className="text-sm font-medium text-on-surface-variant">Retorno Total</p>
+          <p
+            className={`mt-1 font-mono text-2xl font-semibold tabular-nums ${
+              (() => {
+                const totalRet = data.positions.reduce(
+                  (sum, p) => sum + (p.total_return_brl ? parseFloat(p.total_return_brl) : 0), 0,
+                );
+                return totalRet >= 0 ? 'text-secondary' : 'text-tertiary';
+              })()
+            }`}
+          >
+            {(() => {
+              const totalRet = data.positions.reduce(
+                (sum, p) => sum + (p.total_return_brl ? parseFloat(p.total_return_brl) : 0), 0,
+              );
+              return formatPLBRL(totalRet.toFixed(2));
+            })()}
+          </p>
+          <p className="mt-1 text-xs text-outline">Valorização + Proventos</p>
         </Card>
       </motion.div>
     </motion.div>

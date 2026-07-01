@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { queryKeys } from '@/lib/query-keys';
 import { getPortfolioSummary, getPortfolioHistory, getMonthlyActivity } from '@/lib/api/portfolio';
 import { SummaryCards } from '@/components/portfolio/SummaryCards';
+import { ConcentrationCards } from '@/components/portfolio/ConcentrationCards';
 import { PositionTable } from '@/components/portfolio/PositionTable';
 import { AllocationChartDynamic } from '@/components/portfolio/AllocationChartDynamic';
 import { GrowthChartDynamic } from '@/components/portfolio/GrowthChartDynamic';
@@ -97,6 +98,9 @@ export default function DashboardPage() {
             className="space-y-6"
           >
             <SummaryCards data={data} />
+
+            {/* Concentração */}
+            <ConcentrationCards positions={data.positions} />
 
             {/* Crescimento Patrimonial */}
             <Card padding="md">
