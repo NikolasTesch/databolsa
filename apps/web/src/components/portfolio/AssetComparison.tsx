@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { Decimal } from 'decimal.js';
 import type { PortfolioSummaryDto, Asset } from '@/types/api';
-import { formatBRL, formatAllocationPct, getValueSign } from '@/lib/format';
+import { formatBRL, formatAllocationPct, formatPct, getValueSign } from '@/lib/format';
 import { AssetClassBadge } from '@/components/assets/AssetClassBadge';
+import { StaleBadge } from '@/components/portfolio/StaleBadge';
 import { cn } from '@/components/ui/cn';
 
 interface Props {
@@ -74,7 +75,10 @@ export function AssetComparison({ summary, assets }: Props) {
                 className="space-y-3 rounded-xl border border-border bg-surface p-4"
               >
                 <div>
-                  <p className="text-lg font-bold">{pos.ticker}</p>
+                  <p className="text-lg font-bold">
+                    {pos.ticker}
+                    {pos.is_stale && <StaleBadge className="ml-1" />}
+                  </p>
                   {asset && <AssetClassBadge assetClass={asset.asset_class} />}
                 </div>
 
@@ -125,6 +129,54 @@ export function AssetComparison({ summary, assets }: Props) {
                     <p className="text-xs text-on-surface-variant">% Carteira</p>
                     <p className="font-mono font-medium text-on-surface-variant">
                       {pos.alocacao_pct ? formatAllocationPct(pos.alocacao_pct) : '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-on-surface-variant">Yield / Custo</p>
+                    <p className="font-mono font-medium text-green-600">
+                      {formatPct(pos.yield_on_cost_pct)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-on-surface-variant">Retorno Total</p>
+                    <p
+                      className={cn(
+                        'font-mono font-medium',
+                        plSign === 'positive'
+                          ? 'text-green-600'
+                          : plSign === 'negative'
+                          ? 'text-red-600'
+                          : '',
+                      )}
+                    >
+                      {pos.total_return_brl ? formatBRL(pos.total_return_brl) : '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-on-surface-variant">Retorno %</p>
+                    <p
+                      className={cn(
+                        'font-mono font-medium',
+                        plSign === 'positive'
+                          ? 'text-green-600'
+                          : plSign === 'negative'
+                          ? 'text-red-600'
+                          : '',
+                      )}
+                    >
+                      {formatPct(pos.total_return_pct)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-on-surface-variant">Total Prov.</p>
+                    <p className="font-mono font-medium text-green-600">
+                      {formatBRL(pos.total_dividends_brl)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-on-surface-variant">Setor</p>
+                    <p className="font-mono font-medium text-on-surface-variant">
+                      {asset?.sector || '—'}
                     </p>
                   </div>
                 </div>
