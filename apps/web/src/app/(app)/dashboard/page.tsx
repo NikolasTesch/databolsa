@@ -114,6 +114,23 @@ export default function DashboardPage() {
               <GrowthChartDynamic dataPoints={history?.data_points ?? []} />
             </Card>
 
+            {/* Benchmark vs Carteira */}
+            <BenchmarkChartDynamic />
+
+            {/* Dividendos */}
+            <DividendMiniChartDynamic />
+
+            {/* Alocação por Ativo */}
+            {data.positions.filter((p) => p.valor_atual_brl !== null).length > 0 && (
+              <Card padding="md">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-primary">pie_chart</span>
+                  <h2 className="text-sm font-medium text-on-surface-variant">Alocação por Ativo</h2>
+                </div>
+                <AllocationChartDynamic positions={data.positions} />
+              </Card>
+            )}
+
             {/* Atividade do Mês */}
             {monthly && (
               <Card padding="md">
@@ -125,25 +142,7 @@ export default function DashboardPage() {
               </Card>
             )}
 
-            {/* Dividendos */}
-            <DividendMiniChartDynamic />
-
-            {/* Benchmark vs Carteira */}
-            <BenchmarkChartDynamic />
-
-            {/* Aportes por Mês */}
-            <AportesComparativoChartDynamic />
-
-            {data.positions.filter((p) => p.valor_atual_brl !== null).length > 0 && (
-              <Card padding="md">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="material-symbols-outlined text-primary">pie_chart</span>
-                  <h2 className="text-sm font-medium text-on-surface-variant">Alocação por Ativo</h2>
-                </div>
-                <AllocationChartDynamic positions={data.positions} />
-              </Card>
-            )}
-
+            {/* Posições */}
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <span className="material-symbols-outlined text-primary">account_balance</span>
@@ -151,6 +150,9 @@ export default function DashboardPage() {
               </div>
               <PositionTable positions={data.positions} />
             </div>
+
+            {/* Aportes por Mês (final) */}
+            <AportesComparativoChartDynamic />
           </motion.div>
         )}
       </AnimatePresence>
