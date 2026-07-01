@@ -2,6 +2,7 @@
 
 import { Decimal } from 'decimal.js';
 import type { PortfolioSummaryDto } from '@/types/api';
+import { BenchmarkChartDynamic } from './BenchmarkChartDynamic';
 
 interface Props {
   summary: PortfolioSummaryDto;
@@ -128,6 +129,10 @@ export function RentabilidadePanel({ summary }: Props) {
           </p>
         </div>
       )}
+
+      <div className="border-t border-border pt-6">
+        <BenchmarkChartDynamic />
+      </div>
 
       <p className="text-xs text-on-surface-variant">
         * CDI estimado com base em {CDI_ANNUAL_RATE}% a.a. — valores aproximados. IBOV e S&P 500
