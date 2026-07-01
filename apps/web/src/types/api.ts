@@ -35,6 +35,7 @@ export interface Asset {
   asset_class: AssetClass;
   currency: Currency;
   data_source: DataSource;
+  sector: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -91,6 +92,10 @@ export interface PositionSummaryDto {
   alocacao_pct: string | null;
   is_stale: boolean;
   current_price_brl: string | null;
+  total_dividends_brl: string;
+  total_return_brl: string | null;
+  total_return_pct: string | null;
+  yield_on_cost_pct: string;
 }
 
 export interface PortfolioSummaryDto {
@@ -177,6 +182,39 @@ export interface AcceptInviteResponse {
   success: boolean;
   group_id: string;
   role: string;
+}
+
+// ---- Dashboard ----
+
+export interface BenchmarkResponse {
+  period: string;
+  benchmark: string;
+  portfolio_return_pct: string;
+  benchmark_return_pct: string;
+  portfolio_series: { date: string; value: number }[];
+  benchmark_series: { date: string; value: number }[];
+  is_stale: boolean;
+}
+
+export interface DividendsResponse {
+  total_brl: string;
+  by_month: { key: string; value_brl: string }[];
+  by_quarter: { key: string; value_brl: string }[];
+  by_year: { key: string; value_brl: string }[];
+  by_asset: { key: string; value_brl: string }[];
+}
+
+export interface DividendProjectionResponse {
+  annual_projection_brl: string;
+  monthly_avg_brl: string;
+  basis_months: number;
+}
+
+export interface AllocationResponse {
+  patrimonio_total_brl: string;
+  by_class: { key: string; value_brl: string; pct: string }[];
+  by_sector: { key: string; value_brl: string; pct: string }[];
+  by_currency: { key: string; value_brl: string; pct: string }[];
 }
 
 // ---- Error ----
