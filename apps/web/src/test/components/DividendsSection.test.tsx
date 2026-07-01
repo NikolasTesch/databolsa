@@ -77,7 +77,7 @@ describe('DividendsSection', () => {
     render(Component);
 
     const link = screen.getByText('Ver agenda completa');
-    expect(link).toHaveAttribute('href', '/proventos/agenda');
+    expect(link).toHaveAttribute('href', '/dividendos');
   });
 
   it('renders news section with empty state message when no news', async () => {

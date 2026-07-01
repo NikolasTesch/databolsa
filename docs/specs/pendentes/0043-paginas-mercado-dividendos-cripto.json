@@ -1,0 +1,216 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0043",
+  "title": "Páginas de Mercado, Dividendos e Cripto – Full MarketTable, Agenda de Proventos e Panorama Cripto",
+  "status": "draft",
+  "type": "feature",
+  "created": "2026-07-01",
+  "updated": "2026-07-01",
+  "authors": ["Nikolas"],
+  "summary": "Cria três páginas públicas de destino: /mercados com FullMarketTable (tabela completa de ativos por classe), /dividendos com agenda de proventos e calendário de pagamentos, e /cripto com overview completo de criptomoedas (preços, variação, volume, notícias e cursos). Atualiza a navegação do PublicHeader e PublicFooter para incluir as novas rotas.",
+  "motivation": "A home pública (SPEC-0012) exibe apenas 6 altas/baixas por classe. Usuários precisam de páginas dedicadas com tabela completa, filtros e ordenação. Dividendos e cripto são os temas mais buscados por investidores brasileiros — páginas dedicadas aumentam o tempo de visita e a percepção de utilidade.",
+  "related": {
+    "prd": ["PRD §5 (escopo MVP)", "PRD §6 (RF-05 Cotação, RF-12 Cursos)"],
+    "spec_doc": ["SPEC §5 (API market/*)", "SPEC §6 (fontes externas)"],
+    "business_rules": ["RN-10"],
+    "adrs": [],
+    "depends_on": ["SPEC-0012", "SPEC-0042"]
+  },
+  "scope": {
+    "in_scope": [
+      "Página /mercados — FullMarketTable com abas por classe (Ações, FIIs, ETFs, BDRs, Crypto, Stocks US), ordenação por preço/variação/volume, paginação client-side, search por ticker/nome na tabela",
+      "Página /dividendos — agenda de proventos com data de pagamento, tipo (DIVIDEND/JCP), valor por cota, ticker; calendário visual; filtro por ticker e mês",
+      "Página /cripto — overview completo: tabela de preços, variação 24h, market cap, volume; top 3 trending; notícias; cursos de cripto da B3",
+      "Atualização do PublicHeader nav: adicionar links 'Mercados', 'Dividendos', 'Cripto' como entradas fixas no menu principal",
+      "Atualização do PublicFooter: adicionar links para /mercados, /dividendos, /cripto",
+      "APIs existentes (/api/market/highlights, /api/market/dividends/agenda, /api/market/crypto/overview) consumidas pelas páginas — sem novas rotas de API além das já especificadas em SPEC-0042",
+      "Degradação graciosa: se API falhar, exibir mensagem amigável e dados do cache se disponíveis (RN-10)"
+    ],
+    "out_of_scope": [
+      "Gráfico de velas/análise técnica (coberto em Fase 2 do SPEC.md)",
+      "Histórico de preços individual dos ativos na FullMarketTable (apenas cotação atual)",
+      "Páginas de detalhe de cripto individuais (/cripto/[symbol] — futuro)",
+      "Download de dados em CSV/Excel",
+      "Versão mobile Flutter destas páginas"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "/mercados deve exibir FullMarketTable com dados consolidados da API /api/market/highlights para a classe selecionada, com suporte a paginação (20 itens/página) e ordenação por coluna.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "/dividendos deve exibir agenda de proventos da API /api/market/dividends/agenda em formato de tabela com data, ticker, tipo, valor, e filtro por ticker/mês.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "/cripto deve exibir tabela de criptomoedas da API /api/market/crypto/overview com preço BRL, variação 24h, market cap e volume; exibir top 3 trending em cards destacados.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "A navegação do PublicHeader e PublicFooter deve incluir links permanentes para /mercados, /dividendos e /cripto.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Em caso de falha de API externa, as páginas devem exibir dados do cache se disponíveis (stale:true) ou mensagem 'Dados indisponíveis' sem quebrar o layout (RN-10).",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "QuoteCache",
+      "change": "none",
+      "fields": [],
+      "notes": "Reutilizado para cache de destaques e agenda. Sem alteração no schema."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/highlights",
+      "auth": false,
+      "request": "?type=STOCK_BR&limit=50&sort=change_desc",
+      "response": "{ gainers: [], losers: [], all: [], type, asOf, stale }",
+      "errors": ["400: type inválido", "503: dados indisponíveis"],
+      "notes": "Já existe — expandir para suportar limit > 6 e sort options para FullMarketTable."
+    },
+    {
+      "method": "GET",
+      "path": "/api/market/dividends/agenda",
+      "auth": false,
+      "request": "?ticker=PETR4&month=2026-07",
+      "response": "{ data: AgendaItem[], asOf, stale }",
+      "errors": ["429: rate limit", "503: sem dados"],
+      "notes": "Especificado em SPEC-0042. Adicionar filtro por ticker e mês."
+    },
+    {
+      "method": "GET",
+      "path": "/api/market/crypto/overview",
+      "auth": false,
+      "request": "Nenhum",
+      "response": "{ data: CryptoOverviewItem[], trending: CryptoOverviewItem[], asOf }",
+      "errors": ["429: rate limit", "503: sem dados"],
+      "notes": "Especificado em SPEC-0042. Sem alteração adicional."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "Usuário acessa /mercados",
+      "when": "A página carrega",
+      "then": "Vê FullMarketTable com abas de classe (Ações selecionado por default), 20+ ativos por página, colunas ticker/nome/preço/variação, com ordenação clicável e paginação."
+    },
+    {
+      "id": "AC-02",
+      "given": "Usuário acessa /dividendos",
+      "when": "A página carrega",
+      "then": "Vê tabela de agenda de proventos ordenada por data de pagamento, com colunas: Data, Ativo, Tipo, Valor/Cota. Filtros por ticker e mês funcionam."
+    },
+    {
+      "id": "AC-03",
+      "given": "Usuário acessa /cripto",
+      "when": "A página carrega",
+      "then": "Vê tabela de criptomoedas com preços BRL, variação 24h, market cap; top 3 trending em cards destacados; seção de notícias e cursos de cripto."
+    },
+    {
+      "id": "AC-04",
+      "given": "Usuário clica em 'Mercados' no PublicHeader",
+      "when": "A navegação ocorre",
+      "then": "Vai para /mercados sem erro 404."
+    },
+    {
+      "id": "AC-05",
+      "given": "API de mercado retorna erro 503 (fonte externa offline)",
+      "when": "Usuário acessa /mercados",
+      "then": "Página exibe mensagem 'Dados temporariamente indisponíveis' ou dados stale do cache, sem crash ou layout quebrado."
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "/mercados: renderizar FullMarketTable com 50 ativos mockados. Verificar paginação (20/página), ordenação por coluna e troca de abas.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "/dividendos: renderizar tabela de agenda com filtro por ticker e mês. Verificar resultado filtrado.",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "/cripto: renderizar tabela + trending + notícias + cursos com dados mockados.",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "PublicHeader e PublicFooter: verificar que links /mercados, /dividendos, /cripto existem e são rotas válidas (200).",
+      "kind": "e2e",
+      "covers": ["REQ-04", "AC-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-05",
+      "description": "/mercados com falha de API: mockar erro 503 e verificar mensagem de fallback sem layout quebrado.",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-05"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar página /mercados com FullMarketTable, abas por classe, ordenação e paginação client-side.",
+      "target": "apps/web/src/app/(public)/mercados/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar página /dividendos com tabela de agenda, filtro por ticker/mês e calendário visual.",
+      "target": "apps/web/src/app/(public)/dividendos/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar página /cripto com overview, trending cards, notícias e cursos.",
+      "target": "apps/web/src/app/(public)/cripto/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Atualizar PublicHeader e PublicFooter com links para /mercados, /dividendos, /cripto.",
+      "target": "apps/web/src/components/layout/",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Escrever testes TC-01 a TC-05 cobrindo renderização e fallback de API.",
+      "target": "apps/web/src/test/",
+      "done": false
+    }
+  ],
+  "risks": [
+    "FullMarketTable com 100+ ativos pode ser lenta no client-side — usar windowed rendering (react-window ou virtualização) se necessário.",
+    "CoinGecko rate limit apertado para crypto overview — cache de 5min é obrigatório e pode precisar de fallback para dados estáticos.",
+    "Agenda de dividendos brapi pode ter dados incompletos para tickers menos líquidos — documentar limitação na página."
+  ],
+  "observability": [
+    "Log de erros de API nas páginas /mercados, /dividendos, /cripto com prefixo [public-page].",
+    "Métrica de tempo de carregamento (render + fetch) para cada página."
+  ],
+  "rollback": "Remover as páginas /mercados, /dividendos, /cripto e reverter alterações no PublicHeader e PublicFooter. Os links removidos não afetam outras funcionalidades."
+}

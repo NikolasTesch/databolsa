@@ -1,6 +1,7 @@
 'use client';
 
 import { Decimal } from 'decimal.js';
+import { useQuery } from '@tanstack/react-query';
 import type { PortfolioSummaryDto } from '@/types/api';
 import { BenchmarkChartDynamic } from './BenchmarkChartDynamic';
 
@@ -8,7 +9,11 @@ interface Props {
   summary: PortfolioSummaryDto;
 }
 
-const CDI_ANNUAL_RATE = 10.5; // % ao ano — estimativa
+interface CdiResponse {
+  accumulated_pct: string;
+  period: string;
+  as_of: string;
+}
 
 function calcPortfolioReturn(summary: PortfolioSummaryDto): {
   returnPct: string;
@@ -34,22 +39,15 @@ function calcPortfolioReturn(summary: PortfolioSummaryDto): {
   };
 }
 
-function calcCDI(): string {
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const daysPassed = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24));
-  const fraction = daysPassed / 365;
-  return (CDI_ANNUAL_RATE * fraction).toFixed(2);
-}
-
 interface ReturnCardProps {
   label: string;
   value?: string;
   note?: string;
   comingSoon?: boolean;
+  loading?: boolean;
 }
 
-function ReturnCard({ label, value, note, comingSoon }: ReturnCardProps) {
+function ReturnCard({ label, value, note, comingSoon, loading }: ReturnCardProps) {
   const num = value ? parseFloat(value) : 0;
   const isPositive = num > 0;
   const isNegative = num < 0;
@@ -64,8 +62,13 @@ function ReturnCard({ label, value, note, comingSoon }: ReturnCardProps) {
           </span>
         )}
       </div>
-      {comingSoon ? (
-        <p className="mt-2 text-2xl font-bold text-on-surface-variant">—</p>
+      {loading ? (
+        <div className="mt-2 h-8 w-24 animate-pulse rounded bg-surface-muted" />
+      ) : comingSoon ? (
+        <div className="mt-2">
+          <p className="text-2xl font-bold text-on-surface-variant">—</p>
+          <p className="mt-1 text-xs text-on-surface-variant">Disponível no gráfico abaixo</p>
+        </div>
       ) : (
         <p
           className={`mt-2 font-mono text-2xl font-bold ${
@@ -83,7 +86,17 @@ function ReturnCard({ label, value, note, comingSoon }: ReturnCardProps) {
 
 export function RentabilidadePanel({ summary }: Props) {
   const portfolioData = calcPortfolioReturn(summary);
-  const cdiEstimado = calcCDI();
+
+  const { data: cdiData, isLoading: cdiLoading } = useQuery<CdiResponse>({
+    queryKey: ['market', 'cdi', '1Y'],
+    queryFn: async () => {
+      const res = await fetch('/api/market/cdi?period=1Y');
+      if (!res.ok) throw new Error('CDI indisponível');
+      return res.json();
+    },
+    staleTime: 30 * 60 * 1000,
+    retry: 2,
+  });
 
   return (
     <div className="space-y-6">
@@ -94,9 +107,10 @@ export function RentabilidadePanel({ summary }: Props) {
           note="Retorno total sobre capital investido"
         />
         <ReturnCard
-          label="CDI (estimado)"
-          value={cdiEstimado}
-          note={`Base: ${CDI_ANNUAL_RATE}% a.a. × fração do ano`}
+          label="CDI"
+          value={cdiData?.accumulated_pct}
+          note="CDI acumulado no ano (BCB SGS-12)"
+          loading={cdiLoading}
         />
         <ReturnCard label="IBOV" comingSoon />
         <ReturnCard label="S&P 500" comingSoon />
@@ -133,11 +147,6 @@ export function RentabilidadePanel({ summary }: Props) {
       <div className="border-t border-border pt-6">
         <BenchmarkChartDynamic />
       </div>
-
-      <p className="text-xs text-on-surface-variant">
-        * CDI estimado com base em {CDI_ANNUAL_RATE}% a.a. — valores aproximados. IBOV e S&P 500
-        requerem dados históricos de mercado (em desenvolvimento).
-      </p>
     </div>
   );
 }

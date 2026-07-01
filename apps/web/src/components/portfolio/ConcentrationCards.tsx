@@ -1,5 +1,6 @@
 'use client';
 
+import { Decimal } from 'decimal.js';
 import { Card } from '@/components/ui/Card';
 import type { PositionSummaryDto } from '@/types/api';
 
@@ -14,17 +15,17 @@ export function ConcentrationCards({ positions }: Props) {
     return null;
   }
 
-  const pcts = positionsWithAllocation.map(p => parseFloat(p.alocacao_pct!));
+  const pcts = positionsWithAllocation.map(p => new Decimal(p.alocacao_pct!));
 
   // % Maior Ativo
-  const maxPct = Math.max(...pcts);
+  const maxPct = Decimal.max(...pcts);
 
   // % Top 3
-  const sorted = [...pcts].sort((a, b) => b - a);
-  const top3Pct = sorted.slice(0, 3).reduce((sum, v) => sum + v, 0);
+  const sorted = [...pcts].sort((a, b) => b.comparedTo(a));
+  const top3Pct = sorted.slice(0, 3).reduce((sum, v) => sum.add(v), new Decimal(0));
 
   // HHI = sum(pct²) for all positions, scaled 0-10000
-  const hhi = pcts.reduce((sum, p) => sum + p * p, 0);
+  const hhi = pcts.reduce((sum, p) => sum.add(p.pow(2)), new Decimal(0));
 
   return (
     <div className="grid gap-4 sm:grid-cols-3">
@@ -42,9 +43,9 @@ export function ConcentrationCards({ positions }: Props) {
         <p className="text-sm font-medium text-on-surface-variant">Índice HHI</p>
         <p className="mt-1 font-mono text-2xl font-semibold tabular-nums">{hhi.toFixed(0)}</p>
         <p className="mt-1 text-xs text-outline">
-          {hhi < 1000
+          {hhi.lt(1000)
             ? 'Carteira diversificada'
-            : hhi < 2500
+            : hhi.lt(2500)
               ? 'Concentração moderada'
               : 'Alta concentração'}
         </p>

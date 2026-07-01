@@ -130,6 +130,11 @@ _Nenhuma spec em andamento no momento._
 
 ### Pendentes (`pendentes/`)
 
-_Nenhuma spec pendente no momento._
+| ID        | Título                                              | Status   |
+| --------- | --------------------------------------------------- | -------- |
+| SPEC-0040 | Wishlist / Lista de Desejos — AssetWatch             | draft    |
+| SPEC-0041 | Dashboard Enriquecido — Yield, Concentração, Benchmark, Dividendos e Aportes | draft |
+| SPEC-0042 | Gaps de UI Pública — Navegação, APIs Faltantes e Dados Reais | draft |
+| SPEC-0043 | Páginas de Mercado, Dividendos e Cripto — Full MarketTable, Agenda de Proventos e Panorama Cripto | draft |
 
 > Mantenha esta tabela ao adicionar specs.

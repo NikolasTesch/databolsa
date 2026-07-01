@@ -50,10 +50,9 @@ const colors: TailwindTheme['colors'] = {
     muted: 'var(--color-surface-muted)',
   },
   border: 'var(--color-border)',
-  content: {
-    DEFAULT: 'var(--color-text)',
-    muted: 'var(--color-text-muted)',
-    subtle: 'var(--color-text-subtle)',
+  'on-surface': {
+    DEFAULT: 'var(--color-on-surface)',
+    variant: 'var(--color-on-surface-variant)',
   },
   primary: {
     DEFAULT: 'var(--color-primary)',
@@ -88,8 +87,6 @@ const colors: TailwindTheme['colors'] = {
   neutralChange: 'var(--color-neutral-change)',
 
   // --- Stitch-specific extras (Material 3 inspired) ---
-  'on-surface': 'var(--color-on-surface)',
-  'on-surface-variant': 'var(--color-on-surface-variant)',
   'surface-container': {
     lowest: 'var(--color-surface-container-lowest)',
     low: 'var(--color-surface-container-low)',

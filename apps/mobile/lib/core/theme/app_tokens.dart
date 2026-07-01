@@ -62,6 +62,19 @@ class AppColorScheme {
   final Color text;
   final Color textMuted;
   final Color textSubtle;
+  final Color onSurface;
+  final Color onSurfaceVariant;
+  final Color surfaceDim;
+  final Color surfaceBright;
+  final Color surfaceContainerLowest;
+  final Color surfaceContainerLow;
+  final Color surfaceContainer;
+  final Color surfaceContainerHigh;
+  final Color surfaceContainerHighest;
+  final Color outline;
+  final Color outlineVariant;
+  final Color tertiary;
+  final Color tertiaryContainer;
   final Color primary;
   final Color primaryHover;
   final Color accent;
@@ -83,6 +96,19 @@ class AppColorScheme {
     required this.text,
     required this.textMuted,
     required this.textSubtle,
+    required this.onSurface,
+    required this.onSurfaceVariant,
+    required this.surfaceDim,
+    required this.surfaceBright,
+    required this.surfaceContainerLowest,
+    required this.surfaceContainerLow,
+    required this.surfaceContainer,
+    required this.surfaceContainerHigh,
+    required this.surfaceContainerHighest,
+    required this.outline,
+    required this.outlineVariant,
+    required this.tertiary,
+    required this.tertiaryContainer,
     required this.primary,
     required this.primaryHover,
     required this.accent,
@@ -105,6 +131,19 @@ class AppColorScheme {
       text: Color(0xFF0F172A),
       textMuted: Color(0xFF475569),
       textSubtle: Color(0xFF64748B),
+      onSurface: Color(0xFF0F172A),
+      onSurfaceVariant: Color(0xFF475569),
+      surfaceDim: Color(0xFFC8D6E8),
+      surfaceBright: Color(0xFFFFFFFF),
+      surfaceContainerLowest: Color(0xFFFFFFFF),
+      surfaceContainerLow: Color(0xFFE2EAF3),
+      surfaceContainer: Color(0xFFCDD9EB),
+      surfaceContainerHigh: Color(0xFFB8C8DE),
+      surfaceContainerHighest: Color(0xFF9EB4CC),
+      outline: Color(0xFF64748B),
+      outlineVariant: Color(0xFF889EB8),
+      tertiary: Color(0xFFD97706),
+      tertiaryContainer: Color(0xFFFEF3C7),
       primary: Color(0xFF2756A4),
       primaryHover: Color(0xFF234080),
       accent: Color(0xFF4EC3E4),
@@ -127,6 +166,19 @@ class AppColorScheme {
       text: Color(0xFFE1E2EC),
       textMuted: Color(0xFFA3A3A3),
       textSubtle: Color(0xFF8C909F),
+      onSurface: Color(0xFFE1E2EC),
+      onSurfaceVariant: Color(0xFFC2C6D6),
+      surfaceDim: Color(0xFF041024),
+      surfaceBright: Color(0xFF17335A),
+      surfaceContainerLowest: Color(0xFF020A1A),
+      surfaceContainerLow: Color(0xFF081A33),
+      surfaceContainer: Color(0xFF0B1F3D),
+      surfaceContainerHigh: Color(0xFF102B4F),
+      surfaceContainerHighest: Color(0xFF17365F),
+      outline: Color(0xFF8C909F),
+      outlineVariant: Color(0xFF29456B),
+      tertiary: Color(0xFFFFB786),
+      tertiaryContainer: Color(0xFFDF7412),
       primary: Color(0xFFADC6FF),
       primaryHover: Color(0xFFD8E2FF),
       accent: Color(0xFF4EDEA3),

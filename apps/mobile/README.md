@@ -1,6 +1,6 @@
 # apps/mobile — DataBolsa Mobile
 
-Cliente mobile Flutter para o DataBolsa. Consome exclusivamente a API REST (`apps/api`).
+Cliente mobile Flutter para o DataBolsa. Consome a API integrada ao Next.js (Route Handlers em `apps/web/src/app/api/`, ADR-0004).
 
 ## Comandos
 

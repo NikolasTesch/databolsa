@@ -1,5 +1,6 @@
 'use client';
 
+import { Decimal } from 'decimal.js';
 import { useState } from 'react';
 
 function formatBRL(value: number): string {
@@ -21,25 +22,25 @@ export default function GrahamAnalysis() {
     setError(null);
     setResult(null);
 
-    const lpaNum = parseFloat(lpa);
-    const vpaNum = parseFloat(vpa);
+    const lpaNum = new Decimal(lpa || '0');
+    const vpaNum = new Decimal(vpa || '0');
 
-    if (isNaN(lpaNum) || lpaNum <= 0) {
+    if (lpaNum.isNaN() || lpaNum.lte(0)) {
       setError('O LPA deve ser um valor positivo.');
       return;
     }
 
-    if (isNaN(vpaNum) || vpaNum <= 0) {
+    if (vpaNum.isNaN() || vpaNum.lte(0)) {
       setError('O VPA deve ser um valor positivo.');
       return;
     }
 
-    const grahamPrice = Math.sqrt(22.5 * lpaNum * vpaNum);
+    const grahamPrice = new Decimal(22.5).mul(lpaNum).mul(vpaNum).sqrt().toNumber();
     setResult(grahamPrice);
   }
 
-  const currentPriceNum = parseFloat(currentPrice);
-  const hasCurrentPrice = !isNaN(currentPriceNum) && currentPriceNum > 0;
+  const currentPriceNum = new Decimal(currentPrice || '0').toNumber();
+  const hasCurrentPrice = currentPriceNum > 0;
 
   function getVerdict(): { label: string; color: string } | null {
     if (result === null) return null;

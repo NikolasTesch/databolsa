@@ -39,16 +39,16 @@ export function DividendsChart({ data }: DividendsChartProps) {
   return (
     <ResponsiveContainer width="100%" height={200}>
       <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #e2e8f0)" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 11, fontFamily: 'sans-serif', fill: 'var(--color-text-muted, #6b7280)' }}
+          tick={{ fontSize: 11, fontFamily: 'sans-serif', fill: 'var(--color-on-surface-variant)' }}
           tickLine={false}
-          axisLine={{ stroke: 'var(--color-border, #e2e8f0)' }}
+          axisLine={{ stroke: 'var(--color-border)' }}
         />
         <YAxis
           tickFormatter={(val) => `R$ ${formatPrice(val)}`}
-          tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--color-text-muted, #6b7280)' }}
+          tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--color-on-surface-variant)' }}
           width={80}
           tickLine={false}
           axisLine={false}
@@ -60,12 +60,12 @@ export function DividendsChart({ data }: DividendsChartProps) {
           ]}
           labelFormatter={(label: string) => `Mês: ${label}`}
           contentStyle={{
-            background: 'var(--color-surface, #ffffff)',
-            border: '1px solid var(--color-border, #e2e8f0)',
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
             borderRadius: '6px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             fontSize: 12,
-            color: 'var(--color-text, #1e293b)'
+            color: 'var(--color-on-surface)'
           }}
         />
         <Bar

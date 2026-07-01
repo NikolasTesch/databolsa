@@ -24,6 +24,25 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['framer-motion', 'recharts', '@tanstack/react-query'],
   },
+  async redirects() {
+    return [
+      {
+        source: '/ativos',
+        destination: '/mercados',
+        permanent: true,
+      },
+      {
+        source: '/proventos/agenda',
+        destination: '/dividendos',
+        permanent: true,
+      },
+      {
+        source: '/mercado/cripto',
+        destination: '/cripto',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

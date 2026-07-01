@@ -1,25 +1,31 @@
 'use client';
 
+import { Decimal } from 'decimal.js';
 import { useState } from 'react';
 
 type OperationType = 'SWING' | 'DAY_TRADE';
 
-function formatBRL(value: number): string {
+const SWING_TRADE_RATE = new Decimal('0.15');
+const DAY_TRADE_RATE = new Decimal('0.20');
+const SWING_EXEMPTION_THRESHOLD = new Decimal('20000');
+
+function formatBRL(value: Decimal | number): string {
+  const num = typeof value === 'number' ? value : value.toNumber();
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(value);
+  }).format(num);
 }
 
-function parseBRLInput(raw: string): number {
+function parseBRLInput(raw: string): Decimal {
   const cleaned = raw.replace(/[R$\s.]/g, '').replace(',', '.');
-  return parseFloat(cleaned) || 0;
+  return new Decimal(cleaned || '0');
 }
 
 interface TaxResult {
-  profit: number;
-  taxRate: number | null;
-  taxDue: number;
+  profit: Decimal;
+  taxRate: Decimal | null;
+  taxDue: Decimal;
   isExempt: boolean;
 }
 
@@ -35,38 +41,38 @@ export default function IRCalculator() {
     const sale = parseBRLInput(saleValueRaw);
     const cost = parseBRLInput(purchaseCostRaw);
     const monthly = parseBRLInput(monthlySalesRaw);
-    const profit = sale - cost;
+    const profit = sale.sub(cost);
 
-    if (sale <= 0 || cost <= 0) {
+    if (sale.lte(0) || cost.lte(0)) {
       return;
     }
 
-    let taxRate: number | null;
-    let taxDue: number;
+    let taxRate: Decimal | null;
+    let taxDue: Decimal;
     let isExempt = false;
 
-    if (operationType === 'SWING' && monthly <= 20000) {
+    if (operationType === 'SWING' && monthly.lte(SWING_EXEMPTION_THRESHOLD)) {
       isExempt = true;
-      taxRate = null;
-      taxDue = 0;
-    } else if (profit <= 0) {
-      taxRate = operationType === 'SWING' ? 15 : 20;
-      taxDue = 0;
+      taxRate = new Decimal(0);
+      taxDue = new Decimal(0);
+    } else if (profit.lte(0)) {
+      taxRate = operationType === 'SWING' ? SWING_TRADE_RATE : DAY_TRADE_RATE;
+      taxDue = new Decimal(0);
     } else if (operationType === 'SWING') {
-      taxRate = 15;
-      taxDue = profit * 0.15;
+      taxRate = SWING_TRADE_RATE;
+      taxDue = profit.mul(SWING_TRADE_RATE);
     } else {
-      taxRate = 20;
-      taxDue = profit * 0.2;
+      taxRate = DAY_TRADE_RATE;
+      taxDue = profit.mul(DAY_TRADE_RATE);
     }
 
     setResult({ profit, taxRate, taxDue, isExempt });
     setCalculated(true);
   }
 
-  function formatTaxRate(rate: number | null): string {
-    if (rate === null) return '—';
-    return `${rate}%`;
+  function formatTaxRate(rate: Decimal | null): string {
+    if (rate === null || rate.isZero()) return '—';
+    return `${rate.mul(100).toFixed(0)}%`;
   }
 
   return (
@@ -192,10 +198,10 @@ export default function IRCalculator() {
               </span>
               <p
                 className={`font-mono text-lg mt-1 ${
-                  result.profit >= 0 ? 'text-profit' : 'text-loss'
+                  !result.profit.isNegative() ? 'text-profit' : 'text-loss'
                 }`}
               >
-                {result.profit >= 0 ? '+' : ''}
+                {!result.profit.isNegative() ? '+' : ''}
                 {formatBRL(result.profit)}
               </p>
             </div>
@@ -224,12 +230,12 @@ export default function IRCalculator() {
               </span>
               <p
                 className={`font-mono text-xl font-bold mt-1 ${
-                  result.isExempt || result.taxDue === 0
+                  result.isExempt || result.taxDue.isZero()
                     ? 'text-profit'
                     : 'text-primary'
                 }`}
               >
-                {result.isExempt || result.taxDue === 0
+                {result.isExempt || result.taxDue.isZero()
                   ? 'R$ 0,00'
                   : formatBRL(result.taxDue)}
               </p>
@@ -246,7 +252,7 @@ export default function IRCalculator() {
             </div>
           )}
 
-          {result.profit < 0 && (
+                {result.profit.isNegative() && (
             <div className="mt-4 flex items-start gap-2 rounded-lg bg-loss-surface/50 p-3">
               <span className="material-symbols-outlined text-loss text-base mt-0.5">info</span>
               <p className="text-xs text-loss-content leading-relaxed">
@@ -256,7 +262,7 @@ export default function IRCalculator() {
             </div>
           )}
 
-          {result.taxDue > 0 && !result.isExempt && (
+              {result.taxDue.gt(0) && !result.isExempt && (
             <div className="mt-4 flex items-start gap-2 rounded-lg bg-surface-container-low p-3">
               <span className="material-symbols-outlined text-primary text-base mt-0.5">receipt_long</span>
               <p className="text-xs text-on-surface-variant leading-relaxed">

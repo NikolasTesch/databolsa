@@ -1,0 +1,271 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0040",
+  "title": "Wishlist / Lista de Desejos — AssetWatch",
+  "status": "draft",
+  "type": "feature",
+  "created": "2026-07-01",
+  "updated": "2026-07-01",
+  "authors": ["Nikolas"],
+  "summary": "Adiciona um modelo AssetWatch no Prisma, endpoints REST CRUD, página /wishlist na área logada e botão 'favoritar' nas páginas públicas de ativo para que o usuário possa montar uma lista de ativos que deseja acompanhar sem precisar tê-los na carteira.",
+  "motivation": "Usuários frequentemente pesquisam ativos na home pública mas não os adicionam imediatamente à carteira. Uma watchlist permite marcar ativos de interesse, acompanhar preço e variação, e decidir o momento de compra sem pressão de cadastro completo.",
+  "related": {
+    "prd": ["PRD §4 (público-alvo)", "PRD §5 (escopo MVP)"],
+    "spec_doc": ["SPEC §4 (AssetWatch)", "SPEC §5 (endpoints)"],
+    "business_rules": ["RN-11"],
+    "adrs": ["ADR-0003"],
+    "depends_on": []
+  },
+  "scope": {
+    "in_scope": [
+      "Modelo AssetWatch no Prisma (user_id, ticker, name, asset_class, added_at) com unique constraint [user_id, ticker]",
+      "Migration Prisma para criar a tabela asset_watch",
+      "Endpoint GET /api/portfolio/watch — lista ativos da watchlist com cotação atual e variação",
+      "Endpoint POST /api/portfolio/watch — adiciona ativo à watchlist",
+      "Endpoint DELETE /api/portfolio/watch/[id] — remove ativo da watchlist",
+      "Página /wishlist na área logada (apps/web) com tabela de ativos, preço, variação e histórico em gráfico",
+      "Componente AddToWatchlistButton (estrela) nas páginas /ativos/[ticker] e resultados de busca",
+      "Isolamento por user_id em todos os endpoints (RN-11)",
+      "Degradação graciosa de cotação via QuoteService (RN-10)"
+    ],
+    "out_of_scope": [
+      "Notificações push/e-mail quando ativo da watchlist atingir preço alvo (coberto por SPEC-0025 — PriceAlerts)",
+      "Watchlist no app mobile Flutter (fase posterior)",
+      "Comparação entre ativos da watchlist (coberto por AssetComparator em /ferramentas)",
+      "Categorização ou agrupamento de ativos na watchlist"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "AssetWatch deve ter user_id (FK→User), ticker, name (opcional), asset_class (AssetClass) e added_at. Unique [user_id, ticker].",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "GET /api/portfolio/watch retorna lista de AssetWatch do usuário logado com current_price_brl e price_change_pct resolvidos via QuoteService.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "POST /api/portfolio/watch recebe { ticker, name?, asset_class? } e retorna o AssetWatch criado com 201. Rejeita duplicatas [user_id, ticker] com 409.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "DELETE /api/portfolio/watch/[id] valida user_id — retorna 404 se não encontrado ou de outro usuário.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "AddToWatchlistButton consulta watchlist atual e exibe 'Adicionar à Watchlist' (estrela vazia) ou 'Remover da Watchlist' (estrela cheia) em tempo real via react-query.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Página /wishlist deve exibir tabela com ticker, nome, classe, preço atual BRL e variação %. Ao clicar em uma linha, expande gráfico de histórico de preço.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "AssetWatch",
+      "change": "create",
+      "fields": [
+        "id: String @id @default(uuid())",
+        "user_id: String FK→User",
+        "ticker: String",
+        "name: String?",
+        "asset_class: AssetClass (enum)",
+        "added_at: DateTime @default(now())"
+      ],
+      "notes": "Unique constraint [user_id, ticker]. AssetClass enum já existe no Prisma. Dinheiro em Decimal, nunca float."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/portfolio/watch",
+      "auth": true,
+      "request": "Nenhum",
+      "response": "{ watches: Array<{ id, ticker, name, asset_class, current_price_brl: string|null, price_change_pct: string|null, added_at }> }",
+      "errors": ["401: Não autenticado"],
+      "notes": "Resolve cotação via QuoteService para cada ticker (pode ser stale — RN-10)."
+    },
+    {
+      "method": "POST",
+      "path": "/api/portfolio/watch",
+      "auth": true,
+      "request": "{ ticker: string, name?: string, asset_class?: AssetClass }",
+      "response": "201: { id, ticker, name, asset_class, added_at }",
+      "errors": [
+        "401: Não autenticado",
+        "409: Ativo já está na watchlist (duplicata)"
+      ],
+      "notes": "Rejeita se [user_id, ticker] já existir."
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/portfolio/watch/[id]",
+      "auth": true,
+      "request": "Nenhum",
+      "response": "204 No Content",
+      "errors": [
+        "401: Não autenticado",
+        "404: Watch não encontrado ou de outro usuário"
+      ],
+      "notes": "Valida user_id antes de deletar (RN-11)."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "Usuário autenticado na página /ativos/PETR4",
+      "when": "Clica no botão 'Adicionar à Watchlist' (estrela vazia)",
+      "then": "O ticker PETR4 é adicionado à watchlist e o botão muda para 'Remover da Watchlist' (estrela cheia) sem recarregar a página."
+    },
+    {
+      "id": "AC-02",
+      "given": "Usuário com 3 ativos na watchlist",
+      "when": "Acessa /wishlist",
+      "then": "Vê tabela com os 3 ativos, cada um com ticker em mono, AssetClassBadge, preço BRL formatado e variação % com cor gain/loss."
+    },
+    {
+      "id": "AC-03",
+      "given": "Um ativo na watchlist sem cotação disponível",
+      "when": "GET /api/portfolio/watch é chamado",
+      "then": "O ativo aparece na lista com current_price_brl = null e price_change_pct = null, sem quebrar a resposta."
+    },
+    {
+      "id": "AC-04",
+      "given": "Usuário tenta adicionar o mesmo ticker duas vezes",
+      "when": "POST /api/portfolio/watch com ticker já existente na watchlist",
+      "then": "Retorna 409 Conflict com mensagem apropriada."
+    },
+    {
+      "id": "AC-05",
+      "given": "Usuário na página /wishlist",
+      "when": "Clica em um ativo da tabela",
+      "then": "Um gráfico de área (WishlistPriceChart) expande abaixo da linha com o histórico de preço do ativo."
+    },
+    {
+      "id": "AC-06",
+      "given": "Usuário logado na home pública",
+      "when": "Vê o card de um ativo no MarketSection",
+      "then": "O card tem um ícone de estrela que, ao clicar, adiciona/remove da watchlist."
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "POST /api/portfolio/watch: criar watchlist item, verificar resposta 201 com id e ticker.",
+      "kind": "integration",
+      "covers": ["REQ-01", "REQ-03", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "POST /api/portfolio/watch com duplicata: retorna 409.",
+      "kind": "integration",
+      "covers": ["REQ-03", "AC-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "GET /api/portfolio/watch: lista itens do usuário com cotações (mockar QuoteService para testar sem rede).",
+      "kind": "integration",
+      "covers": ["REQ-02", "AC-02", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "DELETE /api/portfolio/watch/[id]: deleta item próprio (204). Tenta deletar item de outro usuário (404).",
+      "kind": "integration",
+      "covers": ["REQ-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-05",
+      "description": "AddToWatchlistButton: verificar toggle de estado entre adicionar/remover com react-query mockado.",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-06",
+      "description": "WishlistPage: renderizar com 0 itens (empty state) e com N itens.",
+      "kind": "unit",
+      "covers": ["REQ-06", "AC-02", "AC-05"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Adicionar modelo AssetWatch ao schema Prisma + criar migration.",
+      "target": "apps/web/prisma/schema.prisma",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar rota GET /api/portfolio/watch com listagem + cotações via QuoteService.",
+      "target": "apps/web/src/app/api/portfolio/watch/route.ts",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar rota POST /api/portfolio/watch com validação de duplicata e 409.",
+      "target": "apps/web/src/app/api/portfolio/watch/route.ts",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Criar rota DELETE /api/portfolio/watch/[id] com validação de user_id.",
+      "target": "apps/web/src/app/api/portfolio/watch/[id]/route.ts",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Criar funções client-side listWatch, addWatch, removeWatch em lib/api/portfolio.ts.",
+      "target": "apps/web/src/lib/api/portfolio.ts",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Criar página /wishlist com WishlistTable, WishlistAddDialog e WishlistPriceChart.",
+      "target": "apps/web/src/app/(app)/wishlist/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-07",
+      "description": "Criar componente AddToWatchlistButton e integrar nas páginas de ativo e cards de mercado.",
+      "target": "apps/web/src/components/market/AddToWatchlistButton.tsx",
+      "done": false
+    },
+    {
+      "id": "T-08",
+      "description": "Adicionar link para /wishlist no menu da sidebar da área logada.",
+      "target": "apps/web/src/components/layout/Sidebar.tsx",
+      "done": false
+    },
+    {
+      "id": "T-09",
+      "description": "Escrever testes de integração e unidade (TC-01 a TC-06).",
+      "target": "apps/web/src/test/",
+      "done": false
+    }
+  ],
+  "risks": [
+    "User-agent pode ficar fora de sincronia se outro cliente remover item da watchlist concorrentemente. Mitigação: react-query invalida query no onSuccess de cada mutação."
+  ],
+  "observability": [
+    "Log de watchlist mutations (add/remove) em nível INFO com user_id anônimo."
+  ],
+  "rollback": "Reverter migration da tabela asset_watch e remover todos os route handlers e componentes criados nas tasks T-01 a T-09."
+}

@@ -1,20 +1,21 @@
 'use client';
 
+import { Decimal } from 'decimal.js';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { PositionSummaryDto } from '@/types/api';
 
-// Cores de gráfico do design system
+// Cores de gráfico do design system (M3 palette)
 const CHART_COLORS = [
-  '#2756A4', // navy-600
-  '#4EC3E4', // cyan accent
-  '#16A34A', // profit
-  '#D97706', // amber/stale
-  '#5E8AD0', // navy-400
-  '#87C6E9', // navy-300
-  '#22C55E', // green lighter
-  '#F59E0B', // amber lighter
-  '#3A6BBE', // navy-500
-  '#234080', // navy-700
+  '#adc6ff', // primary M3
+  '#4edea3', // secondary M3
+  '#ffb786', // tertiary M3
+  '#6b9aff', // primary alt
+  '#2bbf7a', // secondary alt
+  '#fc9a4f', // tertiary alt
+  '#86a8ff', // primary light
+  '#7ae6b7', // secondary light
+  '#fec89a', // tertiary light
+  '#4d7cff', // primary deep
 ];
 
 interface AllocationChartProps {
@@ -27,7 +28,7 @@ export function AllocationChart({ positions }: AllocationChartProps) {
     .filter((p) => p.valor_atual_brl !== null && p.alocacao_pct !== null)
     .map((p) => ({
       name: p.ticker,
-      value: parseFloat(p.alocacao_pct!),
+      value: new Decimal(p.alocacao_pct!).toNumber(),
     }));
 
   if (data.length === 0) {

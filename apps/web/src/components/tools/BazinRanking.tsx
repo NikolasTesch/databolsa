@@ -1,21 +1,22 @@
 'use client';
 
+import { Decimal } from 'decimal.js';
 import { useState } from 'react';
 
 interface StockData {
   ticker: string;
   name: string;
-  dy12m: number; // em percentual (ex.: 16.4 = 16,4%)
-  currentPrice: number;
+  dy12m: string; // em percentual (ex.: '16.4' = 16,4%)
+  currentPrice: string;
 }
 
 const STOCKS: StockData[] = [
-  { ticker: 'PETR4', name: 'Petrobras', dy12m: 16.4, currentPrice: 38.5 },
-  { ticker: 'BBAS3', name: 'Banco do Brasil', dy12m: 9.5, currentPrice: 55.2 },
-  { ticker: 'ITUB4', name: 'Itaú Unibanco', dy12m: 6.5, currentPrice: 33.8 },
-  { ticker: 'EGIE3', name: 'Engie Brasil', dy12m: 8.2, currentPrice: 44.1 },
-  { ticker: 'TAEE11', name: 'Taesa', dy12m: 10.1, currentPrice: 35.4 },
-  { ticker: 'KLBN11', name: 'Klabin', dy12m: 7.5, currentPrice: 24.3 },
+  { ticker: 'PETR4', name: 'Petrobras', dy12m: '16.4', currentPrice: '38.5' },
+  { ticker: 'BBAS3', name: 'Banco do Brasil', dy12m: '9.5', currentPrice: '55.2' },
+  { ticker: 'ITUB4', name: 'Itaú Unibanco', dy12m: '6.5', currentPrice: '33.8' },
+  { ticker: 'EGIE3', name: 'Engie Brasil', dy12m: '8.2', currentPrice: '44.1' },
+  { ticker: 'TAEE11', name: 'Taesa', dy12m: '10.1', currentPrice: '35.4' },
+  { ticker: 'KLBN11', name: 'Klabin', dy12m: '7.5', currentPrice: '24.3' },
 ];
 
 function formatBRL(value: number): string {
@@ -36,20 +37,20 @@ export default function BazinRanking() {
   const [desiredYield, setDesiredYield] = useState('6');
   const [calculated, setCalculated] = useState(false);
 
-  const desiredNum = parseFloat(desiredYield);
+  const desiredNum = new Decimal(desiredYield || '0');
 
   function getCeilingPrice(stock: StockData): number | null {
-    if (isNaN(desiredNum) || desiredNum <= 0) return null;
-    return stock.currentPrice * (stock.dy12m / desiredNum);
+    if (desiredNum.isNaN() || desiredNum.lte(0)) return null;
+    return new Decimal(stock.currentPrice).mul(new Decimal(stock.dy12m).div(desiredNum)).toNumber();
   }
 
   function handleCalculate(e: React.FormEvent) {
     e.preventDefault();
-    if (isNaN(desiredNum) || desiredNum <= 0) return;
+    if (desiredNum.isNaN() || desiredNum.lte(0)) return;
     setCalculated(true);
   }
 
-  const isValid = !isNaN(desiredNum) && desiredNum > 0;
+  const isValid = !desiredNum.isNaN() && desiredNum.gt(0);
 
   return (
     <div className="rounded-xl border border-border bg-surface p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -141,8 +142,9 @@ export default function BazinRanking() {
             <tbody className="divide-y divide-border/50">
               {STOCKS.map((stock) => {
                 const ceiling = getCeilingPrice(stock);
-                const isBelow = ceiling !== null && stock.currentPrice < ceiling;
-                const isAbove = ceiling !== null && stock.currentPrice > ceiling;
+    const currentPriceNum = new Decimal(stock.currentPrice).toNumber();
+    const isBelow = ceiling !== null && currentPriceNum < ceiling;
+    const isAbove = ceiling !== null && currentPriceNum > ceiling;
 
                 return (
                   <tr key={stock.ticker} className="hover:bg-surface-muted/40 transition-colors">
@@ -156,12 +158,12 @@ export default function BazinRanking() {
                     </td>
                     <td className="py-3 pr-3">
                       <span className="font-mono text-on-surface">
-                        {formatPercent(stock.dy12m)}
+                        {formatPercent(parseFloat(stock.dy12m))}
                       </span>
                     </td>
                     <td className="py-3 pr-3">
                       <span className="font-mono text-on-surface">
-                        {formatBRL(stock.currentPrice)}
+                        {formatBRL(parseFloat(stock.currentPrice))}
                       </span>
                     </td>
                     <td className="py-3 pr-3">

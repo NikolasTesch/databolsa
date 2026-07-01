@@ -61,16 +61,16 @@ export function PriceHistoryChart({ series, ticker }: PriceHistoryChartProps) {
             <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #e2e8f0)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
         <XAxis
           dataKey="date"
           tickFormatter={formatDate}
-          tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--color-text-muted, #6b7280)' }}
+          tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--color-on-surface-variant)' }}
           interval="preserveStartEnd"
         />
         <YAxis
           tickFormatter={formatPrice}
-          tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--color-text-muted, #6b7280)' }}
+          tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--color-on-surface-variant)' }}
           width={72}
         />
         <Tooltip
@@ -84,8 +84,8 @@ export function PriceHistoryChart({ series, ticker }: PriceHistoryChartProps) {
             }
           }}
           contentStyle={{
-            background: 'var(--color-surface, #ffffff)',
-            border: '1px solid var(--color-border, #e2e8f0)',
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
             borderRadius: '6px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             fontFamily: 'monospace',

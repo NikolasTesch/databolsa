@@ -85,7 +85,7 @@ describe('HighlightsSection', () => {
     });
 
     const verTodosLinks = screen.getAllByText('Ver todos');
-    expect(verTodosLinks[0]).toHaveAttribute('href', '/ativos?classe=STOCK_BR&sort=change');
+    expect(verTodosLinks[0]).toHaveAttribute('href', '/mercados?classe=STOCK_BR');
   });
 
   it('shows loading skeleton initially', () => {

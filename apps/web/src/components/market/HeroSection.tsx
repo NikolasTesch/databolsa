@@ -212,7 +212,7 @@ void main() {
                     clamp(length(q), 0.0, 1.0) * 0.1);
 
         color = mix(color,
-                    vec3(0.153, 0.337, 0.643), // brand.primary #2756A4
+                    vec3(0.678, 0.776, 1.000), // brand.primary M3 #adc6ff
                     clamp(length(r.x), 0.0, 1.0) * 0.2);
 
         gl_FragColor = vec4((f*f*f + 0.6*f*f + 0.5*f) * color, 1.0);

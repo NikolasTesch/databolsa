@@ -1,0 +1,271 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0041",
+  "title": "Dashboard Enriquecido — Yield, Concentração, Benchmark, Dividendos e Aportes",
+  "status": "draft",
+  "type": "feature",
+  "created": "2026-07-01",
+  "updated": "2026-07-01",
+  "authors": ["Nikolas"],
+  "summary": "Expande o dashboard do portfólio com cards e gráficos de yield on cost / retorno total, concentração por ativo/setor, comparação com benchmark (TWR), mini gráfico de dividendos mensais e comparativo de aportes mensais. Reorganiza as abas para melhor hierarquia de informação.",
+  "motivation": "O dashboard atual mostra apenas patrimônio total e alocação básica. Usuários avançados precisam de métricas de rentabilidade (yield, retorno total), visão de concentração de risco, comparação com benchmarks, evolução de dividendos e aportes para tomar decisões de alocação informadas.",
+  "related": {
+    "prd": ["PRD §6 (RF-08 Dashboard)", "PRD §7 (RN-03 Yield on cost)"],
+    "spec_doc": ["SPEC §4 (modelo)", "SPEC §5 (endpoints)", "SPEC §7 (fórmulas TWR)"],
+    "business_rules": ["RN-03", "RN-06", "RN-08", "RN-09", "RN-10", "RN-11", "RN-12"],
+    "adrs": ["ADR-0009", "ADR-0014"],
+    "depends_on": ["SPEC-0021", "SPEC-0022", "SPEC-0023", "SPEC-0035"]
+  },
+  "scope": {
+    "in_scope": [
+      "YieldCard / ReturnCard — exibe yield on cost % e retorno total R$ + % no topo do dashboard, consumindo PositionSummaryDto.yield_on_cost_pct e total_return_pct",
+      "ConcentrationCards — gráfico de pizza/anéis mostrando concentração por ativo (top 5) + setor, consumindo /api/portfolio/allocation",
+      "BenchmarkChart — gráfico de linha comparando TWR do portfólio vs IBOV/CDI/IPCA, consumindo /api/portfolio/benchmark",
+      "DividendMiniChart — bar chart simples dos últimos 6 meses de dividendos, consumindo /api/portfolio/dividends",
+      "AportesComparativoChart — barras mensais comparando aportes do período, consumindo /api/portfolio/monthly-activity",
+      "Reorganização das abas: Resumo (cards + benchmark) | Composição (concentração) | Proventos (dividendos) | Atividades (aportes)",
+      "Tratamento de dados stale com badge visual (RN-10)"
+    ],
+    "out_of_scope": [
+      "Exportação de dados do dashboard para PDF/CSV",
+      "Dashboard no app mobile Flutter",
+      "Drag-and-drop de cards (layout fixo por enquanto)",
+      "Projeção futura de dividendos (apenas histórico)",
+      "Fundamentalistas (P/L, ROE, etc.) — cobertos em SPEC-0013"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Dashboard deve exibir YieldCard (% yield on cost) e ReturnCard (retorno total R$ e %) lado a lado no topo da aba Resumo.",
+      "rule_ref": "RN-03",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "ConcentrationCards deve mostrar um gráfico de pizza/anéis com top 5 ativos (em valor) e um segundo gráfico com alocação por setor.",
+      "rule_ref": "RN-09",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "BenchmarkChart deve plotar a série TWR do portfólio vs IBOV (default) com opção de alternar para CDI, IPCA e S&P500.",
+      "rule_ref": "RN-12",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "DividendMiniChart deve exibir bar chart dos dividendos recebidos nos últimos 6 meses com valores em BRL.",
+      "rule_ref": "RN-06",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-05",
+      "description": "AportesComparativoChart deve exibir aportes mensais (entradas vs saídas) do período selecionado.",
+      "rule_ref": "RN-08",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Se qualquer dado estiver stale, exibir badge de 'Dado desatualizado' e tooltip com timestamp (RN-10).",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "Transaction",
+      "change": "none",
+      "fields": [],
+      "notes": "Sem alteração no schema. Os dados de yield, retorno e dividendos vêm de campos já existentes em PositionSummaryDto e rotas existentes da API."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/portfolio/summary",
+      "auth": true,
+      "request": "Nenhum",
+      "response": "PositionSummaryDto[] com yield_on_cost_pct e total_return_pct por posição + patrimonio_total_brl",
+      "errors": ["401 não autenticado"],
+      "notes": "Já existe — consumido pelos cards de yield e return."
+    },
+    {
+      "method": "GET",
+      "path": "/api/portfolio/allocation",
+      "auth": true,
+      "request": "Nenhum",
+      "response": "AllocationResponse com alocação por ativo e por setor",
+      "errors": ["401 não autenticado"],
+      "notes": "Já existe — consumido pelo ConcentrationCards."
+    },
+    {
+      "method": "GET",
+      "path": "/api/portfolio/benchmark",
+      "auth": true,
+      "request": "?period=1Y&benchmark=IBOVESPA",
+      "response": "{ period, benchmark, portfolio_series: [{date, value}], benchmark_series: [{date, value}] }",
+      "errors": ["401 não autenticado", "422 parâmetros inválidos"],
+      "notes": "Já existe — consumido pelo BenchmarkChart."
+    },
+    {
+      "method": "GET",
+      "path": "/api/portfolio/dividends",
+      "auth": true,
+      "request": "Nenhum",
+      "response": "DividendsResponse com by_month, by_quarter, by_year, by_asset",
+      "errors": ["401 não autenticado"],
+      "notes": "Já existe — consumido pelo DividendMiniChart."
+    },
+    {
+      "method": "GET",
+      "path": "/api/portfolio/monthly-activity",
+      "auth": true,
+      "request": "?months=6",
+      "response": "{ months: [{ key, label, deposits, withdrawals, net }] }",
+      "errors": ["401 não autenticado"],
+      "notes": "Já existe — consumido pelo AportesComparativoChart."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "Usuário com posições na carteira",
+      "when": "Acessa a aba Resumo do dashboard",
+      "then": "Vê YieldCard com yield on cost % e ReturnCard com retorno total R$ e %, ambos atualizados."
+    },
+    {
+      "id": "AC-02",
+      "given": "Usuário com 8 ativos na carteira",
+      "when": "Acessa a aba Composição",
+      "then": "Vê gráfico de pizza com top 5 ativos + 'Outros' agregando o restante, e outro gráfico com alocação por setor."
+    },
+    {
+      "id": "AC-03",
+      "given": "Usuário com histórico de 1 ano de trades",
+      "when": "Acessa a aba Resumo e vê o BenchmarkChart",
+      "then": "O gráfico mostra a curva TWR do portfólio e do IBOV, ambas normalizadas em base 100, e é possível alternar para CDI/IPCA/S&P500."
+    },
+    {
+      "id": "AC-04",
+      "given": "Usuário com dividendos nos últimos meses",
+      "when": "Acessa a aba Proventos",
+      "then": "Vê DividendMiniChart com barras dos últimos 6 meses e o valor em BRL de cada mês."
+    },
+    {
+      "id": "AC-05",
+      "given": "Usuário que fez aportes e retiradas no período",
+      "when": "Acessa a aba Atividades",
+      "then": "Vê AportesComparativoChart com barras de depósitos (verde) e retiradas (vermelha) por mês."
+    },
+    {
+      "id": "AC-06",
+      "given": "Dado de benchmark não disponível (fonte externa falhou)",
+      "when": "BenchmarkChart é renderizado",
+      "then": "O gráfico exibe badge 'Dado desatualizado' e usa o último cache disponível (RN-10), sem quebrar a página."
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "YieldCard e ReturnCard: renderizar com posições (dados mock). Verificar formatação BRL e % com cores gain/loss.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "ConcentrationCards: renderizar pie chart com top 5 + Others. Verificar legenda e percentuais.",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "BenchmarkChart: renderizar linha TWR + benchmark. Alternar benchmark de IBOV para CDI e verificar atualização.",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "DividendMiniChart: renderizar 6 barras de dividendos mensais. Sem dividendos: empty state.",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "AportesComparativoChart: renderizar aportes x retiradas com 3 meses de dados mockados.",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-06",
+      "description": "Dashboard stale: mockar benchmark retornando is_stale=true. Verificar badge 'Dado desatualizado'.",
+      "kind": "unit",
+      "covers": ["REQ-06", "AC-06"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar componente YieldCard exibindo yield_on_cost_pct com cor gain/loss.",
+      "target": "apps/web/src/components/portfolio/YieldCard.tsx",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar componente ReturnCard exibindo retorno total R$ e %, consumindo summary.",
+      "target": "apps/web/src/components/portfolio/ReturnCard.tsx",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar componente ConcentrationCards com Recharts PieChart para alocação por ativo e por setor.",
+      "target": "apps/web/src/components/portfolio/ConcentrationCards.tsx",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Criar componente BenchmarkChart com Recharts LineChart e seletor de benchmark (IBOV/CDI/IPCA/SP500).",
+      "target": "apps/web/src/components/portfolio/BenchmarkChart.tsx",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Criar componente DividendMiniChart com Recharts BarChart para últimos 6 meses.",
+      "target": "apps/web/src/components/portfolio/DividendMiniChart.tsx",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Criar componente AportesComparativoChart com barras de depósitos e retiradas mensais.",
+      "target": "apps/web/src/components/portfolio/AportesComparativoChart.tsx",
+      "done": false
+    },
+    {
+      "id": "T-07",
+      "description": "Reorganizar página do dashboard com abas Resumo, Composição, Proventos e Atividades.",
+      "target": "apps/web/src/app/(app)/dashboard/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-08",
+      "description": "Escrever testes TC-01 a TC-06 com dados mockados.",
+      "target": "apps/web/src/test/",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Muitos gráficos Recharts na mesma página podem impactar performance — usar React.memo e lazy loading de componentes via next/dynamic.",
+    "API de benchmark retorna séries longas — limitar pontos para não travar o gráfico (downsample se >365 pontos)."
+  ],
+  "observability": [
+    "Log de erros de API de benchmark/dividendos com prefixo [dashboard].",
+    "Métricas de tempo de carregamento de cada card via console.time."
+  ],
+  "rollback": "Reverter as alterações na página do dashboard (dashboard/page.tsx) e remover os novos componentes YieldCard, ReturnCard, ConcentrationCards, BenchmarkChart, DividendMiniChart e AportesComparativoChart."
+}

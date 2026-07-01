@@ -95,6 +95,6 @@ describe('CryptoSections', () => {
     render(Component);
 
     const link = screen.getByText('Painel completo');
-    expect(link).toHaveAttribute('href', '/mercado/cripto');
+    expect(link).toHaveAttribute('href', '/cripto');
   });
 });

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import { Decimal } from 'decimal.js';
 import { Card } from '@/components/ui/Card';
 import { formatBRL, formatPLBRL } from '@/lib/format';
 import type { PortfolioSummaryDto } from '@/types/api';
@@ -61,7 +62,7 @@ function AnimatedValue({ target, fallback }: { target: number; fallback: string 
 }
 
 export function SummaryCards({ data }: SummaryCardsProps) {
-  const patrimonio = parseFloat(data.patrimonio_total_brl);
+  const patrimonio = new Decimal(data.patrimonio_total_brl).toNumber();
 
   return (
     <motion.div
@@ -102,13 +103,13 @@ export function SummaryCards({ data }: SummaryCardsProps) {
           <p className="mt-1 font-mono text-2xl font-semibold tabular-nums">
             {(() => {
               const totalDivs = data.positions.reduce(
-                (sum, p) => sum + parseFloat(p.total_dividends_brl || '0'), 0,
+                (sum, p) => sum.add(new Decimal(p.total_dividends_brl || '0')), new Decimal(0),
               );
               const totalInv = data.positions.reduce(
-                (sum, p) => sum + parseFloat(p.invested_value), 0,
+                (sum, p) => sum.add(new Decimal(p.invested_value)), new Decimal(0),
               );
-              if (totalInv <= 0 || totalDivs <= 0) return '—';
-              return `${((totalDivs / totalInv) * 100).toFixed(2)}%`;
+              if (totalInv.isZero() || totalDivs.isZero()) return '—';
+              return `${totalDivs.div(totalInv).mul(100).toFixed(2)}%`;
             })()}
           </p>
           <p className="mt-1 text-xs text-outline">Dividendos / Capital Investido</p>
@@ -122,15 +123,15 @@ export function SummaryCards({ data }: SummaryCardsProps) {
             className={`mt-1 font-mono text-2xl font-semibold tabular-nums ${
               (() => {
                 const totalRet = data.positions.reduce(
-                  (sum, p) => sum + (p.total_return_brl ? parseFloat(p.total_return_brl) : 0), 0,
+                  (sum, p) => sum.add(new Decimal(p.total_return_brl || '0')), new Decimal(0),
                 );
-                return totalRet >= 0 ? 'text-secondary' : 'text-tertiary';
+                return totalRet.isNegative() ? 'text-tertiary' : 'text-secondary';
               })()
             }`}
           >
             {(() => {
               const totalRet = data.positions.reduce(
-                (sum, p) => sum + (p.total_return_brl ? parseFloat(p.total_return_brl) : 0), 0,
+                (sum, p) => sum.add(new Decimal(p.total_return_brl || '0')), new Decimal(0),
               );
               return formatPLBRL(totalRet.toFixed(2));
             })()}

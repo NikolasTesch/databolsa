@@ -1,0 +1,283 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0042",
+  "title": "Gaps de UI Pública — Navegação, APIs Faltantes e Dados Reais",
+  "status": "draft",
+  "type": "feature",
+  "created": "2026-07-01",
+  "updated": "2026-07-01",
+  "authors": ["Nikolas"],
+  "summary": "Levanta e corrige gaps identificados na UI pública do DataBolsa: section IDs para âncora de navegação, links pendentes no footer, cards clicáveis que não redirecionam, formatação inconsistente de changePercent, APIs de dividendos/agenda e crypto/overview com dados reais, e páginas institucionais (termos, privacidade) com conteúdo real.",
+  "motivation": "A home pública foi construída rapidamente (SPEC-0012) e várias páginas subsequentes (SPEC-0016 a SPEC-0019, SPEC-0043) adicionaram seções e rotas sem revisão unificada. Isso gerou inconsistências de navegação, links quebrados no footer, dados mockados em lugar de reais e falta de âncoras para deep-linking.",
+  "related": {
+    "prd": ["PRD §5 (escopo)", "PRD §6 (RF-05 Cotação, RF-10 Notícias, RF-12 Cursos)"],
+    "spec_doc": ["SPEC §5 (API routes)", "SPEC §6 (fontes externas)"],
+    "business_rules": ["RN-10", "RN-11"],
+    "adrs": [],
+    "depends_on": ["SPEC-0012", "SPEC-0016", "SPEC-0017", "SPEC-0018", "SPEC-0019", "SPEC-0043"]
+  },
+  "scope": {
+    "in_scope": [
+      "Adicionar IDs de seção (id='mercado', id='ferramentas', id='cursos', id='noticias', id='dividendos', id='glossario') nos componentes da home para navegação por âncora",
+      "Corrigir links do footer: /cursos, /dividendos, /mercados, /cripto, /ferramentas, /ajuda, /termos, /privacidade, /compliance — todos apontando para as rotas corretas",
+      "Remover links mortos (páginas 404) do footer e da nav",
+      "Adicionar onClick / next/Link nos AssetMiniCard e cards de destaque que estão sem href ou com href incorreto",
+      "Padronizar formatação de changePercent: usar mesmo componente TrendBadge em IndexBar, AssetMiniCard, MarketSection e páginas de ativo",
+      "API GET /api/market/dividends/agenda: substituir dados mockados por chamada real à brapi (fetchBrapiDividends) com cache de 1h",
+      "API GET /api/market/crypto/overview: garantir dados reais CoinGecko com tratamento de rate limit e cache 5min",
+      "Páginas institucionais (/termos, /privacidade, /compliance, /ajuda) com conteúdo real de texto",
+      "Adicionar breadcrumbs nas páginas públicas profundas (/ativos/[ticker], /cursos, etc.)"
+    ],
+    "out_of_scope": [
+      "Redesign visual de componentes existentes (apenas correção de links e dados)",
+      "Páginas de perfil público de usuário",
+      "Internacionalização (i18n)",
+      "SEO / meta tags dinâmicas (coberto por SPEC-0012)",
+      "Performance / Lighthouse (fase separada)"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Toda seção da home pública deve ter um id HTML único para navegação por âncora.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Todos os links do footer devem apontar para rotas existentes (200) — nenhum link quebrado.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "AssetMiniCard e cards de destaque (HighlightsSection) devem ser clicáveis via next/Link para /ativos/[ticker].",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "changePercent deve usar o componente TrendBadge padronizado em toda UI pública (IndexBar, MarketSection, AssetMiniCard, ativo/[ticker]).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "GET /api/market/dividends/agenda deve retornar dividendos reais via fetchBrapiDividends com cache em memória de 1h e rate limiting de 15 req/min.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "GET /api/market/crypto/overview deve retornar dados reais CoinGecko com cache 5min em QuoteCache e rate limiting de 30 req/min.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-07",
+      "description": "Em falha de fonte externa, usar último cache disponível e marcar stale=true (RN-10). Nunca retornar 500 se houver cache.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-08",
+      "description": "Páginas institucionais (/termos, /privacidade, /compliance, /ajuda) devem ter conteúdo textual real sobre o DataBolsa.",
+      "priority": "should"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "QuoteCache",
+      "change": "none",
+      "fields": [],
+      "notes": "Reutilizado para cache de crypto/overview. Sem alteração no schema."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/dividends/agenda",
+      "auth": false,
+      "request": "Nenhum",
+      "response": "{ data: AgendaItem[], asOf: string, stale: boolean }",
+      "errors": ["429: Rate limit excedido", "503: Sem cache disponível"],
+      "notes": "Chama fetchBrapiDividends para tickers STOCK_BR e FII em lotes de 5 com delay 200ms. Cache 1h em memória. Rate limit 15 req/min/IP."
+    },
+    {
+      "method": "GET",
+      "path": "/api/market/crypto/overview",
+      "auth": false,
+      "request": "Nenhum",
+      "response": "{ data: CryptoOverviewItem[], trending: CryptoOverviewItem[], asOf: string }",
+      "errors": ["429: Rate limit excedido", "503: Sem cache disponível"],
+      "notes": "Chama CoinGecko multi-coin. Cache 5min. Rate limit 30 req/min/IP."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "Usuário na home pública",
+      "when": "Clica em 'Cursos' no PublicHeader ou footer",
+      "then": "Navega para /cursos (âncora ou página cheia) sem erro 404."
+    },
+    {
+      "id": "AC-02",
+      "given": "Usuário visualiza AssetMiniCard na MarketSection",
+      "when": "Clica no card",
+      "then": "Navega para /ativos/[ticker] com o ticker correto."
+    },
+    {
+      "id": "AC-03",
+      "given": "Usuário na IndexBar vê changePercent do IBOV",
+      "when": "A variação é positiva",
+      "then": "Exibe verde com ícone ↑ (TrendBadge); se negativa, vermelho com ↓."
+    },
+    {
+      "id": "AC-04",
+      "given": "GET /api/market/dividends/agenda",
+      "when": "Chamado sem parâmetros",
+      "then": "Retorna array de dividendos com ticker, type, paymentDate, value (dados reais brapi)."
+    },
+    {
+      "id": "AC-05",
+      "given": "GET /api/market/crypto/overview",
+      "when": "Chamado sem parâmetros",
+      "then": "Retorna array de cripto com symbol, name, price, changePercent, volume24h (dados reais CoinGecko)."
+    },
+    {
+      "id": "AC-06",
+      "given": "Usuário acessa /termos",
+      "when": "A página carrega",
+      "then": "Exibe conteúdo textual real sobre os termos de uso do DataBolsa, não placeholder."
+    },
+    {
+      "id": "AC-07",
+      "given": "brapi retorna erro ao buscar agenda de dividendos",
+      "when": "Existe cache anterior",
+      "then": "Retorna dados com stale:true; sem cache retorna 503 com data:[]."
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Verificar links do footer: cada href deve retornar 200 (usar head request ou check de rota no middleware).",
+      "kind": "e2e",
+      "covers": ["REQ-02", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "AssetMiniCard: renderizar com href correto para /ativos/[ticker]. Verificar navegação click.",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "TrendBadge: renderizar positivo (verde + ↑), negativo (vermelho + ↓), zero (neutro).",
+      "kind": "unit",
+      "covers": ["REQ-04", "AC-03"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "GET /api/market/dividends/agenda: mockar brapi e verificar parsing de AgendaItem com dados reais.",
+      "kind": "integration",
+      "covers": ["REQ-05", "AC-04", "AC-07"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "GET /api/market/crypto/overview: mockar CoinGecko e verificar CryptoOverviewItem com dados reais.",
+      "kind": "integration",
+      "covers": ["REQ-06", "AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-06",
+      "description": "Página /termos: renderizar com conteúdo real (não 'Em breve').",
+      "kind": "unit",
+      "covers": ["REQ-08", "AC-06"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Adicionar IDs de âncora (id='...') nas seções da home pública.",
+      "target": "apps/web/src/app/(public)/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Revisar e corrigir todos os links do footer (PublicFooter) apontando para rotas existentes.",
+      "target": "apps/web/src/components/layout/PublicFooter.tsx",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Garantir que AssetMiniCard e cards de destaque tenham href via next/Link para /ativos/[ticker].",
+      "target": "apps/web/src/components/market/AssetMiniCard.tsx",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Padronizar uso do componente TrendBadge em IndexBar, MarketSection, AssetMiniCard e página de ativo.",
+      "target": "apps/web/src/components/ui/TrendBadge.tsx",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Implementar /api/market/dividends/agenda com fetchBrapiDividends, cache 1h e rate limit 15 req/min.",
+      "target": "apps/web/src/app/api/market/dividends/agenda/route.ts",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Implementar /api/market/crypto/overview com CoinGecko, cache 5min e rate limit 30 req/min.",
+      "target": "apps/web/src/app/api/market/crypto/overview/route.ts",
+      "done": false
+    },
+    {
+      "id": "T-07",
+      "description": "Criar helpers fetchBrapiDividends e adaptador dividend-agenda no lib/market.",
+      "target": "apps/web/src/lib/market/market-fetchers.ts",
+      "done": false
+    },
+    {
+      "id": "T-08",
+      "description": "Criar função getCryptoOverview no lib/market/crypto-overview.ts com tratamento de stale.",
+      "target": "apps/web/src/lib/market/crypto-overview.ts",
+      "done": false
+    },
+    {
+      "id": "T-09",
+      "description": "Escrever páginas /termos, /privacidade, /compliance, /ajuda com conteúdo real.",
+      "target": "apps/web/src/app/(public)/",
+      "done": false
+    },
+    {
+      "id": "T-10",
+      "description": "Adicionar breadcrumbs nas páginas /ativos/[ticker], /cursos, /ferramentas, /dividendos.",
+      "target": "apps/web/src/components/ui/Breadcrumbs.tsx",
+      "done": false
+    },
+    {
+      "id": "T-11",
+      "description": "Verificar e corrigir rotas do PublicHeader nav para garantir que todas existem.",
+      "target": "apps/web/src/components/layout/PublicHeader.tsx",
+      "done": false
+    },
+    {
+      "id": "T-12",
+      "description": "Escrever testes TC-01 a TC-06.",
+      "target": "apps/web/src/test/",
+      "done": false
+    }
+  ],
+  "risks": [
+    "brapi /dividends pode ter payload grande com muitos tickers. Mitigação: lotes de 5 com delay 200ms e cache de 1h para reduzir chamadas.",
+    "CoinGecko rate limit de 10-30 req/min. Mitigação: cache 5min obrigatório e limitar para 1 chamada a cada 5 minutos (TTL do cache)."
+  ],
+  "observability": [
+    "Log de cache HIT/MISS para /market/dividends/agenda e /market/crypto/overview.",
+    "Log de warning quando brapi/CoinGecko falham (prefixo [market-gap])."
+  ],
+  "rollback": "Reverter commits de cada correção individual. Remover APIs novas se criadas. Restaurar conteúdo placeholder das páginas institucionais."
+}
