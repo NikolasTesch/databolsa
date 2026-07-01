@@ -10,6 +10,8 @@ import { PositionTable } from '@/components/portfolio/PositionTable';
 import { AllocationChartDynamic } from '@/components/portfolio/AllocationChartDynamic';
 import { GrowthChartDynamic } from '@/components/portfolio/GrowthChartDynamic';
 import { MonthlyActivityCard } from '@/components/portfolio/MonthlyActivityCard';
+import { DividendMiniChartDynamic } from '@/components/portfolio/DividendMiniChartDynamic';
+import { BenchmarkChartDynamic } from '@/components/portfolio/BenchmarkChartDynamic';
 import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
 
@@ -121,6 +123,12 @@ export default function DashboardPage() {
                 <MonthlyActivityCard data={monthly} />
               </Card>
             )}
+
+            {/* Dividendos */}
+            <DividendMiniChartDynamic />
+
+            {/* Benchmark vs Carteira */}
+            <BenchmarkChartDynamic />
 
             {data.positions.filter((p) => p.valor_atual_brl !== null).length > 0 && (
               <Card padding="md">
