@@ -75,12 +75,19 @@ function groupByCurrency(
   }));
 }
 
+interface SectorDataItem {
+  key: string;
+  value_brl: string;
+  pct: string;
+}
+
 interface Props {
   positions: PositionSummaryDto[];
   assets: Asset[];
+  sectorData?: SectorDataItem[];
 }
 
-export function ComposicaoCharts({ positions, assets }: Props) {
+export function ComposicaoCharts({ positions, assets, sectorData }: Props) {
   const byClass = groupByClass(positions, assets);
   const byCurrency = groupByCurrency(positions, assets);
 
@@ -174,6 +181,37 @@ export function ComposicaoCharts({ positions, assets }: Props) {
           ))}
         </div>
       </div>
+
+      {/* Por Setor */}
+      {sectorData && sectorData.length > 0 && (
+        <div>
+          <h3 className="mb-4 text-sm font-medium">Por Setor</h3>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+            <div className="flex-1 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+                    <th className="pb-2 pr-4">Setor</th>
+                    <th className="pb-2 pr-4 text-right">Valor</th>
+                    <th className="pb-2 text-right">% Carteira</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sectorData.map((s) => (
+                    <tr key={s.key} className="border-b border-border/50 last:border-0">
+                      <td className="py-2 pr-4">{s.key}</td>
+                      <td className="py-2 pr-4 text-right font-mono">{formatBRL(s.value_brl)}</td>
+                      <td className="py-2 text-right font-mono text-on-surface-variant">
+                        {formatAllocationPct(s.pct)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

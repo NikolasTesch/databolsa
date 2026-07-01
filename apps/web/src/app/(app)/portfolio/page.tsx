@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-keys';
-import { getPortfolioSummary } from '@/lib/api/portfolio';
+import { getPortfolioSummary, getAllocation, getDividends, getDividendProjection } from '@/lib/api/portfolio';
 import { listAssets } from '@/lib/api/assets';
 import { listTransactions } from '@/lib/api/transactions';
 import { Spinner } from '@/components/ui/Spinner';
@@ -14,7 +14,7 @@ import { RentabilidadePanel } from '@/components/portfolio/RentabilidadePanel';
 import { ComposicaoCharts } from '@/components/portfolio/ComposicaoCharts';
 import { ProventosTable } from '@/components/portfolio/ProventosTable';
 import { AssetComparison } from '@/components/portfolio/AssetComparison';
-import type { Transaction } from '@/types/api';
+import type { Transaction, DividendsResponse, DividendProjectionResponse } from '@/types/api';
 
 const tabs = [
   { id: 'posicao', label: 'Posição' },
@@ -43,6 +43,24 @@ function PortfolioPageInner() {
   const { data: assets = [], isLoading: loadingAssets } = useQuery({
     queryKey: queryKeys.assets.list(),
     queryFn: listAssets,
+  });
+
+  const { data: allocation } = useQuery({
+    queryKey: queryKeys.portfolio.allocation(targetUserId),
+    queryFn: () => getAllocation(targetUserId),
+    enabled: activeTab === 'composicao',
+  });
+
+  const { data: dividendsData } = useQuery({
+    queryKey: queryKeys.portfolio.dividends(targetUserId),
+    queryFn: () => getDividends(targetUserId),
+    enabled: activeTab === 'proventos',
+  });
+
+  const { data: dividendProjection } = useQuery({
+    queryKey: queryKeys.portfolio.dividendProjection(targetUserId),
+    queryFn: () => getDividendProjection(targetUserId),
+    enabled: activeTab === 'proventos',
   });
 
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
@@ -112,7 +130,11 @@ function PortfolioPageInner() {
             <RentabilidadePanel summary={summary} />
           )}
           {activeTab === 'composicao' && (
-            <ComposicaoCharts positions={summary.positions} assets={assets} />
+            <ComposicaoCharts
+              positions={summary.positions}
+              assets={assets}
+              sectorData={allocation?.by_sector}
+            />
           )}
           {activeTab === 'proventos' &&
             (loadingTxs ? (
@@ -120,7 +142,7 @@ function PortfolioPageInner() {
                 <Spinner />
               </div>
             ) : (
-              <ProventosTable transactions={allTransactions} assets={assets} />
+              <ProventosTable transactions={allTransactions} assets={assets} dividendsData={dividendsData} projectionData={dividendProjection} />
             ))}
           {activeTab === 'comparacao' && (
             <AssetComparison summary={summary} assets={assets} />
