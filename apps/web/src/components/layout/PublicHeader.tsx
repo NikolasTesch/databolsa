@@ -13,9 +13,9 @@ interface PublicHeaderProps {
 
 const NAV_ITEMS = [
   { label: 'Início', href: '/' },
-  { label: 'Mercados', href: '/#mercados' },
-  { label: 'Dividendos', href: '/#dividendos' },
-  { label: 'Cripto', href: '/#cripto' },
+  { label: 'Mercados', href: '/mercados' },
+  { label: 'Dividendos', href: '/dividendos' },
+  { label: 'Cripto', href: '/cripto' },
   { label: 'Ferramentas', href: '/ferramentas' },
   { label: 'Cursos', href: '/cursos' },
 ] as const;

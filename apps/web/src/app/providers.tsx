@@ -1,7 +1,6 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AnimatePresence } from 'framer-motion';
 import { useState, type ReactNode } from 'react';
 import { AuthProvider } from '@/lib/auth/context';
 
@@ -24,11 +23,7 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AnimatePresence mode="wait" initial={false}>
-          {children}
-        </AnimatePresence>
-      </AuthProvider>
+      <AuthProvider>{children}</AuthProvider>
     </QueryClientProvider>
   );
 }

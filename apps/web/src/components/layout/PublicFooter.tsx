@@ -3,12 +3,12 @@ import { BrandLogo } from './BrandLogo';
 
 const FOOTER_LINKS = {
   Mercado: [
-    { label: 'Ações', href: '/ativos?classe=STOCK_BR' },
-    { label: 'FIIs', href: '/ativos?classe=FII' },
-    { label: 'ETFs', href: '/ativos?classe=ETF' },
-    { label: 'BDRs', href: '/ativos?classe=BDR' },
-    { label: 'Crypto', href: '/ativos?classe=CRYPTO' },
-    { label: 'Stocks US', href: '/ativos?classe=STOCK_US' },
+    { label: 'Ações', href: '/mercados?classe=STOCK_BR' },
+    { label: 'FIIs', href: '/mercados?classe=FII' },
+    { label: 'ETFs', href: '/mercados?classe=ETF' },
+    { label: 'BDRs', href: '/mercados?classe=BDR' },
+    { label: 'Crypto', href: '/mercados?classe=CRYPTO' },
+    { label: 'Stocks US', href: '/mercados?classe=STOCK_US' },
   ],
   Ferramentas: [
     { label: 'Conversor de Moedas', href: '/ferramentas#conversor' },

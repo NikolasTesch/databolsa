@@ -1,0 +1,125 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - link "databolsa" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]:
+            - img [ref=e9]
+            - generic [ref=e15]: databolsa
+        - navigation [ref=e16]:
+          - link "Início" [ref=e17] [cursor=pointer]:
+            - /url: /
+          - link "Mercados" [ref=e18] [cursor=pointer]:
+            - /url: /mercados
+          - link "Dividendos" [ref=e19] [cursor=pointer]:
+            - /url: /dividendos
+          - link "Cripto" [ref=e20] [cursor=pointer]:
+            - /url: /cripto
+          - link "Ferramentas" [ref=e21] [cursor=pointer]:
+            - /url: /ferramentas
+          - link "Cursos" [ref=e22] [cursor=pointer]:
+            - /url: /cursos
+      - generic [ref=e23]:
+        - generic [ref=e26]:
+          - img [ref=e28]
+          - combobox "Buscar ativo..." [ref=e30]
+        - button "Ativar modo claro" [ref=e31] [cursor=pointer]:
+          - generic [ref=e32]: light_mode
+        - generic [ref=e33]:
+          - link "Entrar" [ref=e34] [cursor=pointer]:
+            - /url: /login
+          - link "Criar conta" [ref=e35] [cursor=pointer]:
+            - /url: /register
+  - main [ref=e36]:
+    - generic [ref=e37]:
+      - generic [ref=e40]:
+        - generic [ref=e45]: Mercado em tempo real
+        - heading "Mercado Overview" [level=1] [ref=e46]
+        - paragraph [ref=e47]: Acompanhe cotações, variações e notícias do mercado financeiro em tempo real. Ações, FIIs, BDRs, ETFs, criptomoedas e stocks americanos.
+      - generic [ref=e48]:
+        - tablist "Classe de ativo" [ref=e49]:
+          - button "Ações" [ref=e50] [cursor=pointer]
+          - button "FIIs" [ref=e51] [cursor=pointer]
+          - button "BDRs" [ref=e52] [cursor=pointer]
+          - button "ETFs" [ref=e53] [cursor=pointer]
+          - button "Cripto" [ref=e54] [cursor=pointer]
+          - button "Stocks US" [ref=e55] [cursor=pointer]
+        - generic [ref=e56]:
+          - generic [ref=e57]:
+            - generic: search
+            - textbox "Buscar em Ações..." [ref=e58]
+          - generic [ref=e59]:
+            - generic [ref=e60]: "Ordenar:"
+            - button "Maiores altas" [ref=e61] [cursor=pointer]
+            - button "Maiores baixas" [ref=e62] [cursor=pointer]
+            - button "Nome (A-Z)" [ref=e63] [cursor=pointer]
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - heading "Maiores Altas" [level=3] [ref=e74]
+            - paragraph [ref=e75]: Carregando...
+          - generic [ref=e76]:
+            - heading "Maiores Baixas" [level=3] [ref=e77]
+            - paragraph [ref=e78]: Carregando...
+  - contentinfo [ref=e79]:
+    - generic [ref=e80]:
+      - generic [ref=e81]:
+        - generic [ref=e82]:
+          - generic [ref=e83]:
+            - img [ref=e84]
+            - generic [ref=e90]: databolsa
+          - paragraph [ref=e91]: Acompanhamento de patrimônio em investimentos com lançamento manual de operações e consolidação em BRL.
+        - generic [ref=e92]:
+          - heading "Mercado" [level=3] [ref=e93]
+          - list [ref=e94]:
+            - listitem [ref=e95]:
+              - link "Ações" [ref=e96] [cursor=pointer]:
+                - /url: /mercados?classe=STOCK_BR
+            - listitem [ref=e97]:
+              - link "FIIs" [ref=e98] [cursor=pointer]:
+                - /url: /mercados?classe=FII
+            - listitem [ref=e99]:
+              - link "ETFs" [ref=e100] [cursor=pointer]:
+                - /url: /mercados?classe=ETF
+            - listitem [ref=e101]:
+              - link "BDRs" [ref=e102] [cursor=pointer]:
+                - /url: /mercados?classe=BDR
+            - listitem [ref=e103]:
+              - link "Crypto" [ref=e104] [cursor=pointer]:
+                - /url: /mercados?classe=CRYPTO
+            - listitem [ref=e105]:
+              - link "Stocks US" [ref=e106] [cursor=pointer]:
+                - /url: /mercados?classe=STOCK_US
+        - generic [ref=e107]:
+          - heading "Ferramentas" [level=3] [ref=e108]
+          - list [ref=e109]:
+            - listitem [ref=e110]:
+              - link "Conversor de Moedas" [ref=e111] [cursor=pointer]:
+                - /url: /ferramentas#conversor
+            - listitem [ref=e112]:
+              - link "Simulador" [ref=e113] [cursor=pointer]:
+                - /url: /ferramentas#simulador
+            - listitem [ref=e114]:
+              - link "Calculadora IR" [ref=e115] [cursor=pointer]:
+                - /url: /ferramentas#calculadora-ir
+            - listitem [ref=e116]:
+              - link "Análise de Índices" [ref=e117] [cursor=pointer]:
+                - /url: /ferramentas
+        - generic [ref=e118]:
+          - heading "Institucional" [level=3] [ref=e119]
+          - list [ref=e120]:
+            - listitem [ref=e121]:
+              - link "Termos de Uso" [ref=e122] [cursor=pointer]:
+                - /url: /termos
+            - listitem [ref=e123]:
+              - link "Privacidade" [ref=e124] [cursor=pointer]:
+                - /url: /privacidade
+            - listitem [ref=e125]:
+              - link "Compliance" [ref=e126] [cursor=pointer]:
+                - /url: /compliance
+            - listitem [ref=e127]:
+              - link "Ajuda" [ref=e128] [cursor=pointer]:
+                - /url: /ajuda
+      - generic [ref=e129]:
+        - paragraph [ref=e130]: © 2026 databolsa. Todos os direitos reservados.
+        - paragraph [ref=e131]: "Aviso: O conteúdo apresentado neste site tem caráter meramente informativo e educacional, não constituindo recomendação de investimento."

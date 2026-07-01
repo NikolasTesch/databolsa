@@ -5,7 +5,7 @@ import { fetchAssetsForB3, fetchAssetsForCrypto, fetchAssetsForUS } from '@/lib/
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 const VALID_TYPES = new Set<string>(['STOCK_BR', 'FII', 'ETF', 'BDR', 'CRYPTO', 'STOCK_US']);
-const MAX_LIMIT = 6;
+const MAX_LIMIT = 50;
 
 interface HighlightItem {
   ticker: string;

@@ -21,6 +21,9 @@ const securityHeaders = [
 const nextConfig = {
   output: 'standalone',
   transpilePackages: ['@databolsa/ui'],
+  experimental: {
+    optimizePackageImports: ['framer-motion', 'recharts', '@tanstack/react-query'],
+  },
   async headers() {
     return [
       {

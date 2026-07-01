@@ -44,7 +44,7 @@ async function CryptoSections() {
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-semibold text-on-surface">Mercado Cripto</h2>
           <Link
-            href="/mercado/cripto"
+            href="/cripto"
             className="text-sm text-primary hover:text-primary-hover transition-colors"
           >
             Painel completo

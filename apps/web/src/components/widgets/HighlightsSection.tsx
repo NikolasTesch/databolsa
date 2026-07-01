@@ -148,7 +148,7 @@ export default function HighlightsSection() {
                 <h3 className="text-base font-semibold text-on-surface">Maiores Altas</h3>
               </div>
               <Link
-                href={`/ativos?classe=STOCK_BR&sort=change`}
+                href={`/mercados?classe=${activeTab}`}
                 className="text-sm text-primary hover:underline"
               >
                 Ver todos
@@ -174,7 +174,7 @@ export default function HighlightsSection() {
                 <h3 className="text-base font-semibold text-on-surface">Maiores Baixas</h3>
               </div>
               <Link
-                href={`/ativos?sort=change_asc`}
+                href={`/mercados?sort=change_asc`}
                 className="text-sm text-primary hover:underline"
               >
                 Ver todos

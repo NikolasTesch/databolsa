@@ -1,14 +1,93 @@
 {
-  "active_plan": "C:\\PASTA IMPORTANTE\\TESCH_DEV\\databolsa\\.omo\\plans\\public-ui-gaps.md",
-  "started_at": "2026-06-30T17:20:03.898Z",
-  "completed_at": "2026-06-30T17:58:03.898Z",
-  "session_ids": [
-    "opencode:ses_0e6fb63c2ffe66XYg164MxnUMj"
-  ],
-  "plan_name": "public-ui-gaps",
-  "status": "completed",
-  "session_origins": {
-    "opencode:ses_0e6fb63c2ffe66XYg164MxnUMj": "direct"
+  "schema_version": 2,
+  "active_work_id": "paginas-mercado-dividendos-cripto-ccadd266",
+  "works": {
+    "paginas-mercado-dividendos-cripto-ccadd266": {
+      "work_id": "paginas-mercado-dividendos-cripto-ccadd266",
+      "active_plan": "C:\\PASTA IMPORTANTE\\TESCH_DEV\\databolsa\\.omo\\plans\\paginas-mercado-dividendos-cripto.md",
+      "plan_name": "paginas-mercado-dividendos-cripto",
+      "status": "completed",
+      "started_at": "2026-07-01T13:26:07.634Z",
+      "updated_at": "2026-07-01T15:45:26.391Z",
+      "session_ids": [
+        "opencode:ses_0e24236d8ffeh2c7NW8sh1Pgf0"
+      ],
+      "session_origins": {
+        "opencode:ses_0e24236d8ffeh2c7NW8sh1Pgf0": "direct"
+      },
+      "agent": "atlas",
+      "task_sessions": {
+        "todo:1": {
+          "task_key": "todo:1",
+          "task_label": "1",
+          "task_title": "**Criar página `/mercados` — Mercado Completo**",
+          "session_id": "opencode:ses_0e22326eeffeRgWwerpynyCLBk",
+          "agent": "Sisyphus-Junior",
+          "category": "visual-engineering",
+          "updated_at": "2026-07-01T14:25:42.993Z",
+          "started_at": "2026-07-01T14:16:15.135Z",
+          "status": "completed",
+          "ended_at": "2026-07-01T14:25:42.993Z",
+          "elapsed_ms": 567858
+        },
+        "todo:4": {
+          "task_key": "todo:4",
+          "task_label": "4",
+          "task_title": "**Atualizar navegação, footer e links dos widgets**",
+          "session_id": "opencode:ses_0e1ed6185ffeMcXL7qO4nS1osS",
+          "agent": "Sisyphus-Junior",
+          "category": "visual-engineering",
+          "updated_at": "2026-07-01T14:33:04.624Z",
+          "started_at": "2026-07-01T14:28:39.681Z",
+          "status": "completed",
+          "ended_at": "2026-07-01T14:33:04.624Z",
+          "elapsed_ms": 264943
+        }
+      },
+      "ended_at": "2026-07-01T15:45:26.391Z",
+      "elapsed_ms": 8358757
+    }
   },
-  "task_sessions": {}
+  "active_plan": "C:\\PASTA IMPORTANTE\\TESCH_DEV\\databolsa\\.omo\\plans\\paginas-mercado-dividendos-cripto.md",
+  "started_at": "2026-07-01T13:26:07.634Z",
+  "status": "completed",
+  "updated_at": "2026-07-01T15:45:26.391Z",
+  "session_ids": [
+    "opencode:ses_0e24236d8ffeh2c7NW8sh1Pgf0"
+  ],
+  "session_origins": {
+    "opencode:ses_0e24236d8ffeh2c7NW8sh1Pgf0": "direct"
+  },
+  "plan_name": "paginas-mercado-dividendos-cripto",
+  "task_sessions": {
+    "todo:1": {
+      "task_key": "todo:1",
+      "task_label": "1",
+      "task_title": "**Criar página `/mercados` — Mercado Completo**",
+      "session_id": "opencode:ses_0e22326eeffeRgWwerpynyCLBk",
+      "agent": "Sisyphus-Junior",
+      "category": "visual-engineering",
+      "updated_at": "2026-07-01T14:25:42.993Z",
+      "started_at": "2026-07-01T14:16:15.135Z",
+      "status": "completed",
+      "ended_at": "2026-07-01T14:25:42.993Z",
+      "elapsed_ms": 567858
+    },
+    "todo:4": {
+      "task_key": "todo:4",
+      "task_label": "4",
+      "task_title": "**Atualizar navegação, footer e links dos widgets**",
+      "session_id": "opencode:ses_0e1ed6185ffeMcXL7qO4nS1osS",
+      "agent": "Sisyphus-Junior",
+      "category": "visual-engineering",
+      "updated_at": "2026-07-01T14:33:04.624Z",
+      "started_at": "2026-07-01T14:28:39.681Z",
+      "status": "completed",
+      "ended_at": "2026-07-01T14:33:04.624Z",
+      "elapsed_ms": 264943
+    }
+  },
+  "agent": "atlas",
+  "ended_at": "2026-07-01T15:45:26.391Z",
+  "elapsed_ms": 8358757
 }

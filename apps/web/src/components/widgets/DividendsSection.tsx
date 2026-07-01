@@ -38,7 +38,7 @@ export default async function DividendsSection() {
             Agenda de Dividendos
           </h2>
           <Link
-            href="/proventos/agenda"
+            href="/dividendos"
             className="text-sm text-primary hover:underline"
           >
             Ver agenda completa

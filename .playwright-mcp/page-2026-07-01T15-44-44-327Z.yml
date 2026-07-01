@@ -1,0 +1,275 @@
+- generic [ref=f2e2]:
+  - banner [ref=f2e3]:
+    - generic [ref=f2e5]:
+      - generic [ref=f2e6]:
+        - link "databolsa" [ref=f2e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f2e8]:
+            - img [ref=f2e9]
+            - generic [ref=f2e15]: databolsa
+        - navigation [ref=f2e16]:
+          - link "Início" [ref=f2e17] [cursor=pointer]:
+            - /url: /
+          - link "Mercados" [ref=f2e18] [cursor=pointer]:
+            - /url: /mercados
+          - link "Dividendos" [ref=f2e19] [cursor=pointer]:
+            - /url: /dividendos
+          - link "Cripto" [ref=f2e20] [cursor=pointer]:
+            - /url: /cripto
+          - link "Ferramentas" [ref=f2e21] [cursor=pointer]:
+            - /url: /ferramentas
+          - link "Cursos" [ref=f2e22] [cursor=pointer]:
+            - /url: /cursos
+      - generic [ref=f2e23]:
+        - generic [ref=f2e26]:
+          - img [ref=f2e28]
+          - combobox "Buscar ativo..." [ref=f2e30]
+        - button "Ativar modo claro" [ref=f2e31] [cursor=pointer]:
+          - generic [ref=f2e32]: light_mode
+        - generic [ref=f2e33]:
+          - link "Entrar" [ref=f2e34] [cursor=pointer]:
+            - /url: /login
+          - link "Criar conta" [ref=f2e35] [cursor=pointer]:
+            - /url: /register
+  - main [ref=f2e36]:
+    - generic [ref=f2e37]:
+      - generic [ref=f2e40]:
+        - generic [ref=f2e45]: Mercado em Tempo Real
+        - heading "Mercado Cripto" [level=1] [ref=f2e46]
+        - paragraph [ref=f2e47]: Acompanhe os preços, variações e volume das principais criptomoedas do mercado.
+        - generic [ref=f2e48]:
+          - generic [ref=f2e49]:
+            - generic [ref=f2e50]: currency_bitcoin
+            - generic [ref=f2e51]: 5 ativos
+          - generic [ref=f2e52]:
+            - generic [ref=f2e53]: swap_vert
+            - generic [ref=f2e54]: "Maior variação: SOL +6.31%"
+          - generic [ref=f2e55]:
+            - generic [ref=f2e56]: new_releases
+            - generic [ref=f2e57]: 97 notícias
+      - generic [ref=f2e59]:
+        - generic: search
+        - textbox "Buscar criptomoeda por nome ou símbolo..." [ref=f2e60]
+      - generic [ref=f2e62]:
+        - generic [ref=f2e64]:
+          - 'link "₿ BTCBitcoin trending_up +3.79% R$ 314154.00 Vol 24h: R$ 184,0B" [ref=f2e65] [cursor=pointer]':
+            - /url: /ativos/BTC?class=CRYPTO
+            - generic [ref=f2e66]:
+              - generic [ref=f2e67]:
+                - generic [ref=f2e68]: ₿
+                - generic [ref=f2e69]: BTCBitcoin
+              - generic [ref=f2e70]:
+                - generic [ref=f2e71]: trending_up
+                - text: +3.79%
+            - paragraph [ref=f2e72]: R$ 314154.00
+            - paragraph [ref=f2e73]: "Vol 24h: R$ 184,0B"
+          - 'link "Ξ ETHEthereum trending_up +4.36% R$ 8463.97 Vol 24h: R$ 50,6B" [ref=f2e74] [cursor=pointer]':
+            - /url: /ativos/ETH?class=CRYPTO
+            - generic [ref=f2e75]:
+              - generic [ref=f2e76]:
+                - generic [ref=f2e77]: Ξ
+                - generic [ref=f2e78]: ETHEthereum
+              - generic [ref=f2e79]:
+                - generic [ref=f2e80]: trending_up
+                - text: +4.36%
+            - paragraph [ref=f2e81]: R$ 8463.97
+            - paragraph [ref=f2e82]: "Vol 24h: R$ 50,6B"
+          - 'link "₮ USDTTether trending_up +0.67% R$ 5.22 Vol 24h: R$ 287,3B" [ref=f2e83] [cursor=pointer]':
+            - /url: /ativos/USDT?class=CRYPTO
+            - generic [ref=f2e84]:
+              - generic [ref=f2e85]:
+                - generic [ref=f2e86]: ₮
+                - generic [ref=f2e87]: USDTTether
+              - generic [ref=f2e88]:
+                - generic [ref=f2e89]: trending_up
+                - text: +0.67%
+            - paragraph [ref=f2e90]: R$ 5.22
+            - paragraph [ref=f2e91]: "Vol 24h: R$ 287,3B"
+          - 'link "S SOLSolana trending_up +6.31% R$ 403.41 Vol 24h: R$ 17,4B" [ref=f2e92] [cursor=pointer]':
+            - /url: /ativos/SOL?class=CRYPTO
+            - generic [ref=f2e93]:
+              - generic [ref=f2e94]:
+                - generic [ref=f2e95]: S
+                - generic [ref=f2e96]: SOLSolana
+              - generic [ref=f2e97]:
+                - generic [ref=f2e98]: trending_up
+                - text: +6.31%
+            - paragraph [ref=f2e99]: R$ 403.41
+            - paragraph [ref=f2e100]: "Vol 24h: R$ 17,4B"
+          - 'link "◆ BNBBNB trending_up +2.20% R$ 2886.52 Vol 24h: R$ 3,9B" [ref=f2e101] [cursor=pointer]':
+            - /url: /ativos/BNB?class=CRYPTO
+            - generic [ref=f2e102]:
+              - generic [ref=f2e103]:
+                - generic [ref=f2e104]: ◆
+                - generic [ref=f2e105]: BNBBNB
+              - generic [ref=f2e106]:
+                - generic [ref=f2e107]: trending_up
+                - text: +2.20%
+            - paragraph [ref=f2e108]: R$ 2886.52
+            - paragraph [ref=f2e109]: "Vol 24h: R$ 3,9B"
+        - complementary [ref=f2e110]:
+          - generic [ref=f2e111]:
+            - heading "trending_up Em alta" [level=3] [ref=f2e112]:
+              - generic [ref=f2e113]: trending_up
+              - text: Em alta
+            - generic [ref=f2e114]:
+              - generic [ref=f2e115]:
+                - generic [ref=f2e116]: SOL
+                - generic [ref=f2e117]:
+                  - generic [ref=f2e118]: trending_up
+                  - text: +6.31%
+              - generic [ref=f2e119]:
+                - generic [ref=f2e120]: ETH
+                - generic [ref=f2e121]:
+                  - generic [ref=f2e122]: trending_up
+                  - text: +4.36%
+              - generic [ref=f2e123]:
+                - generic [ref=f2e124]: BTC
+                - generic [ref=f2e125]:
+                  - generic [ref=f2e126]: trending_up
+                  - text: +3.79%
+          - generic [ref=f2e127]:
+            - heading "feed Últimas notícias" [level=3] [ref=f2e128]:
+              - generic [ref=f2e129]: feed
+              - text: Últimas notícias
+            - generic [ref=f2e130]:
+              - link "01 de jul. Europe is closing the door on offshore crypto, but it’s leaving the riskiest window open" [ref=f2e131] [cursor=pointer]:
+                - /url: https://www.coindesk.com/opinion/2026/07/01/europe-is-closing-the-door-on-offshore-crypto-but-it-s-leaving-the-riskiest-window-open
+                - time [ref=f2e132]: 01 de jul.
+                - paragraph [ref=f2e133]: Europe is closing the door on offshore crypto, but it’s leaving the riskiest window open
+              - link "01 de jul. French banking giant Crédit Agricole rolls out euro stablecoin, EURXT" [ref=f2e134] [cursor=pointer]:
+                - /url: https://www.coindesk.com/business/2026/07/01/french-banking-giant-credit-agricole-rolls-out-euro-stablecoin-eurxt
+                - time [ref=f2e135]: 01 de jul.
+                - paragraph [ref=f2e136]: French banking giant Crédit Agricole rolls out euro stablecoin, EURXT
+              - link "01 de jul. Morpho poised to scale as DeFi infrastructure play, Standard Chartered says" [ref=f2e137] [cursor=pointer]:
+                - /url: https://www.coindesk.com/markets/2026/07/01/morpho-poised-to-scale-as-defi-infrastructure-play-standard-chartered-says
+                - time [ref=f2e138]: 01 de jul.
+                - paragraph [ref=f2e139]: Morpho poised to scale as DeFi infrastructure play, Standard Chartered says
+      - generic [ref=f2e141]:
+        - generic [ref=f2e143]:
+          - heading "Notícias Cripto" [level=2] [ref=f2e144]
+          - paragraph [ref=f2e145]: As principais notícias do mundo das criptomoedas
+        - generic [ref=f2e146]:
+          - link "01 de jul. CoinDesk Europe is closing the door on offshore crypto, but it’s leaving the riskiest window open" [ref=f2e147] [cursor=pointer]:
+            - /url: https://www.coindesk.com/opinion/2026/07/01/europe-is-closing-the-door-on-offshore-crypto-but-it-s-leaving-the-riskiest-window-open
+            - generic [ref=f2e148]:
+              - time [ref=f2e149]: 01 de jul.
+              - generic [ref=f2e150]: CoinDesk
+            - paragraph [ref=f2e151]: Europe is closing the door on offshore crypto, but it’s leaving the riskiest window open
+          - link "01 de jul. CoinDesk French banking giant Crédit Agricole rolls out euro stablecoin, EURXT" [ref=f2e152] [cursor=pointer]:
+            - /url: https://www.coindesk.com/business/2026/07/01/french-banking-giant-credit-agricole-rolls-out-euro-stablecoin-eurxt
+            - generic [ref=f2e153]:
+              - time [ref=f2e154]: 01 de jul.
+              - generic [ref=f2e155]: CoinDesk
+            - paragraph [ref=f2e156]: French banking giant Crédit Agricole rolls out euro stablecoin, EURXT
+          - link "01 de jul. CoinDesk Morpho poised to scale as DeFi infrastructure play, Standard Chartered says" [ref=f2e157] [cursor=pointer]:
+            - /url: https://www.coindesk.com/markets/2026/07/01/morpho-poised-to-scale-as-defi-infrastructure-play-standard-chartered-says
+            - generic [ref=f2e158]:
+              - time [ref=f2e159]: 01 de jul.
+              - generic [ref=f2e160]: CoinDesk
+            - paragraph [ref=f2e161]: Morpho poised to scale as DeFi infrastructure play, Standard Chartered says
+          - link "01 de jul. CoinDesk Ethereum gets a new nonprofit focused on institutional adoption" [ref=f2e162] [cursor=pointer]:
+            - /url: https://www.coindesk.com/tech/2026/07/01/ethereum-gets-a-new-nonprofit-focused-on-institutional-adoption
+            - generic [ref=f2e163]:
+              - time [ref=f2e164]: 01 de jul.
+              - generic [ref=f2e165]: CoinDesk
+            - paragraph [ref=f2e166]: Ethereum gets a new nonprofit focused on institutional adoption
+          - link "01 de jul. CoinDesk Citi slashes 12-month bitcoin, ether targets as ETF flows dry up" [ref=f2e167] [cursor=pointer]:
+            - /url: https://www.coindesk.com/markets/2026/07/01/citi-slashes-12-month-bitcoin-ether-targets-as-etf-flows-dry-up
+            - generic [ref=f2e168]:
+              - time [ref=f2e169]: 01 de jul.
+              - generic [ref=f2e170]: CoinDesk
+            - paragraph [ref=f2e171]: Citi slashes 12-month bitcoin, ether targets as ETF flows dry up
+          - link "01 de jul. Cointelegraph Bank of Korea governor outlines tokenized bond vision, unified ledger plan The Bank of Korea’s governor praised tokenized government bonds for easing the issuance and management of government debt during a panel discussion at the ECB Forum." [ref=f2e172] [cursor=pointer]:
+            - /url: https://cointelegraph.com/news/bank-korea-governor-tokenized-government-bonds?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound
+            - generic [ref=f2e173]:
+              - time [ref=f2e174]: 01 de jul.
+              - generic [ref=f2e175]: Cointelegraph
+            - paragraph [ref=f2e176]: Bank of Korea governor outlines tokenized bond vision, unified ledger plan
+            - paragraph [ref=f2e177]: The Bank of Korea’s governor praised tokenized government bonds for easing the issuance and management of government debt during a panel discussion at the ECB Forum.
+      - generic [ref=f2e179]:
+        - generic [ref=f2e180]:
+          - heading "Aprenda sobre Cripto" [level=2] [ref=f2e181]
+          - paragraph [ref=f2e182]: Cursos oficiais e gratuitos da B3 Educação para entender o universo dos criptoativos.
+        - link "currency_bitcoin Iniciante Criptomoedas Introdução aos Criptoativos Entenda o que são Bitcoin, Ethereum e outras criptomoedas, como funcionam as exchanges e os riscos do mercado cripto. schedule 3h Acessar curso arrow_forward" [ref=f2e184] [cursor=pointer]:
+          - /url: https://edu.b3.com.br/cursos/criptoativos-introducao
+          - generic [ref=f2e186]:
+            - generic [ref=f2e187]:
+              - generic [ref=f2e189]: currency_bitcoin
+              - generic [ref=f2e190]: Iniciante
+            - generic [ref=f2e191]: Criptomoedas
+            - heading "Introdução aos Criptoativos" [level=3] [ref=f2e192]
+            - paragraph [ref=f2e193]: Entenda o que são Bitcoin, Ethereum e outras criptomoedas, como funcionam as exchanges e os riscos do mercado cripto.
+            - generic [ref=f2e194]:
+              - generic [ref=f2e195]:
+                - generic [ref=f2e196]: schedule
+                - text: 3h
+              - generic [ref=f2e197]:
+                - text: Acessar curso
+                - generic [ref=f2e198]: arrow_forward
+        - link "VER TODOS OS CURSOS B3 open_in_new" [ref=f2e200] [cursor=pointer]:
+          - /url: https://edu.b3.com.br
+          - text: VER TODOS OS CURSOS B3
+          - generic [ref=f2e201]: open_in_new
+  - contentinfo [ref=f2e202]:
+    - generic [ref=f2e203]:
+      - generic [ref=f2e204]:
+        - generic [ref=f2e205]:
+          - generic [ref=f2e206]:
+            - img [ref=f2e207]
+            - generic [ref=f2e213]: databolsa
+          - paragraph [ref=f2e214]: Acompanhamento de patrimônio em investimentos com lançamento manual de operações e consolidação em BRL.
+        - generic [ref=f2e215]:
+          - heading "Mercado" [level=3] [ref=f2e216]
+          - list [ref=f2e217]:
+            - listitem [ref=f2e218]:
+              - link "Ações" [ref=f2e219] [cursor=pointer]:
+                - /url: /mercados?classe=STOCK_BR
+            - listitem [ref=f2e220]:
+              - link "FIIs" [ref=f2e221] [cursor=pointer]:
+                - /url: /mercados?classe=FII
+            - listitem [ref=f2e222]:
+              - link "ETFs" [ref=f2e223] [cursor=pointer]:
+                - /url: /mercados?classe=ETF
+            - listitem [ref=f2e224]:
+              - link "BDRs" [ref=f2e225] [cursor=pointer]:
+                - /url: /mercados?classe=BDR
+            - listitem [ref=f2e226]:
+              - link "Crypto" [ref=f2e227] [cursor=pointer]:
+                - /url: /mercados?classe=CRYPTO
+            - listitem [ref=f2e228]:
+              - link "Stocks US" [ref=f2e229] [cursor=pointer]:
+                - /url: /mercados?classe=STOCK_US
+        - generic [ref=f2e230]:
+          - heading "Ferramentas" [level=3] [ref=f2e231]
+          - list [ref=f2e232]:
+            - listitem [ref=f2e233]:
+              - link "Conversor de Moedas" [ref=f2e234] [cursor=pointer]:
+                - /url: /ferramentas#conversor
+            - listitem [ref=f2e235]:
+              - link "Simulador" [ref=f2e236] [cursor=pointer]:
+                - /url: /ferramentas#simulador
+            - listitem [ref=f2e237]:
+              - link "Calculadora IR" [ref=f2e238] [cursor=pointer]:
+                - /url: /ferramentas#calculadora-ir
+            - listitem [ref=f2e239]:
+              - link "Análise de Índices" [ref=f2e240] [cursor=pointer]:
+                - /url: /ferramentas
+        - generic [ref=f2e241]:
+          - heading "Institucional" [level=3] [ref=f2e242]
+          - list [ref=f2e243]:
+            - listitem [ref=f2e244]:
+              - link "Termos de Uso" [ref=f2e245] [cursor=pointer]:
+                - /url: /termos
+            - listitem [ref=f2e246]:
+              - link "Privacidade" [ref=f2e247] [cursor=pointer]:
+                - /url: /privacidade
+            - listitem [ref=f2e248]:
+              - link "Compliance" [ref=f2e249] [cursor=pointer]:
+                - /url: /compliance
+            - listitem [ref=f2e250]:
+              - link "Ajuda" [ref=f2e251] [cursor=pointer]:
+                - /url: /ajuda
+      - generic [ref=f2e252]:
+        - paragraph [ref=f2e253]: © 2026 databolsa. Todos os direitos reservados.
+        - paragraph [ref=f2e254]: "Aviso: O conteúdo apresentado neste site tem caráter meramente informativo e educacional, não constituindo recomendação de investimento."

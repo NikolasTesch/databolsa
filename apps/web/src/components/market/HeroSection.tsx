@@ -313,7 +313,7 @@ void main() {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none opacity-25 dark:opacity-55 mix-blend-multiply dark:mix-blend-screen"
+      className="absolute inset-0 w-full h-full pointer-events-none opacity-25 dark:opacity-35 mix-blend-multiply dark:mix-blend-screen"
       style={{ display: 'block' }}
     />
   );

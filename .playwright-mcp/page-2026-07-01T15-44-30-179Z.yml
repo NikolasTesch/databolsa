@@ -1,0 +1,474 @@
+- generic [ref=f1e2]:
+  - banner [ref=f1e3]:
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]:
+        - link "databolsa" [ref=f1e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f1e8]:
+            - img [ref=f1e9]
+            - generic [ref=f1e15]: databolsa
+        - navigation [ref=f1e16]:
+          - link "Início" [ref=f1e17] [cursor=pointer]:
+            - /url: /
+          - link "Mercados" [ref=f1e18] [cursor=pointer]:
+            - /url: /mercados
+          - link "Dividendos" [ref=f1e19] [cursor=pointer]:
+            - /url: /dividendos
+          - link "Cripto" [ref=f1e20] [cursor=pointer]:
+            - /url: /cripto
+          - link "Ferramentas" [ref=f1e21] [cursor=pointer]:
+            - /url: /ferramentas
+          - link "Cursos" [ref=f1e22] [cursor=pointer]:
+            - /url: /cursos
+      - generic [ref=f1e23]:
+        - generic [ref=f1e26]:
+          - img [ref=f1e28]
+          - combobox "Buscar ativo..." [ref=f1e30]
+        - button "Ativar modo claro" [ref=f1e31] [cursor=pointer]:
+          - generic [ref=f1e32]: light_mode
+        - generic [ref=f1e33]:
+          - link "Entrar" [ref=f1e34] [cursor=pointer]:
+            - /url: /login
+          - link "Criar conta" [ref=f1e35] [cursor=pointer]:
+            - /url: /register
+  - main [ref=f1e36]:
+    - generic [ref=f1e37]:
+      - generic [ref=f1e40]:
+        - generic [ref=f1e45]: Renda Passiva
+        - heading "Dividendos e Proventos" [level=1] [ref=f1e46]
+        - paragraph [ref=f1e47]: Acompanhe a agenda completa de dividendos, JCP e proventos de ações e FIIs listados na B3. Filtre por ativo e confira datas, valores e rendimentos.
+        - generic [ref=f1e48]:
+          - generic [ref=f1e49]:
+            - generic [ref=f1e50]: payments
+            - generic [ref=f1e51]: 4 ativos
+          - generic [ref=f1e52]:
+            - generic [ref=f1e53]: monetization_on
+            - generic [ref=f1e54]: 756 dividendos
+          - generic [ref=f1e55]:
+            - generic [ref=f1e56]: account_balance
+            - generic [ref=f1e57]: 0 JCP
+          - generic [ref=f1e58]:
+            - generic [ref=f1e59]: table_rows
+            - generic [ref=f1e60]: 756 registros
+      - generic [ref=f1e62]:
+        - generic [ref=f1e63]:
+          - button "Todos" [ref=f1e64] [cursor=pointer]
+          - button "Dividendos" [ref=f1e65] [cursor=pointer]
+          - button "JCP" [ref=f1e66] [cursor=pointer]
+        - generic [ref=f1e67]:
+          - generic: search
+          - textbox "Buscar por ticker..." [ref=f1e68]
+      - generic [ref=f1e69]:
+        - table [ref=f1e71]:
+          - rowgroup [ref=f1e72]:
+            - row "Ativo Tipo Data Com Pagamento Valor (R$) Yield" [ref=f1e73]:
+              - columnheader "Ativo" [ref=f1e74]
+              - columnheader "Tipo" [ref=f1e75]
+              - columnheader "Data Com" [ref=f1e76]
+              - columnheader "Pagamento" [ref=f1e77]
+              - columnheader "Valor (R$)" [ref=f1e78]
+              - columnheader "Yield" [ref=f1e79]
+          - rowgroup [ref=f1e80]:
+            - row "IT ITUB4 Dividendo 01/01/2017 01/01/2017 0.0150 -" [ref=f1e81] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e82]:
+                - link "IT ITUB4" [ref=f1e83]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e84]: IT
+                  - generic [ref=f1e85]: ITUB4
+              - cell "Dividendo" [ref=f1e86]:
+                - generic [ref=f1e87]: Dividendo
+              - cell "01/01/2017" [ref=f1e88]
+              - cell "01/01/2017" [ref=f1e89]
+              - cell "0.0150" [ref=f1e90]
+              - cell "-" [ref=f1e91]
+            - row "IT ITUB4 Dividendo 01/01/2018 01/01/2018 0.0150 -" [ref=f1e92] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e93]:
+                - link "IT ITUB4" [ref=f1e94]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e95]: IT
+                  - generic [ref=f1e96]: ITUB4
+              - cell "Dividendo" [ref=f1e97]:
+                - generic [ref=f1e98]: Dividendo
+              - cell "01/01/2018" [ref=f1e99]
+              - cell "01/01/2018" [ref=f1e100]
+              - cell "0.0150" [ref=f1e101]
+              - cell "-" [ref=f1e102]
+            - row "IT ITUB4 Dividendo 01/01/2019 01/01/2019 0.0150 -" [ref=f1e103] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e104]:
+                - link "IT ITUB4" [ref=f1e105]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e106]: IT
+                  - generic [ref=f1e107]: ITUB4
+              - cell "Dividendo" [ref=f1e108]:
+                - generic [ref=f1e109]: Dividendo
+              - cell "01/01/2019" [ref=f1e110]
+              - cell "01/01/2019" [ref=f1e111]
+              - cell "0.0150" [ref=f1e112]
+              - cell "-" [ref=f1e113]
+            - row "IT ITUB4 Dividendo 01/01/2020 01/01/2020 0.0150 -" [ref=f1e114] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e115]:
+                - link "IT ITUB4" [ref=f1e116]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e117]: IT
+                  - generic [ref=f1e118]: ITUB4
+              - cell "Dividendo" [ref=f1e119]:
+                - generic [ref=f1e120]: Dividendo
+              - cell "01/01/2020" [ref=f1e121]
+              - cell "01/01/2020" [ref=f1e122]
+              - cell "0.0150" [ref=f1e123]
+              - cell "-" [ref=f1e124]
+            - row "IT ITUB4 Dividendo 01/01/2023 01/01/2023 0.0177 -" [ref=f1e125] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e126]:
+                - link "IT ITUB4" [ref=f1e127]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e128]: IT
+                  - generic [ref=f1e129]: ITUB4
+              - cell "Dividendo" [ref=f1e130]:
+                - generic [ref=f1e131]: Dividendo
+              - cell "01/01/2023" [ref=f1e132]
+              - cell "01/01/2023" [ref=f1e133]
+              - cell "0.0177" [ref=f1e134]
+              - cell "-" [ref=f1e135]
+            - row "IT ITUB4 Dividendo 01/01/2024 01/01/2024 0.0177 -" [ref=f1e136] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e137]:
+                - link "IT ITUB4" [ref=f1e138]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e139]: IT
+                  - generic [ref=f1e140]: ITUB4
+              - cell "Dividendo" [ref=f1e141]:
+                - generic [ref=f1e142]: Dividendo
+              - cell "01/01/2024" [ref=f1e143]
+              - cell "01/01/2024" [ref=f1e144]
+              - cell "0.0177" [ref=f1e145]
+              - cell "-" [ref=f1e146]
+            - row "IT ITUB4 Dividendo 01/01/2025 01/01/2025 0.0177 -" [ref=f1e147] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e148]:
+                - link "IT ITUB4" [ref=f1e149]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e150]: IT
+                  - generic [ref=f1e151]: ITUB4
+              - cell "Dividendo" [ref=f1e152]:
+                - generic [ref=f1e153]: Dividendo
+              - cell "01/01/2025" [ref=f1e154]
+              - cell "01/01/2025" [ref=f1e155]
+              - cell "0.0177" [ref=f1e156]
+              - cell "-" [ref=f1e157]
+            - row "IT ITUB4 Dividendo 01/01/2026 01/01/2026 0.0177 -" [ref=f1e158] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e159]:
+                - link "IT ITUB4" [ref=f1e160]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e161]: IT
+                  - generic [ref=f1e162]: ITUB4
+              - cell "Dividendo" [ref=f1e163]:
+                - generic [ref=f1e164]: Dividendo
+              - cell "01/01/2026" [ref=f1e165]
+              - cell "01/01/2026" [ref=f1e166]
+              - cell "0.0177" [ref=f1e167]
+              - cell "-" [ref=f1e168]
+            - row "IT ITUB4 Dividendo 01/02/2026 01/02/2026 0.0182 -" [ref=f1e169] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e170]:
+                - link "IT ITUB4" [ref=f1e171]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e172]: IT
+                  - generic [ref=f1e173]: ITUB4
+              - cell "Dividendo" [ref=f1e174]:
+                - generic [ref=f1e175]: Dividendo
+              - cell "01/02/2026" [ref=f1e176]
+              - cell "01/02/2026" [ref=f1e177]
+              - cell "0.0182" [ref=f1e178]
+              - cell "-" [ref=f1e179]
+            - row "IT ITUB4 Dividendo 01/03/2017 01/03/2017 0.7754 -" [ref=f1e180] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e181]:
+                - link "IT ITUB4" [ref=f1e182]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e183]: IT
+                  - generic [ref=f1e184]: ITUB4
+              - cell "Dividendo" [ref=f1e185]:
+                - generic [ref=f1e186]: Dividendo
+              - cell "01/03/2017" [ref=f1e187]
+              - cell "01/03/2017" [ref=f1e188]
+              - cell "0.7754" [ref=f1e189]
+              - cell "-" [ref=f1e190]
+            - row "IT ITUB4 Dividendo 01/03/2020 01/03/2020 0.0150 -" [ref=f1e191] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e192]:
+                - link "IT ITUB4" [ref=f1e193]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e194]: IT
+                  - generic [ref=f1e195]: ITUB4
+              - cell "Dividendo" [ref=f1e196]:
+                - generic [ref=f1e197]: Dividendo
+              - cell "01/03/2020" [ref=f1e198]
+              - cell "01/03/2020" [ref=f1e199]
+              - cell "0.0150" [ref=f1e200]
+              - cell "-" [ref=f1e201]
+            - row "IT ITUB4 Dividendo 01/03/2020 01/03/2020 0.0150 -" [ref=f1e202] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e203]:
+                - link "IT ITUB4" [ref=f1e204]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e205]: IT
+                  - generic [ref=f1e206]: ITUB4
+              - cell "Dividendo" [ref=f1e207]:
+                - generic [ref=f1e208]: Dividendo
+              - cell "01/03/2020" [ref=f1e209]
+              - cell "01/03/2020" [ref=f1e210]
+              - cell "0.0150" [ref=f1e211]
+              - cell "-" [ref=f1e212]
+            - row "IT ITUB4 Dividendo 01/03/2022 01/03/2022 0.0177 -" [ref=f1e213] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e214]:
+                - link "IT ITUB4" [ref=f1e215]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e216]: IT
+                  - generic [ref=f1e217]: ITUB4
+              - cell "Dividendo" [ref=f1e218]:
+                - generic [ref=f1e219]: Dividendo
+              - cell "01/03/2022" [ref=f1e220]
+              - cell "01/03/2022" [ref=f1e221]
+              - cell "0.0177" [ref=f1e222]
+              - cell "-" [ref=f1e223]
+            - row "IT ITUB4 Dividendo 01/03/2026 01/03/2026 0.0182 -" [ref=f1e224] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e225]:
+                - link "IT ITUB4" [ref=f1e226]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e227]: IT
+                  - generic [ref=f1e228]: ITUB4
+              - cell "Dividendo" [ref=f1e229]:
+                - generic [ref=f1e230]: Dividendo
+              - cell "01/03/2026" [ref=f1e231]
+              - cell "01/03/2026" [ref=f1e232]
+              - cell "0.0182" [ref=f1e233]
+              - cell "-" [ref=f1e234]
+            - row "PE PETR4 Dividendo 01/04/2007 01/04/2007 0.0106 -" [ref=f1e235] [cursor=pointer]:
+              - cell "PE PETR4" [ref=f1e236]:
+                - link "PE PETR4" [ref=f1e237]:
+                  - /url: /ativos/PETR4?class=STOCK_BR
+                  - generic [ref=f1e238]: PE
+                  - generic [ref=f1e239]: PETR4
+              - cell "Dividendo" [ref=f1e240]:
+                - generic [ref=f1e241]: Dividendo
+              - cell "01/04/2007" [ref=f1e242]
+              - cell "01/04/2007" [ref=f1e243]
+              - cell "0.0106" [ref=f1e244]
+              - cell "-" [ref=f1e245]
+            - row "PE PETR4 Dividendo 01/04/2007 01/04/2007 0.3500 -" [ref=f1e246] [cursor=pointer]:
+              - cell "PE PETR4" [ref=f1e247]:
+                - link "PE PETR4" [ref=f1e248]:
+                  - /url: /ativos/PETR4?class=STOCK_BR
+                  - generic [ref=f1e249]: PE
+                  - generic [ref=f1e250]: PETR4
+              - cell "Dividendo" [ref=f1e251]:
+                - generic [ref=f1e252]: Dividendo
+              - cell "01/04/2007" [ref=f1e253]
+              - cell "01/04/2007" [ref=f1e254]
+              - cell "0.3500" [ref=f1e255]
+              - cell "-" [ref=f1e256]
+            - row "IT ITUB4 Dividendo 01/04/2018 01/04/2018 0.0150 -" [ref=f1e257] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e258]:
+                - link "IT ITUB4" [ref=f1e259]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e260]: IT
+                  - generic [ref=f1e261]: ITUB4
+              - cell "Dividendo" [ref=f1e262]:
+                - generic [ref=f1e263]: Dividendo
+              - cell "01/04/2018" [ref=f1e264]
+              - cell "01/04/2018" [ref=f1e265]
+              - cell "0.0150" [ref=f1e266]
+              - cell "-" [ref=f1e267]
+            - row "IT ITUB4 Dividendo 01/05/2016 01/05/2016 0.0150 -" [ref=f1e268] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e269]:
+                - link "IT ITUB4" [ref=f1e270]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e271]: IT
+                  - generic [ref=f1e272]: ITUB4
+              - cell "Dividendo" [ref=f1e273]:
+                - generic [ref=f1e274]: Dividendo
+              - cell "01/05/2016" [ref=f1e275]
+              - cell "01/05/2016" [ref=f1e276]
+              - cell "0.0150" [ref=f1e277]
+              - cell "-" [ref=f1e278]
+            - row "IT ITUB4 Dividendo 01/05/2017 01/05/2017 0.0150 -" [ref=f1e279] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e280]:
+                - link "IT ITUB4" [ref=f1e281]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e282]: IT
+                  - generic [ref=f1e283]: ITUB4
+              - cell "Dividendo" [ref=f1e284]:
+                - generic [ref=f1e285]: Dividendo
+              - cell "01/05/2017" [ref=f1e286]
+              - cell "01/05/2017" [ref=f1e287]
+              - cell "0.0150" [ref=f1e288]
+              - cell "-" [ref=f1e289]
+            - row "IT ITUB4 Dividendo 01/05/2018 01/05/2018 0.0150 -" [ref=f1e290] [cursor=pointer]:
+              - cell "IT ITUB4" [ref=f1e291]:
+                - link "IT ITUB4" [ref=f1e292]:
+                  - /url: /ativos/ITUB4?class=STOCK_BR
+                  - generic [ref=f1e293]: IT
+                  - generic [ref=f1e294]: ITUB4
+              - cell "Dividendo" [ref=f1e295]:
+                - generic [ref=f1e296]: Dividendo
+              - cell "01/05/2018" [ref=f1e297]
+              - cell "01/05/2018" [ref=f1e298]
+              - cell "0.0150" [ref=f1e299]
+              - cell "-" [ref=f1e300]
+        - generic [ref=f1e301]:
+          - generic [ref=f1e302]: Mostrando 1–20 de 756
+          - generic [ref=f1e303]:
+            - button "chevron_left" [disabled] [ref=f1e304]:
+              - generic [ref=f1e305]: chevron_left
+            - button "1" [ref=f1e306] [cursor=pointer]
+            - button "2" [ref=f1e307] [cursor=pointer]
+            - button "3" [ref=f1e308] [cursor=pointer]
+            - button "4" [ref=f1e309] [cursor=pointer]
+            - button "5" [ref=f1e310] [cursor=pointer]
+            - button "chevron_right" [ref=f1e311] [cursor=pointer]:
+              - generic [ref=f1e312]: chevron_right
+      - generic [ref=f1e314]:
+        - generic [ref=f1e315]:
+          - heading "Últimas sobre Proventos" [level=2] [ref=f1e316]
+          - paragraph [ref=f1e317]: Notícias e análises sobre dividendos, JCP e distribuição de proventos.
+        - 'link "InvestNews Agenda de dividendos de julho: Itaú, Itaúsa, Bradesco e Rede D&#039;Or pagam proventos <![CDATA[Nova regra de IR sobre dividendos já prevalece entre as distribuições programadas para julho]]> Há 5 horas" [ref=f1e319] [cursor=pointer]':
+          - /url: https://investnews.com.br/investimentos/agenda-de-dividendos-de-julho-itau-itausa-bradesco-e-rede-dor-pagam-proventos/
+          - generic [ref=f1e320]: InvestNews
+          - 'heading "Agenda de dividendos de julho: Itaú, Itaúsa, Bradesco e Rede D&#039;Or pagam proventos" [level=3] [ref=f1e321]'
+          - paragraph [ref=f1e322]: <![CDATA[Nova regra de IR sobre dividendos já prevalece entre as distribuições programadas para julho]]>
+          - generic [ref=f1e323]: Há 5 horas
+      - generic [ref=f1e324]:
+        - generic [ref=f1e325]:
+          - heading "Como funcionam os proventos" [level=2] [ref=f1e326]
+          - paragraph [ref=f1e327]: Entenda as principais formas de distribuição de lucros e remuneração aos acionistas e cotistas.
+        - generic [ref=f1e328]:
+          - generic [ref=f1e329]:
+            - generic [ref=f1e331]: monetization_on
+            - heading "Dividendos (DIV)" [level=3] [ref=f1e332]
+            - paragraph [ref=f1e333]:
+              - text: Os
+              - strong [ref=f1e334]: dividendos
+              - text: são a distribuição periódica de parte do lucro líquido de uma empresa aos seus acionistas. O pagamento é feito em dinheiro, creditado diretamente na conta do investidor.
+            - list [ref=f1e335]:
+              - listitem [ref=f1e336]:
+                - generic [ref=f1e337]: check_circle
+                - generic [ref=f1e338]:
+                  - strong [ref=f1e339]: Isentos de IR
+                  - text: para pessoas físicas
+              - listitem [ref=f1e340]:
+                - generic [ref=f1e341]: check_circle
+                - generic [ref=f1e342]:
+                  - text: Pagamento em
+                  - strong [ref=f1e343]: dinheiro
+                  - text: na conta
+              - listitem [ref=f1e344]:
+                - generic [ref=f1e345]: check_circle
+                - generic [ref=f1e346]:
+                  - text: "Frequência:"
+                  - strong [ref=f1e347]: mensal, trimestral ou semestral
+          - generic [ref=f1e348]:
+            - generic [ref=f1e350]: account_balance
+            - heading "Juros sobre Capital Próprio (JCP)" [level=3] [ref=f1e351]
+            - paragraph [ref=f1e352]:
+              - text: Os
+              - strong [ref=f1e353]: JCP
+              - text: são uma forma de remuneração aos acionistas calculada sobre o patrimônio líquido da empresa. Funciona como uma “juros” sobre o capital investido.
+            - list [ref=f1e354]:
+              - listitem [ref=f1e355]:
+                - generic [ref=f1e356]: info
+                - generic [ref=f1e357]:
+                  - strong [ref=f1e358]: "Tributação na fonte:"
+                  - text: 15% de IR retido
+              - listitem [ref=f1e359]:
+                - generic [ref=f1e360]: info
+                - generic [ref=f1e361]:
+                  - text: Vantagem
+                  - strong [ref=f1e362]: fiscal
+                  - text: para a empresa (dedutível)
+              - listitem [ref=f1e363]:
+                - generic [ref=f1e364]: info
+                - generic [ref=f1e365]:
+                  - text: Pagamento em
+                  - strong [ref=f1e366]: dinheiro
+                  - text: ", igual ao dividendo"
+          - generic [ref=f1e367]:
+            - generic [ref=f1e369]: redeem
+            - heading "Bonificações" [level=3] [ref=f1e370]
+            - paragraph [ref=f1e371]:
+              - text: As
+              - strong [ref=f1e372]: bonificações
+              - text: ocorrem quando uma empresa distribui novas ações gratuitamente aos acionistas existentes, sem desembolso por parte do investidor.
+            - list [ref=f1e373]:
+              - listitem [ref=f1e374]:
+                - generic [ref=f1e375]: check_circle
+                - generic [ref=f1e376]:
+                  - strong [ref=f1e377]: Novas ações
+                  - text: distribuídas gratuitamente
+              - listitem [ref=f1e378]:
+                - generic [ref=f1e379]: check_circle
+                - generic [ref=f1e380]:
+                  - strong [ref=f1e381]: Sem desembolso
+                  - text: para o acionista
+              - listitem [ref=f1e382]:
+                - generic [ref=f1e383]: check_circle
+                - generic [ref=f1e384]:
+                  - text: Aumenta a
+                  - strong [ref=f1e385]: quantidade de ações
+                  - text: em carteira
+        - paragraph [ref=f1e387]: Os valores e datas exibidos nesta página são baseados em dados públicos da B3 e podem sofrer alterações. Consulte sempre o site da B3 ou seu corretor para informações oficiais.
+  - contentinfo [ref=f1e388]:
+    - generic [ref=f1e389]:
+      - generic [ref=f1e390]:
+        - generic [ref=f1e391]:
+          - generic [ref=f1e392]:
+            - img [ref=f1e393]
+            - generic [ref=f1e399]: databolsa
+          - paragraph [ref=f1e400]: Acompanhamento de patrimônio em investimentos com lançamento manual de operações e consolidação em BRL.
+        - generic [ref=f1e401]:
+          - heading "Mercado" [level=3] [ref=f1e402]
+          - list [ref=f1e403]:
+            - listitem [ref=f1e404]:
+              - link "Ações" [ref=f1e405] [cursor=pointer]:
+                - /url: /mercados?classe=STOCK_BR
+            - listitem [ref=f1e406]:
+              - link "FIIs" [ref=f1e407] [cursor=pointer]:
+                - /url: /mercados?classe=FII
+            - listitem [ref=f1e408]:
+              - link "ETFs" [ref=f1e409] [cursor=pointer]:
+                - /url: /mercados?classe=ETF
+            - listitem [ref=f1e410]:
+              - link "BDRs" [ref=f1e411] [cursor=pointer]:
+                - /url: /mercados?classe=BDR
+            - listitem [ref=f1e412]:
+              - link "Crypto" [ref=f1e413] [cursor=pointer]:
+                - /url: /mercados?classe=CRYPTO
+            - listitem [ref=f1e414]:
+              - link "Stocks US" [ref=f1e415] [cursor=pointer]:
+                - /url: /mercados?classe=STOCK_US
+        - generic [ref=f1e416]:
+          - heading "Ferramentas" [level=3] [ref=f1e417]
+          - list [ref=f1e418]:
+            - listitem [ref=f1e419]:
+              - link "Conversor de Moedas" [ref=f1e420] [cursor=pointer]:
+                - /url: /ferramentas#conversor
+            - listitem [ref=f1e421]:
+              - link "Simulador" [ref=f1e422] [cursor=pointer]:
+                - /url: /ferramentas#simulador
+            - listitem [ref=f1e423]:
+              - link "Calculadora IR" [ref=f1e424] [cursor=pointer]:
+                - /url: /ferramentas#calculadora-ir
+            - listitem [ref=f1e425]:
+              - link "Análise de Índices" [ref=f1e426] [cursor=pointer]:
+                - /url: /ferramentas
+        - generic [ref=f1e427]:
+          - heading "Institucional" [level=3] [ref=f1e428]
+          - list [ref=f1e429]:
+            - listitem [ref=f1e430]:
+              - link "Termos de Uso" [ref=f1e431] [cursor=pointer]:
+                - /url: /termos
+            - listitem [ref=f1e432]:
+              - link "Privacidade" [ref=f1e433] [cursor=pointer]:
+                - /url: /privacidade
+            - listitem [ref=f1e434]:
+              - link "Compliance" [ref=f1e435] [cursor=pointer]:
+                - /url: /compliance
+            - listitem [ref=f1e436]:
+              - link "Ajuda" [ref=f1e437] [cursor=pointer]:
+                - /url: /ajuda
+      - generic [ref=f1e438]:
+        - paragraph [ref=f1e439]: © 2026 databolsa. Todos os direitos reservados.
+        - paragraph [ref=f1e440]: "Aviso: O conteúdo apresentado neste site tem caráter meramente informativo e educacional, não constituindo recomendação de investimento."
