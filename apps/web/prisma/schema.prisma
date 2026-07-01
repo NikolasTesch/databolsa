@@ -58,6 +58,7 @@ model User {
   memberships          GroupMembership[]
   created_groups       Group[]           @relation("GroupCreator")
   created_invites      GroupInvite[]     @relation("InviteCreator")
+  watches              AssetWatch[]
 
   @@map("users")
 }
@@ -135,6 +136,19 @@ model Transaction {
   asset      Asset           @relation(fields: [asset_id], references: [id], onDelete: Cascade)
 
   @@map("transactions")
+}
+
+model AssetWatch {
+  id             String     @id @default(uuid())
+  user_id        String
+  ticker         String
+  name           String?
+  asset_class    AssetClass
+  added_at       DateTime   @default(now()) @map("added_at")
+  user           User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, ticker])
+  @@map("asset_watch")
 }
 
 enum AlertCondition {
