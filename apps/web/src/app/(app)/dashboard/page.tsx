@@ -12,6 +12,7 @@ import { GrowthChartDynamic } from '@/components/portfolio/GrowthChartDynamic';
 import { MonthlyActivityCard } from '@/components/portfolio/MonthlyActivityCard';
 import { DividendMiniChartDynamic } from '@/components/portfolio/DividendMiniChartDynamic';
 import { BenchmarkChartDynamic } from '@/components/portfolio/BenchmarkChartDynamic';
+import { AportesComparativoChartDynamic } from '@/components/portfolio/AportesComparativoChartDynamic';
 import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
 
@@ -129,6 +130,9 @@ export default function DashboardPage() {
 
             {/* Benchmark vs Carteira */}
             <BenchmarkChartDynamic />
+
+            {/* Aportes por Mês */}
+            <AportesComparativoChartDynamic />
 
             {data.positions.filter((p) => p.valor_atual_brl !== null).length > 0 && (
               <Card padding="md">
