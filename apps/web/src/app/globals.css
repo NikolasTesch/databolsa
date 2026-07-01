@@ -58,6 +58,13 @@
 
 @layer components {
   .glass-panel {
+    background: var(--color-surface);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border);
+  }
+
+  .dark .glass-panel {
     background: rgba(8, 26, 51, 0.68);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { SearchBar } from '@/components/market/SearchBar';
 import { ThemeToggle } from './ThemeToggle';
 import { BrandLogo } from './BrandLogo';
@@ -21,6 +22,32 @@ const NAV_ITEMS = [
 
 export function PublicHeader({ isAuthenticated }: PublicHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+  const [currentHash, setCurrentHash] = useState('');
+
+  useEffect(() => {
+    setCurrentHash(window.location.hash);
+
+    const handleHashChange = () => {
+      setCurrentHash(window.location.hash);
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [pathname]);
+
+  const checkActive = (href: string) => {
+    if (href === '/') {
+      return pathname === '/' && currentHash === '';
+    }
+    if (href.startsWith('/#')) {
+      const hash = href.substring(1);
+      return pathname === '/' && currentHash === hash;
+    }
+    return pathname === href;
+  };
 
   return (
     <header className="sticky top-0 z-sticky bg-background/80 backdrop-blur-md border-b border-border">
@@ -35,7 +62,7 @@ export function PublicHeader({ isAuthenticated }: PublicHeaderProps) {
             {/* Desktop nav */}
             <nav className="hidden md:flex items-center gap-6">
               {NAV_ITEMS.map((item) => {
-                const isActive = item.href === '/' || item.href === '/#mercados';
+                const isActive = checkActive(item.href);
                 return (
                   <Link
                     key={item.label}

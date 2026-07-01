@@ -98,10 +98,10 @@ class AppColorScheme {
   });
 
   static const AppColorScheme light = AppColorScheme(
-      background: Color(0xFFF4F8FF),
+      background: Color(0xFFECEFF5),
       surface: Color(0xFFFFFFFF),
-      surfaceMuted: Color(0xFFEAF2FF),
-      border: Color(0xFFCAD8EE),
+      surfaceMuted: Color(0xFFDEE6F0),
+      border: Color(0xFF7A90AC),
       text: Color(0xFF0F172A),
       textMuted: Color(0xFF475569),
       textSubtle: Color(0xFF64748B),

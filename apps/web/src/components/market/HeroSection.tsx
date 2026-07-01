@@ -155,6 +155,7 @@ varying vec2 v_texCoord;
 uniform float u_time;
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
+uniform float u_dark;
 
 float random(vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
@@ -185,7 +186,6 @@ float fbm(vec2 st) {
 
 void main() {
     vec2 st = v_texCoord;
-    vec3 color = vec3(0.04, 0.04, 0.04); // Base neutra bem escura para mesclar bem em light/dark
     
     vec2 q = vec2(0.);
     q.x = fbm(st + 0.0 * u_time);
@@ -197,20 +197,47 @@ void main() {
 
     float f = fbm(st + r);
 
-    // Mesclar cores do design system da databolsa
-    color = mix(color,
-                vec3(0.118, 0.204, 0.4), // brand.navy.800 #1E3466
-                clamp((f*f)*4.0, 0.0, 1.0));
+    vec3 color = vec3(0.0);
 
-    color = mix(color,
-                vec3(0.306, 0.765, 0.894), // brand.accent #4EC3E4
-                clamp(length(q), 0.0, 1.0) * 0.1);
+    if (u_dark > 0.5) {
+        color = vec3(0.04, 0.04, 0.04); // Base neutra bem escura para mesclar bem em light/dark
+        
+        // Mesclar cores do design system da databolsa
+        color = mix(color,
+                    vec3(0.118, 0.204, 0.4), // brand.navy.800 #1E3466
+                    clamp((f*f)*4.0, 0.0, 1.0));
 
-    color = mix(color,
-                vec3(0.153, 0.337, 0.643), // brand.primary #2756A4
-                clamp(length(r.x), 0.0, 1.0) * 0.2);
+        color = mix(color,
+                    vec3(0.306, 0.765, 0.894), // brand.accent #4EC3E4
+                    clamp(length(q), 0.0, 1.0) * 0.1);
 
-    gl_FragColor = vec4((f*f*f + 0.6*f*f + 0.5*f) * color, 1.0);
+        color = mix(color,
+                    vec3(0.153, 0.337, 0.643), // brand.primary #2756A4
+                    clamp(length(r.x), 0.0, 1.0) * 0.2);
+
+        gl_FragColor = vec4((f*f*f + 0.6*f*f + 0.5*f) * color, 1.0);
+    } else {
+        // Modo claro: ondas pastel suaves integradas perfeitamente ao fundo claro #F4F8FF
+        vec3 lightNavy = vec3(0.92, 0.94, 0.97);
+        vec3 lightAccent = vec3(0.90, 0.96, 0.98);
+        vec3 lightPrimary = vec3(0.88, 0.92, 0.97);
+
+        color = vec3(1.0); // Base branca em light mode para mix-blend-multiply
+
+        color = mix(color,
+                    lightNavy,
+                    clamp((f*f)*2.0, 0.0, 1.0));
+
+        color = mix(color,
+                    lightAccent,
+                    clamp(length(q), 0.0, 1.0) * 0.15);
+
+        color = mix(color,
+                    lightPrimary,
+                    clamp(length(r.x), 0.0, 1.0) * 0.25);
+
+        gl_FragColor = vec4(color, 1.0);
+    }
 }`;
 
     function cs(type: number, src: string) {
@@ -243,6 +270,7 @@ void main() {
     const uTime = gl.getUniformLocation(prog, 'u_time');
     const uRes = gl.getUniformLocation(prog, 'u_resolution');
     const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+    const uDark = gl.getUniformLocation(prog, 'u_dark');
 
     let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
     const handleMouseMove = (event: MouseEvent) => {
@@ -265,6 +293,10 @@ void main() {
       if (uTime) gl.uniform1f(uTime, t * 0.001);
       if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
       if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+      if (uDark) {
+        const isDark = document.documentElement.classList.contains('dark');
+        gl.uniform1f(uDark, isDark ? 1.0 : 0.0);
+      }
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       animationFrameId = requestAnimationFrame(render);
     }
