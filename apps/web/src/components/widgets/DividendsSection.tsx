@@ -67,7 +67,6 @@ export default async function DividendsSection() {
                     <Link
                       href={`/ativos/${row.ticker}?class=STOCK_BR`}
                       className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
-                      onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-surface-muted font-mono text-xs font-semibold text-on-surface">
                         {getTickerInitials(row.ticker)}
