@@ -11,7 +11,7 @@ import CryptoSections from '@/components/widgets/CryptoSections';
 import { RevealOnScroll } from '@/components/layout/RevealOnScroll';
 import { LazyGlossarySection, LazyInvestorProfileQuiz } from './home-lazy-sections';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function PublicHomePage() {
   return (

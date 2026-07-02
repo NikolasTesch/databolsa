@@ -3,7 +3,7 @@ import { cn } from '@/components/ui/cn';
 import { fetchAssetsForClass } from '@/lib/market/highlights-data';
 import type { HighlightItem } from '@/lib/market/highlights-data';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 const ASSET_CLASSES = [
   { label: 'Ações', key: 'STOCK_BR' },

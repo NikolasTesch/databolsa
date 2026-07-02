@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getDividendsAgenda } from '@/lib/market/dividends-agenda';
 import type { AgendaItem } from '@/lib/market/dividends-agenda';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 function getTickerInitials(ticker: string): string {
   return ticker.slice(0, 2);

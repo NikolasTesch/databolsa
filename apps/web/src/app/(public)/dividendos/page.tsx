@@ -3,7 +3,7 @@ import { getDividendsAgenda } from '@/lib/market/dividends-agenda';
 import { fetchDividendsNews } from '@/lib/news/news.service';
 import { DividendosClient } from './client';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Dividendos e Proventos | DataBolsa',

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getCryptoOverview } from '@/lib/market/crypto-overview';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 function ChangeIndicator({ percent }: { percent: string }) {
   const isNeutral = percent === '0.00%';

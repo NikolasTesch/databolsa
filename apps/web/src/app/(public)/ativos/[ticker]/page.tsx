@@ -23,7 +23,7 @@ import {
   fetchBrapiDividends,
 } from '@/lib/market/market-fetchers';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 interface PageProps {
   params: { ticker: string };

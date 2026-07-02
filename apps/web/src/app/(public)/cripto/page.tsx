@@ -4,7 +4,7 @@ import { fetchCryptoNews } from '@/lib/news/news.service';
 import { B3_COURSES } from '@/lib/courses-data';
 import CriptoClient from './client';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Mercado Cripto | DataBolsa',
