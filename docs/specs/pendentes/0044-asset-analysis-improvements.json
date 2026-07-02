@@ -1,0 +1,398 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0044",
+  "title": "Melhorias de analise de ativos, score e screener",
+  "status": "approved",
+  "type": "feature",
+  "created": "2026-07-02",
+  "updated": "2026-07-02",
+  "authors": ["Arquiteto DataBolsa"],
+  "summary": "Criar uma camada reutilizavel de AssetAnalysis para enriquecer a pagina publica de ativo, trocar o screener simples por filtros fundamentalistas e adicionar diagnostico de carteira sem recomendacao de compra ou venda. A feature reutiliza cotacoes e fundamentos cacheados, preserva isolamento por usuario e trata dados ausentes como sinais de baixa confianca.",
+  "motivation": "A pagina /ativos/[ticker] ja mostra cotacao, fundamentos, historico e dividendos, mas ainda nao entrega uma leitura agregada comparavel a referencias de mercado. O screener publico atual lista apenas altas e baixas; usuarios precisam filtrar por indicadores e entender a carteira com alertas analiticos sem sair do DataBolsa.",
+  "related": {
+    "prd": ["PRD §4", "PRD §5", "PRD §7"],
+    "spec_doc": ["SPEC §6", "SPEC §7"],
+    "business_rules": ["RN-01", "RN-02", "RN-03", "RN-05", "RN-06", "RN-07", "RN-08", "RN-09", "RN-10", "RN-11"],
+    "adrs": ["ADR-0004", "ADR-0005", "ADR-0013", "ADR-0016"],
+    "depends_on": ["SPEC-0013", "SPEC-0030", "SPEC-0041"]
+  },
+  "scope": {
+    "in_scope": [
+      "Contrato canonico AssetAnalysis em apps/web/src/lib/analysis/ para pagina publica, API, screener e carteira",
+      "Score interpretativo por classe de ativo com breakdown, alertas, dados ausentes e pares",
+      "GET /api/market/[ticker]/analysis publico, sem consulta a dados de usuario",
+      "GET /api/market/screener publico com filtros fundamentalistas, presets, ordenacao e limite de resultados",
+      "Componentes da pagina /ativos/[ticker]: resumo de analise, indicadores agrupados, comparacao com pares e painel de dividendos",
+      "Substituicao do ScreenerAvaliador por screener fundamentalista mantendo compatibilidade de import",
+      "Aba de diagnostico na carteira usando apenas posicoes ja autorizadas pelo endpoint de portfolio",
+      "Tratamento de dados ausentes, stale e divisao por zero sem NaN/Infinity na API ou UI"
+    ],
+    "out_of_scope": [
+      "Scraping de Investidor10, Status Invest ou outros sites",
+      "Recomendacao financeira de compra, venda ou manutencao",
+      "Provedor pago de dados fundamentalistas",
+      "Open Finance, integracao com corretora ou envio de ordens",
+      "Imposto de renda e apuracao fiscal",
+      "Realtime intraday ou websocket de cotacoes",
+      "Cache persistente especifico de score/AssetAnalysis",
+      "Mudancas nas regras de preco medio, venda, P/L, patrimonio e alocacao do packages/core"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Definir AssetAnalysis com ticker, name, assetClass, sector, industry, asOf, stale, fundamentals, totalScore, scoreLevel, breakdown, alerts e peers; valores numericos financeiros e scores devem sair como string decimal.",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "Calcular score por classe usando Decimal.js, pesos documentados na ADR-0016 e clamp 0..100; nunca usar float para comparacoes financeiras.",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Para STOCK_BR, STOCK_US e BDR, avaliar valuation, quality, dividends e risk com P/L 1..12, P/VP <= 2.5, ROE >= 12%, margem liquida >= 8%, DY 3..12% e alerta para divida/PL > 2.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Para FII, avaliar valuation, dividends, liquidity e risk com P/VP 0.75..1.05, DY 6..14%, liquidez diaria > 1000000 e alerta para vacancia > 15%.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Para ETF e CRYPTO, usar indicadores aplicaveis: ETF por custo/liquidez/dados; CRYPTO por liquidez, momentum, risco e dados, sem renderizar P/L, P/VP, ROE ou dividendos para crypto.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Dados ausentes devem gerar level unknown ou alertas de dados insuficientes, sem NaN, Infinity, excecao no cliente ou linguagem de recomendacao.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-07",
+      "description": "O servico getAssetAnalysis deve reutilizar getFundamentals, cache de cotacao existente quando necessario, sector-data e Promise.allSettled para pares limitados a 5.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-08",
+      "description": "As rotas publicas /api/market/[ticker]/analysis e /api/market/screener nao podem consultar User, Asset ou Transaction; devem usar apenas dados publicos/cacheados e listas curadas.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-09",
+      "description": "O screener deve aceitar filtros class, sector, minDy, maxPe, maxPb, minRoe, minLiquidity, preset, sort e limit; limit padrao 30 e maximo 100.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-10",
+      "description": "A pagina /ativos/[ticker] deve renderizar AnalysisSummary abaixo do AssetHeader, indicadores agrupados por categoria, pares comparaveis e painel de dividendos quando aplicavel.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-11",
+      "description": "A carteira deve ter aba Diagnostico baseada nas posicoes ja autorizadas, exibindo concentracao, cotacao stale, P/L relevante, dados ausentes, ranking interno e links para analise publica.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-12",
+      "description": "O diagnostico de carteira deve respeitar as formulas de SPEC §7 para valor atual, P/L, patrimonio total e alocacao, sem recalcular preco medio nem alterar semantica de venda.",
+      "rule_ref": "RN-03",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-13",
+      "description": "Toda UI nova deve usar tokens M3 atuais e nao usar text-content, text-content-muted ou text-content-subtle.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-14",
+      "description": "Textos de score, alerta, screener e diagnostico devem evitar recomendacao financeira; usar termos como sinais, pontos de atencao, dados disponiveis e diagnostico.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "AssetFundamentalsCache",
+      "change": "none",
+      "notes": "Reutilizar o cache JSON existente de fundamentos definido na ADR-0005. Valores monetarios permanecem como string decimal."
+    },
+    {
+      "entity": "QuoteCache",
+      "change": "none",
+      "notes": "Reutilizar cache de cotacoes/cambio com TTL curto e fallback stale conforme RN-10."
+    },
+    {
+      "entity": "User/Asset/Transaction",
+      "change": "none",
+      "notes": "Nenhuma migration nesta spec. Rotas publicas nao consultam tabelas de usuario; diagnostico recebe dados ja autorizados dos endpoints de portfolio."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/[ticker]/analysis",
+      "auth": false,
+      "request": "Path ticker; query opcional class=STOCK_BR|FII|ETF|BDR|STOCK_US|CRYPTO.",
+      "response": "AssetAnalysis: { ticker, name, assetClass, sector, industry, asOf, stale, fundamentals, totalScore, scoreLevel, breakdown, alerts, peers }.",
+      "errors": [
+        "404 para ticker invalido ou nao reconhecido, no envelope de erro existente",
+        "200 com stale:true quando dados de fundamentos/cotacao vierem de cache expirado",
+        "200 com scoreLevel:'unknown' e alertas quando fundamentos estiverem ausentes"
+      ],
+      "notes": "Nao consulta tabelas de usuario. Pares falhos sao omitidos com Promise.allSettled."
+    },
+    {
+      "method": "GET",
+      "path": "/api/market/screener",
+      "auth": false,
+      "request": "Query: class, sector, minDy, maxPe, maxPb, minRoe, minLiquidity, preset=dividends|graham|quality|low-debt|liquidity, sort=score|dy|roe|liquidity|change, limit.",
+      "response": "{ items: AssetAnalysis[], total, partial: boolean, failedTickers: string[], asOf: string }.",
+      "errors": [
+        "400 para filtros numericos invalidos ou limit acima de 100",
+        "200 com partial:true quando alguns candidatos falharem",
+        "200 com items:[] quando nenhum ativo cumprir filtros"
+      ],
+      "notes": "Universo inicial vem de curated-lists.ts; filtros sao aplicados apos normalizacao."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "um usuario acessa /ativos/PETR4",
+      "when": "a pagina carrega com fundamentos disponiveis",
+      "then": "ve AssetHeader, resumo de score, indicadores por categoria, setor, pares, historico e dividendos sem texto de compra ou venda"
+    },
+    {
+      "id": "AC-02",
+      "given": "a fonte de fundamentos falha mas existe AssetFundamentalsCache expirado",
+      "when": "GET /api/market/PETR4/analysis e chamado",
+      "then": "retorna 200 com stale:true, asOf do cache, score calculado sobre o dado stale e alerta visual de desatualizacao"
+    },
+    {
+      "id": "AC-03",
+      "given": "um ativo nao possui fundamentos suficientes",
+      "when": "a analise e renderizada",
+      "then": "mostra Dados insuficientes, scoreLevel unknown e nenhum campo NaN ou Infinity"
+    },
+    {
+      "id": "AC-04",
+      "given": "o usuario abre o screener publico para FIIs",
+      "when": "aplica preset de dividendos e maxPb=1.1",
+      "then": "a tabela exibe ticker, score, DY, P/VP, liquidez, stale/asOf e link para /ativos/[ticker]?class=FII"
+    },
+    {
+      "id": "AC-05",
+      "given": "alguns tickers da lista curada falham na fonte externa",
+      "when": "GET /api/market/screener e chamado",
+      "then": "retorna resultados parciais com partial:true sem quebrar a UI"
+    },
+    {
+      "id": "AC-06",
+      "given": "um usuario autenticado acessa /portfolio?tab=diagnostico",
+      "when": "existem posicoes com alocacao acima de 25%, cotacao stale e P/L negativo relevante",
+      "then": "o diagnostico mostra pontos de atencao por ativo usando somente as posicoes autorizadas desse usuario"
+    },
+    {
+      "id": "AC-07",
+      "given": "a carteira tem patrimonio total zero ou todas as posicoes zeradas",
+      "when": "a aba Diagnostico e aberta",
+      "then": "a UI mostra estado vazio e nao executa divisao por zero"
+    },
+    {
+      "id": "AC-08",
+      "given": "um ativo em moeda estrangeira aparece na carteira",
+      "when": "o diagnostico calcula valor atual, retorno e alocacao",
+      "then": "usa os valores BRL ja normalizados pelo portfolio e preserva RN-07"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "Score engine: acao lucrativa com P/L 8, P/VP 1.1, DY 7, ROE 18, margem 15 e divida/PL 0.6 retorna score positivo sem alertas.",
+      "kind": "unit",
+      "covers": ["REQ-02", "REQ-03"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "Score engine: EMPTY_FUNDAMENTALS retorna totalScore '0', scoreLevel unknown, alerta missing-fundamentals e nenhum NaN.",
+      "kind": "unit",
+      "covers": ["REQ-02", "REQ-06"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "Score engine: crypto usa liquidity/momentum/risk/data e nao inclui dividends ou valuation de acoes.",
+      "kind": "unit",
+      "covers": ["REQ-05"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "getAssetAnalysis chama getFundamentals, inclui setor/industria, calcula score, limita pares a 5 e omite pares que falham.",
+      "kind": "unit",
+      "covers": ["REQ-01", "REQ-07"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "GET /api/market/PETR4/analysis retorna AssetAnalysis e respeita query class; ticker invalido retorna envelope de erro 404.",
+      "kind": "integration",
+      "covers": ["REQ-08", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-06",
+      "description": "GET /api/market/screener aplica filtros minDy, maxPb, minRoe, minLiquidity, preset e sort; falhas parciais retornam partial:true.",
+      "kind": "integration",
+      "covers": ["REQ-09", "AC-04", "AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-07",
+      "description": "AnalysisSummary e IndicatorCategoryGrid renderizam score, alertas e 'Dados insuficientes' sem NaN; usam tokens M3 atuais.",
+      "kind": "unit",
+      "covers": ["REQ-10", "REQ-13", "REQ-14"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-08",
+      "description": "FundamentalScreener renderiza classes, presets, filtros, colunas de score/DY/P/L/P/VP/ROE/liquidez e links para /ativos/[ticker]?class=...",
+      "kind": "unit",
+      "covers": ["REQ-09", "AC-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-09",
+      "description": "PortfolioDiagnostics sinaliza concentracao acima de 25%, cotacao stale, posicao sem dados, maior retorno, maior perda, maior peso e maior yield on cost.",
+      "kind": "unit",
+      "covers": ["REQ-11", "AC-06"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-10",
+      "description": "Edge case: venda parcial preserva preco medio vindo do portfolio e diagnostico nao recalcula media nem altera P/L.",
+      "kind": "edge_case",
+      "covers": ["REQ-12"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-11",
+      "description": "Edge case: venda total/posicao zero nao aparece como patrimonio ativo e nao causa divisao por zero no diagnostico.",
+      "kind": "edge_case",
+      "covers": ["REQ-12", "AC-07"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-12",
+      "description": "Edge case: tentativa de venda maior que posicao continua coberta pelo core/API existente; esta feature apenas consome posicoes validas.",
+      "kind": "edge_case",
+      "covers": ["REQ-12"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-13",
+      "description": "Edge case: ativo sem cotacao usa stale quando houver cache e mostra alerta de dado desatualizado sem quebrar patrimonio/analise.",
+      "kind": "edge_case",
+      "covers": ["REQ-06", "REQ-07"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-14",
+      "description": "Edge case: multiplas compras a precos diferentes permanecem calculadas pela camada de portfolio; diagnostico usa average_price recebido.",
+      "kind": "edge_case",
+      "covers": ["REQ-12"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-15",
+      "description": "Edge case: ativo em moeda estrangeira usa valores BRL ja convertidos pela carteira e API publica exibe currency/asOf sem misturar float.",
+      "kind": "edge_case",
+      "covers": ["REQ-02", "REQ-12", "AC-08"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar tipos publicos em apps/web/src/lib/analysis/asset-analysis.types.ts com AssetAnalysis, AnalysisScoreBreakdown, AnalysisAlert e PeerComparisonItem.",
+      "target": "apps/web/src/lib/analysis/asset-analysis.types.ts",
+      "done": true
+    },
+    {
+      "id": "T-02",
+      "description": "Criar score engine puro em apps/web/src/lib/analysis/asset-analysis-score.ts usando Decimal.js, pesos da ADR-0016, alertas e tratamento de dados ausentes.",
+      "target": "apps/web/src/lib/analysis/asset-analysis-score.ts",
+      "done": true
+    },
+    {
+      "id": "T-03",
+      "description": "Criar getAssetAnalysis em apps/web/src/lib/analysis/asset-analysis.service.ts reutilizando getFundamentals, sector-data, pares e Promise.allSettled.",
+      "target": "apps/web/src/lib/analysis/asset-analysis.service.ts",
+      "done": true
+    },
+    {
+      "id": "T-04",
+      "description": "Criar GET /api/market/[ticker]/analysis com validacao de ticker, class hint, jsonError e sem consulta a tabelas de usuario.",
+      "target": "apps/web/src/app/api/market/[ticker]/analysis/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-05",
+      "description": "Criar GET /api/market/screener com universo de curated-lists.ts, filtros, presets, ordenacao, limit maximo 100 e resposta parcial.",
+      "target": "apps/web/src/app/api/market/screener/route.ts",
+      "done": true
+    },
+    {
+      "id": "T-06",
+      "description": "Criar componentes AnalysisSummary, IndicatorCategoryGrid, PeerComparisonTable e DividendAnalysisPanel em apps/web/src/components/market/.",
+      "target": "apps/web/src/components/market/",
+      "done": false
+    },
+    {
+      "id": "T-07",
+      "description": "Atualizar apps/web/src/app/(public)/ativos/[ticker]/page.tsx para consumir getAssetAnalysis e renderizar os novos blocos sem remover historico, setor, noticias e eventos.",
+      "target": "apps/web/src/app/(public)/ativos/[ticker]/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-08",
+      "description": "Criar FundamentalScreener e manter ScreenerAvaliador como wrapper/export compat, usando query keys se o consumo for client-side.",
+      "target": "apps/web/src/components/tools/",
+      "done": false
+    },
+    {
+      "id": "T-09",
+      "description": "Criar PortfolioDiagnostics e adicionar aba diagnostico em apps/web/src/app/(app)/portfolio/page.tsx usando summary.positions e assets ja autorizados.",
+      "target": "apps/web/src/components/portfolio/PortfolioDiagnostics.tsx; apps/web/src/app/(app)/portfolio/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-10",
+      "description": "Adicionar testes Vitest/API/componentes cobrindo TC-01..TC-15, com APIs externas mockadas e sem rede.",
+      "target": "apps/web/src/test/",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Cobertura incompleta de dados gratuitos pode deixar muitos ativos com score unknown; mitigar com UI clara de dados insuficientes.",
+    "Screener pode atingir limites de fontes externas se o universo for grande; mitigar com listas curadas, limit maximo 100, cache existente e Promise.allSettled.",
+    "Linguagem de score pode ser interpretada como recomendacao; revisar copy para remover termos de compra/venda/manter.",
+    "Heuristica de classe por ticker pode errar em tickers ambiguos; aceitar query class e preservar inferAssetClassForFundamentals como fallback.",
+    "Diagnostico de grupo/read-only pode vazar dados se buscar assets sem targetUserId/autorizacao; componente deve consumir somente dados ja autorizados pelo endpoint existente."
+  ],
+  "observability": [
+    "Logar getAssetAnalysis com ticker, assetClass, stale, peerSuccess e peerFail sem dados de usuario.",
+    "Logar screener com class, preset, candidateCount, successCount e failedCount.",
+    "Manter asOf e stale em respostas de analysis/screener para rastreabilidade de RN-10."
+  ],
+  "rollback": "Remover rotas /api/market/[ticker]/analysis e /api/market/screener, remover componentes novos e voltar ScreenerAvaliador para highlights. Nenhuma migration e necessaria porque esta spec nao altera modelo de dados.",
+  "notes": "Implementacao deve seguir o plano docs/superpowers/plans/2026-07-02-asset-analysis-improvements.md. O implementador deve manter packages/core intacto salvo se encontrar bug real nas regras RN-01..RN-11, caso em que uma spec separada deve ser criada."
+}
