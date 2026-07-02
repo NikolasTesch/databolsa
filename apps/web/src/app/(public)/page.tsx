@@ -6,11 +6,10 @@ import MarketTickerBar from '@/components/widgets/MarketTickerBar';
 import HighlightsSection from '@/components/widgets/HighlightsSection';
 import DividendsSection from '@/components/widgets/DividendsSection';
 import ToolsSection from '@/components/widgets/ToolsSection';
-import InvestorProfileQuiz from '@/components/widgets/InvestorProfileQuiz';
 import B3CoursesSection from '@/components/widgets/B3CoursesSection';
 import CryptoSections from '@/components/widgets/CryptoSections';
-import GlossarySection from '@/components/widgets/GlossarySection';
 import { RevealOnScroll } from '@/components/layout/RevealOnScroll';
+import { LazyGlossarySection, LazyInvestorProfileQuiz } from './home-lazy-sections';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,7 +58,7 @@ export default async function PublicHomePage() {
 
       {/* Quiz */}
       <RevealOnScroll>
-        <InvestorProfileQuiz />
+        <LazyInvestorProfileQuiz />
       </RevealOnScroll>
 
       {/* Courses */}
@@ -76,7 +75,7 @@ export default async function PublicHomePage() {
 
       {/* Glossary */}
       <RevealOnScroll delay="short">
-        <GlossarySection />
+        <LazyGlossarySection />
       </RevealOnScroll>
     </>
   );
