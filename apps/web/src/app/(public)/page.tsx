@@ -3,7 +3,7 @@ import { HeroSection } from '@/components/market/HeroSection';
 import { RelatedNewsSection } from '@/components/market/RelatedNewsSection';
 import { Spinner } from '@/components/ui/Spinner';
 import MarketTickerBar from '@/components/widgets/MarketTickerBar';
-import HighlightsSection from '@/components/widgets/HighlightsSection';
+import HighlightsSectionServer from '@/components/widgets/HighlightsSectionServer';
 import DividendsSection from '@/components/widgets/DividendsSection';
 import ToolsSection from '@/components/widgets/ToolsSection';
 import B3CoursesSection from '@/components/widgets/B3CoursesSection';
@@ -28,7 +28,7 @@ export default async function PublicHomePage() {
 
       {/* Highlights: gainers / losers */}
       <RevealOnScroll>
-        <HighlightsSection />
+        <HighlightsSectionServer />
       </RevealOnScroll>
 
       {/* News */}

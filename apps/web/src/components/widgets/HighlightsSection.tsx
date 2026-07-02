@@ -25,6 +25,10 @@ interface HighlightsResponse {
   type: string;
 }
 
+interface HighlightsSectionProps {
+  initialData: HighlightsResponse | null;
+}
+
 const ASSET_CLASSES = [
   { label: 'Ações', key: 'STOCK_BR' },
   { label: 'FIIs', key: 'FII' },
@@ -69,19 +73,33 @@ function AssetCard({ ticker, name, price, changePercent, assetClass }: AssetItem
   );
 }
 
-export default function HighlightsSection() {
-  const [activeTab, setActiveTab] = useState<string>('STOCK_BR');
-  const [data, setData] = useState<HighlightsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function HighlightsSection({ initialData }: HighlightsSectionProps) {
+  const [activeTab, setActiveTab] = useState<string>(initialData?.type ?? 'STOCK_BR');
+  const [data, setData] = useState<HighlightsResponse | null>(initialData);
+  const [loading, setLoading] = useState(initialData === null);
 
   useEffect(() => {
+    if (data?.type === activeTab) return;
+
+    let cancelled = false;
     setLoading(true);
+
     fetch(`/api/market/highlights?type=${activeTab}&limit=4`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setData(d))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, [activeTab]);
+      .then((d) => {
+        if (!cancelled) setData(d);
+      })
+      .catch(() => {
+        if (!cancelled) setData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, data?.type]);
 
   const gainers = data?.gainers ?? [];
   const losers = data?.losers ?? [];

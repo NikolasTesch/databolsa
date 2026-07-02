@@ -31,7 +31,7 @@ describe('HighlightsSection', () => {
   });
 
   it('renders AssetCard as Link with correct href for gainers', async () => {
-    render(<HighlightsSection />);
+    render(<HighlightsSection initialData={null} />);
 
     await waitFor(() => {
       expect(screen.getByText('PETR4')).toBeInTheDocument();
@@ -42,7 +42,7 @@ describe('HighlightsSection', () => {
   });
 
   it('renders AssetCard as Link with correct href for losers', async () => {
-    render(<HighlightsSection />);
+    render(<HighlightsSection initialData={null} />);
 
     await waitFor(() => {
       expect(screen.getByText('VALE3')).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('HighlightsSection', () => {
       json: async () => ({ gainers: [], losers: [], type: 'STOCK_BR' }),
     });
 
-    render(<HighlightsSection />);
+    render(<HighlightsSection initialData={null} />);
 
     await waitFor(() => {
       const emptyMessages = screen.getAllByText('Nenhum dado disponível.');
@@ -69,7 +69,7 @@ describe('HighlightsSection', () => {
   it('shows empty state on fetch failure', async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 
-    render(<HighlightsSection />);
+    render(<HighlightsSection initialData={null} />);
 
     await waitFor(() => {
       const emptyMessages = screen.getAllByText('Nenhum dado disponível.');
@@ -78,7 +78,7 @@ describe('HighlightsSection', () => {
   });
 
   it('renders "Ver todos" link for gainers with correct href', async () => {
-    render(<HighlightsSection />);
+    render(<HighlightsSection initialData={null} />);
 
     await waitFor(() => {
       expect(screen.getAllByText('Ver todos').length).toBeGreaterThan(0);
@@ -88,10 +88,23 @@ describe('HighlightsSection', () => {
     expect(verTodosLinks[0]).toHaveAttribute('href', '/mercados?classe=STOCK_BR');
   });
 
+  it('renders initial server data without fetching the initial tab', () => {
+    const fetchSpy = vi.fn();
+    global.fetch = fetchSpy;
+
+    render(<HighlightsSection initialData={MOCK_HIGHLIGHTS} />);
+
+    expect(screen.getByText('Maiores Altas')).toBeInTheDocument();
+    expect(screen.getByText('PETR4')).toBeInTheDocument();
+    expect(screen.getByText('VALE3')).toBeInTheDocument();
+    expect(screen.queryByText(/Carregando/i)).not.toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it('shows loading skeleton initially', () => {
     global.fetch = vi.fn<() => Promise<Response>>(() => new Promise(() => {}));
 
-    const { container } = render(<HighlightsSection />);
+    const { container } = render(<HighlightsSection initialData={null} />);
 
     const skeletonElements = container.querySelectorAll('.animate-pulse');
     expect(skeletonElements.length).toBeGreaterThan(0);
