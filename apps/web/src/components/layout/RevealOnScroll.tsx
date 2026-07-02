@@ -41,7 +41,7 @@ export function RevealOnScroll({
           observer.disconnect();
         }
       },
-      { rootMargin: '0px 0px -12% 0px', threshold: 0.12 },
+      { rootMargin: '160px 0px', threshold: 0.01 },
     );
 
     observer.observe(node);
@@ -52,11 +52,9 @@ export function RevealOnScroll({
     <div
       ref={ref}
       className={[
-        'motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out',
+        'motion-safe:transition-opacity motion-safe:duration-300 motion-safe:ease-out',
         delayClasses[delay],
-        isVisible
-          ? 'motion-safe:translate-y-0 motion-safe:opacity-100'
-          : 'motion-safe:translate-y-8 motion-safe:opacity-0',
+        isVisible ? 'motion-safe:opacity-100' : 'motion-safe:opacity-0',
         className,
       ].join(' ')}
     >
