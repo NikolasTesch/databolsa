@@ -4,7 +4,7 @@ import type { FundamentalsAdapter, NormalizedFundamentals } from './fundamentals
 import { EMPTY_FUNDAMENTALS } from './fundamentals-adapter.interface';
 
 function safeDecimalStr(value: unknown): string | null {
-  if (value === null || value === undefined || value === '' || value === 0) return null;
+  if (value === null || value === undefined || value === '') return null;
   try {
     const d = new Decimal(String(value));
     if (!d.isFinite()) return null;
@@ -12,6 +12,12 @@ function safeDecimalStr(value: unknown): string | null {
   } catch {
     return null;
   }
+}
+
+/** Brapi returns financial ratios as decimals (0.05 = 5%), so multiply by 100 for display. */
+function toPctStr(val: unknown): string | null {
+  const d = safeDecimalStr(val);
+  return d ? new Decimal(d).times(100).toString() : null;
 }
 
 export class BrapiFundamentalsAdapter implements FundamentalsAdapter {
@@ -35,11 +41,6 @@ export class BrapiFundamentalsAdapter implements FundamentalsAdapter {
         if (q && (q.defaultKeyStatistics || q.financialData)) {
           const stats = q.defaultKeyStatistics ?? {};
           const fin = q.financialData ?? {};
-
-          const toPctStr = (val: unknown) => {
-            const d = safeDecimalStr(val);
-            return d ? new Decimal(d).times(100).toString() : null;
-          };
 
           return {
             ...EMPTY_FUNDAMENTALS,
@@ -90,9 +91,9 @@ export class BrapiFundamentalsAdapter implements FundamentalsAdapter {
         pb: safeDecimalStr(q.priceToBook),
         evEbitda: safeDecimalStr(q.enterpriseValueEbitda),
         debtToEquity: safeDecimalStr(q.debtToEquity),
-        dy: safeDecimalStr(q.dividendYield),
-        roe: safeDecimalStr(q.returnOnEquity),
-        netMargin: safeDecimalStr(q.profitMargins),
+        dy: toPctStr(q.dividendYield),
+        roe: toPctStr(q.returnOnEquity),
+        netMargin: toPctStr(q.profitMargins),
         eps: safeDecimalStr(q.eps),
         marketCap: safeDecimalStr(q.marketCap),
         vacancyRate: safeDecimalStr(q.vacancyRate),

@@ -1,8 +1,10 @@
 import { AssetClassBadge } from '@/components/assets/AssetClassBadge';
 import { StaleBadge } from '@/components/portfolio/StaleBadge';
 import { TrendBadge } from '@/components/ui/TrendBadge';
+import { Badge } from '@/components/ui/Badge';
 import { AddToPortfolioButton } from './AddToPortfolioButton';
 import type { AssetClass } from '@/types/api';
+import { getSectorIcon } from '@/lib/market/sector-data';
 
 interface AssetHeaderProps {
   ticker: string;
@@ -14,6 +16,8 @@ interface AssetHeaderProps {
   changePercent: string | null;
   changeValue: string | null;
   stale?: boolean;
+  sector?: string | null;
+  industry?: string | null;
 }
 
 export function AssetHeader({
@@ -26,6 +30,8 @@ export function AssetHeader({
   changePercent,
   changeValue,
   stale,
+  sector,
+  industry,
 }: AssetHeaderProps) {
   const isUsd = currency === 'USD';
 
@@ -37,6 +43,18 @@ export function AssetHeader({
           {/* Linha 1: badge + ticker + nome */}
           <div className="flex items-center gap-2 flex-wrap">
             <AssetClassBadge assetClass={assetClass} />
+            {sector && industry && (
+              <Badge variant="neutral" className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">{getSectorIcon(sector)}</span>
+                <span>{sector} · {industry}</span>
+              </Badge>
+            )}
+            {sector && !industry && (
+              <Badge variant="neutral" className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">{getSectorIcon(sector)}</span>
+                <span>{sector}</span>
+              </Badge>
+            )}
             <span className="text-2xl font-mono font-bold text-on-surface">{ticker}</span>
             {name && name !== ticker && (
               <span className="text-base text-on-surface-variant">{name}</span>

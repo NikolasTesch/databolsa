@@ -1,4 +1,6 @@
-import { fetchBrapiDividends } from './market-fetchers';
+import { fetchBrapiDividends, fetchBrapiQuote } from './market-fetchers';
+import { fetchCachedMarketValue } from '@/lib/market/market-cache';
+import { DataSource } from '@prisma/client';
 import { CURATED_LISTS } from './curated-lists';
 
 export interface AgendaItem {
@@ -39,25 +41,43 @@ export async function getDividendsAgenda(): Promise<AgendaItem[]> {
   for (const batch of batches) {
     const batchResults = await Promise.allSettled(
       batch.map(async ({ ticker, assetClass }) => {
-        const dividends = await fetchBrapiDividends(ticker);
-        return dividends.map((d) => ({
-          ticker,
-          assetClass,
-          type:
-            d.type === 'Juros Sobre Capital Próprio'
-              ? 'JCP'
-              : d.type === 'Dividendo'
-                ? 'Dividendo'
-                : d.type,
-          dateCom: d.paymentDate
-            ? new Date(d.paymentDate).toLocaleDateString('pt-BR')
-            : '—',
-          payment: d.paymentDate
-            ? new Date(d.paymentDate).toLocaleDateString('pt-BR')
-            : '—',
-          value: d.value,
-          yieldPct: '-',
-        }));
+        const [dividends, cacheResult] = await Promise.all([
+          fetchBrapiDividends(ticker),
+          fetchCachedMarketValue(
+            ticker,
+            DataSource.BRAPI,
+            undefined,
+            () => fetchBrapiQuote(ticker),
+          ).catch(() => null),
+        ]);
+        const price = cacheResult?.price ?? null;
+        return dividends.map((d) => {
+          let yieldPct: string;
+          if (price && parseFloat(d.value) > 0) {
+            const yieldValue = (parseFloat(d.value) / parseFloat(price.toString())) * 100;
+            yieldPct = yieldValue.toFixed(2) + '%';
+          } else {
+            yieldPct = '—';
+          }
+          return {
+            ticker,
+            assetClass,
+            type:
+              d.type === 'Juros Sobre Capital Próprio'
+                ? 'JCP'
+                : d.type === 'Dividendo'
+                  ? 'Dividendo'
+                  : d.type,
+            dateCom: d.paymentDate
+              ? new Date(d.paymentDate).toLocaleDateString('pt-BR')
+              : '—',
+            payment: d.paymentDate
+              ? new Date(d.paymentDate).toLocaleDateString('pt-BR')
+              : '—',
+            value: d.value,
+            yieldPct,
+          };
+        });
       }),
     );
     for (const r of batchResults) {

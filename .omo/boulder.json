@@ -1,59 +1,35 @@
-﻿{
-    "schema_version":  2,
-    "active_work_id":  "plano-melhorias-usuario-476be295",
-    "works":  {
-                  "plano-melhorias-usuario-476be295":  {
-                                                           "work_id":  "plano-melhorias-usuario-476be295",
-                                                           "active_plan":  "C:\\PASTA IMPORTANTE\\TESCH_DEV\\databolsa\\.omo\\plans\\plano-melhorias-usuario.md",
-                                                           "plan_name":  "plano-melhorias-usuario",
-                                                           "status":  "completed",
-                                                           "started_at":  "2026-07-01T17:57:26.504Z",
-                                                           "updated_at":  "2026-07-01T18:37:20.122Z",
-                                                           "session_ids":  [
-                                                                               "opencode:ses_0e19c6820ffeO1pbsLA09cq5i5"
-                                                                           ],
-                                                           "session_origins":  {
-                                                                                   "opencode:ses_0e19c6820ffeO1pbsLA09cq5i5":  "direct"
-                                                                               },
-                                                           "agent":  "atlas",
-                                                           "task_sessions":  {
-                                                                                 "todo:1":  {
-                                                                                                "task_key":  "todo:1",
-                                                                                                "task_label":  "1",
-                                                                                                "task_title":  "A new API route `/api/portfolio/aportes` that returns monthly BUY transactions grouped by year",
-                                                                                                "session_id":  "opencode:ses_0e10bd71dffet247uk4ZYrH6nT",
-                                                                                                "agent":  "Sisyphus-Junior",
-                                                                                                "category":  "unspecified-high",
-                                                                                                "updated_at":  "2026-07-01T18:37:20.129Z",
-                                                                                                "started_at":  "2026-07-01T18:37:20.129Z",
-                                                                                                "status":  "running"
-                                                                                            }
-                                                                             }
-                                                       }
-              },
-    "active_plan":  "C:\\PASTA IMPORTANTE\\TESCH_DEV\\databolsa\\.omo\\plans\\plano-melhorias-usuario.md",
-    "started_at":  "2026-07-01T17:57:26.504Z",
-    "status":  "completed",
-    "updated_at":  "2026-07-01T18:37:20.122Z",
-    "session_ids":  [
-                        "opencode:ses_0e19c6820ffeO1pbsLA09cq5i5"
-                    ],
-    "session_origins":  {
-                            "opencode:ses_0e19c6820ffeO1pbsLA09cq5i5":  "direct"
-                        },
-    "plan_name":  "plano-melhorias-usuario",
-    "task_sessions":  {
-                          "todo:1":  {
-                                         "task_key":  "todo:1",
-                                         "task_label":  "1",
-                                         "task_title":  "A new API route `/api/portfolio/aportes` that returns monthly BUY transactions grouped by year",
-                                         "session_id":  "opencode:ses_0e10bd71dffet247uk4ZYrH6nT",
-                                         "agent":  "Sisyphus-Junior",
-                                         "category":  "unspecified-high",
-                                         "updated_at":  "2026-07-01T18:37:20.129Z",
-                                         "started_at":  "2026-07-01T18:37:20.129Z",
-                                         "status":  "running"
-                                     }
-                      },
-    "agent":  "atlas"
+{
+  "schema_version": 2,
+  "active_work_id": "mercado-e-dados-ativos-476be295",
+  "works": {
+    "mercado-e-dados-ativos-476be295": {
+      "work_id": "mercado-e-dados-ativos-476be295",
+      "active_plan": "C:\\PASTA IMPORTANTE\\TESCH_DEV\\databolsa\\.omo\\plans\\mercado-e-dados-ativos.md",
+      "plan_name": "mercado-e-dados-ativos",
+      "session_ids": [
+        "opencode:ses_0dd3bc633ffeHwZ5yFlo4GzXDe"
+      ],
+      "status": "completed",
+      "started_at": "2026-07-02T12:31:49.392Z",
+      "updated_at": "2026-07-02T13:07:13.601Z",
+      "agent": "atlas",
+      "task_sessions": {},
+      "session_origins": {},
+      "ended_at": "2026-07-02T13:07:13.601Z",
+      "elapsed_ms": 2124209
+    }
+  },
+  "active_plan": "C:\\PASTA IMPORTANTE\\TESCH_DEV\\databolsa\\.omo\\plans\\mercado-e-dados-ativos.md",
+  "plan_name": "mercado-e-dados-ativos",
+  "started_at": "2026-07-02T12:31:49.392Z",
+  "status": "completed",
+  "session_ids": [
+    "opencode:ses_0dd3bc633ffeHwZ5yFlo4GzXDe"
+  ],
+  "agent": "atlas",
+  "session_origins": {},
+  "task_sessions": {},
+  "ended_at": "2026-07-02T13:07:13.601Z",
+  "elapsed_ms": 2124209,
+  "updated_at": "2026-07-02T13:07:13.601Z"
 }

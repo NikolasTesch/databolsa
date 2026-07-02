@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import type { AssetClass } from '@/types/api';
 import { inferAssetClassForFundamentals, getFundamentals } from '@/lib/fundamentals/fundamentals.service';
 import { AssetHeader } from '@/components/market/AssetHeader';
@@ -13,6 +14,7 @@ import { fetchCachedMarketValue } from '@/lib/market/market-cache';
 import { CRYPTO_TICKER_MAP } from '@/lib/quotes/ticker-map';
 import { CRYPTO_ID_TO_NAME } from '@/lib/market/curated-lists';
 import { isValidTicker } from '@/lib/market/ticker-validation';
+import { getSectorInfo, getRelatedTickers, getSectorIcon } from '@/lib/market/sector-data';
 import {
   fetchBrapiQuote,
   fetchCoinGeckoMulti,
@@ -146,6 +148,9 @@ export default async function AssetAnalysisPage({ params, searchParams }: PagePr
 
   const price = cached ? cached.price.toFixed(assetClass === 'CRYPTO' ? 8 : 2) : '—';
 
+  const sectorInfo = getSectorInfo(ticker);
+  const relatedTickers = sectorInfo ? getRelatedTickers(ticker, 6) : [];
+
   return (
     <div className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop pb-12">
       <AssetHeader
@@ -158,6 +163,8 @@ export default async function AssetAnalysisPage({ params, searchParams }: PagePr
         changePercent={changePercent}
         changeValue={changeValue}
         stale={cached?.isStale}
+        sector={sectorInfo?.sector}
+        industry={sectorInfo?.industry}
       />
 
       {fundamentals && (
@@ -170,6 +177,56 @@ export default async function AssetAnalysisPage({ params, searchParams }: PagePr
             indicators={fundamentals.indicators}
             assetClass={assetClass}
           />
+        </section>
+      )}
+
+      {/* Setor */}
+      {sectorInfo && (
+        <section className="mt-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-primary">{getSectorIcon(sectorInfo.sector)}</span>
+            <h2 className="text-lg font-semibold text-on-surface">Setor</h2>
+          </div>
+          <div className="bg-surface border border-border rounded-lg p-5">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-[2rem] text-primary">
+                {getSectorIcon(sectorInfo.sector)}
+              </span>
+              <div>
+                <p className="text-base font-semibold text-on-surface">{sectorInfo.sector}</p>
+                <p className="text-sm text-on-surface-variant">{sectorInfo.industry}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Ativos Relacionados (mesmo setor) */}
+      {relatedTickers.length > 0 && (
+        <section className="mt-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-primary">layers</span>
+            <h2 className="text-lg font-semibold text-on-surface">Ativos Relacionados</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {relatedTickers.map((t) => {
+              const tInfo = getSectorInfo(t);
+              return (
+                <Link
+                  key={t}
+                  href={`/ativos/${t}`}
+                  className="flex flex-col gap-1.5 rounded-lg border border-border bg-surface p-4 hover:border-primary/30 hover:shadow-sm transition-all duration-200"
+                >
+                  <span className="text-sm font-mono font-bold text-on-surface">{t}</span>
+                  {tInfo && (
+                    <span className="text-caption text-on-surface-variant line-clamp-1">
+                      {tInfo.industry}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
         </section>
       )}
 
@@ -195,6 +252,26 @@ export default async function AssetAnalysisPage({ params, searchParams }: PagePr
         <Suspense fallback={null}>
           <RelatedNewsSection ticker={ticker} limit={6} />
         </Suspense>
+      </section>
+
+      {/* Próximos Eventos */}
+      <section className="mt-8">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="material-symbols-outlined text-primary">event</span>
+          <h2 className="text-lg font-semibold text-on-surface">Próximos Eventos</h2>
+        </div>
+        <div className="bg-surface border border-border rounded-lg p-8 flex flex-col items-center justify-center text-center gap-3">
+          <span className="material-symbols-outlined text-[2.5rem] text-on-surface-variant/50">
+            event_busy
+          </span>
+          <p className="text-sm text-on-surface-variant">
+            Nenhum evento encontrado para os próximos dias.
+          </p>
+          <p className="text-caption text-on-surface-variant/60 max-w-md">
+            Os eventos corporativos como assembleias, pagamentos de proventos e
+            divulgação de resultados aparecerão aqui quando disponíveis.
+          </p>
+        </div>
       </section>
     </div>
   );

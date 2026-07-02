@@ -48,6 +48,10 @@ interface HighlightItem {
   name: string;
   price: string;
   changePercent: string;
+  pl: string | null;
+  dy: string | null;
+  volume: string | null;
+  mktCap: string | null;
 }
 
 interface NewsArticle {
@@ -78,6 +82,35 @@ function formatTime(iso: string): string {
   } catch {
     return iso;
   }
+}
+
+/* ── Formatters for fundamentals columns ── */
+
+function formatPL(value: string | null): string {
+  if (value === null) return '—';
+  const num = parseFloat(value);
+  if (isNaN(num)) return '—';
+  return num.toFixed(2);
+}
+
+function formatDY(value: string | null): string {
+  if (value === null) return '—';
+  const num = parseFloat(value);
+  if (isNaN(num)) return '—';
+  return `${num.toFixed(2)}%`;
+}
+
+function abbreviateBRL(value: string | null): string {
+  if (value === null) return '—';
+  const num = parseFloat(value);
+  if (isNaN(num)) return '—';
+  if (Math.abs(num) >= 1_000_000_000) {
+    return `R$ ${(num / 1_000_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} Bi`;
+  }
+  if (Math.abs(num) >= 1_000_000) {
+    return `R$ ${(num / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} Mi`;
+  }
+  return `R$ ${num.toLocaleString('pt-BR', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`;
 }
 
 /* ── Shared helpers ── */
@@ -264,7 +297,7 @@ export default function FullMarketTable() {
       try {
         const [indicesRes, highlightsRes, newsRes] = await Promise.all([
           fetch('/api/market/indices'),
-          fetch('/api/market/highlights?type=STOCK_BR&limit=10'),
+          fetch('/api/market/highlights/full?type=STOCK_BR&limit=10'),
           fetch('/api/market/news?limit=4'),
         ]);
 
@@ -317,10 +350,10 @@ export default function FullMarketTable() {
       price: h.price,
       changePercent: h.changePercent,
       trend: detectTrend(h.changePercent) as 'up' | 'down' | 'flat',
-      pl: '—',
-      dy: '—',
-      volume: '—',
-      mktCap: '—',
+      pl: formatPL(h.pl),
+      dy: formatDY(h.dy),
+      volume: abbreviateBRL(h.volume),
+      mktCap: abbreviateBRL(h.mktCap),
     }));
     const losers = (highlightsLosers ?? []).map((h) => ({
       ticker: h.ticker,
@@ -328,10 +361,10 @@ export default function FullMarketTable() {
       price: h.price,
       changePercent: h.changePercent,
       trend: detectTrend(h.changePercent) as 'up' | 'down' | 'flat',
-      pl: '—',
-      dy: '—',
-      volume: '—',
-      mktCap: '—',
+      pl: formatPL(h.pl),
+      dy: formatDY(h.dy),
+      volume: abbreviateBRL(h.volume),
+      mktCap: abbreviateBRL(h.mktCap),
     }));
     return [...gainers, ...losers].slice(0, 10);
   }, [highlightsGainers, highlightsLosers]);

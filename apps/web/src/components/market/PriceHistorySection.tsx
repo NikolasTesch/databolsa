@@ -4,9 +4,12 @@ import { useState, useEffect } from 'react';
 import { PriceHistoryChart } from './PriceHistoryChartDynamic';
 import { cn } from '@/components/ui/cn';
 
-type Range = '1m' | '6m' | '1y' | '5y';
+type Range = '1d' | '1w' | '15d' | '1m' | '6m' | '1y' | '5y';
 
 const RANGE_OPTIONS: { label: string; value: Range }[] = [
+  { label: '1D', value: '1d' },
+  { label: '1S', value: '1w' },
+  { label: '15D', value: '15d' },
   { label: '1M', value: '1m' },
   { label: '6M', value: '6m' },
   { label: '1A', value: '1y' },

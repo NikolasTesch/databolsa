@@ -14,4 +14,6 @@ export const CRYPTO_TICKER_MAP: Record<string, string> = {
   SHIB: 'shiba-inu',
   TRX: 'tron',
   TON: 'toncoin',
+  USDT: 'tether',
+  UNI: 'uniswap',
 };

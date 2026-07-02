@@ -1,10 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Decimal } from 'decimal.js';
 import type { AgendaItem } from '@/lib/market/dividends-agenda';
 
 const mockFetchBrapiDividends = vi.hoisted(() => vi.fn());
+const mockFetchCachedMarketValue = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/market/market-fetchers', () => ({
   fetchBrapiDividends: mockFetchBrapiDividends,
+  fetchBrapiQuote: vi.fn(),
+}));
+
+vi.mock('@/lib/market/market-cache', () => ({
+  fetchCachedMarketValue: mockFetchCachedMarketValue,
 }));
 
 describe('getDividendsAgenda', () => {
@@ -13,6 +20,8 @@ describe('getDividendsAgenda', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     mockFetchBrapiDividends.mockReset();
+    mockFetchCachedMarketValue.mockReset();
+    mockFetchCachedMarketValue.mockResolvedValue(null); // default: no price → yieldPct = '—'
     // Re-import to get a fresh module state (clear in-memory cache)
     vi.resetModules();
     const mod = await import('@/lib/market/dividends-agenda');
@@ -71,12 +80,31 @@ describe('getDividendsAgenda', () => {
     expect(result[0].payment).toBe('—');
   });
 
-  it('usa yieldPct como "-"', async () => {
+  it('calcula yieldPct como (value / price) * 100', async () => {
+    mockFetchBrapiDividends.mockResolvedValue([
+      { paymentDate: '2026-07-15', value: '0.50', type: 'Dividendo' },
+    ]);
+    mockFetchCachedMarketValue.mockResolvedValue({
+      price: new Decimal('38.50'),
+      currency: 'BRL',
+      name: 'PETR4',
+      changePercent: null,
+      changeValue: null,
+      isStale: false,
+    });
+
+    const result = await getDividendsAgenda();
+    // (0.50 / 38.50) * 100 = 1.29870… → '1.30%'
+    expect(result[0].yieldPct).toBe('1.30%');
+  });
+
+  it('usa "—" para yieldPct quando price não disponível', async () => {
     mockFetchBrapiDividends.mockResolvedValue([
       { paymentDate: '2026-07-15', value: '1.00', type: 'Dividendo' },
     ]);
+    mockFetchCachedMarketValue.mockResolvedValue(null);
 
     const result = await getDividendsAgenda();
-    expect(result[0].yieldPct).toBe('-');
+    expect(result[0].yieldPct).toBe('—');
   });
 });

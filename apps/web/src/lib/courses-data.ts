@@ -1,5 +1,7 @@
-// Cursos curados da B3 Educação — última revisão: 2026-06-15
-// Para atualizar: verificar os links em https://edu.b3.com.br e ajustar url + campos.
+// Cursos curados da B3 Educação — última revisão: 2026-07-02
+// Nota: a B3 removeu as páginas individuais de curso (/cursos/*). Os links abaixo agora
+// apontam para as páginas de conteúdo/tipo de investimento mais relevantes no site da B3
+// (verificadas em jul/2026). Se a estrutura mudar novamente, refaça a verificação.
 
 export interface B3Course {
   id: string;
@@ -19,7 +21,7 @@ export const B3_COURSES: B3Course[] = [
     duration: '2h',
     level: 'Iniciante',
     category: 'Renda Variável',
-    url: 'https://edu.b3.com.br/cursos/primeiros-passos-renda-variavel',
+    url: 'https://edu.b3.com.br/tipos-de-investimentos/renda-variavel',
   },
   {
     id: 'como-investir-acoes',
@@ -28,7 +30,7 @@ export const B3_COURSES: B3Course[] = [
     duration: '3h',
     level: 'Iniciante',
     category: 'Renda Variável',
-    url: 'https://edu.b3.com.br/cursos/como-investir-acoes',
+    url: 'https://edu.b3.com.br/tipos-de-investimentos/renda-variavel/acoes',
   },
   {
     id: 'fundos-imobiliarios',
@@ -37,7 +39,7 @@ export const B3_COURSES: B3Course[] = [
     duration: '2h30',
     level: 'Iniciante',
     category: 'Fundos',
-    url: 'https://edu.b3.com.br/cursos/fundos-imobiliarios',
+    url: 'https://edu.b3.com.br/tipos-de-investimentos/renda-variavel/fii',
   },
   {
     id: 'analise-fundamentalista',
@@ -46,7 +48,7 @@ export const B3_COURSES: B3Course[] = [
     duration: '4h',
     level: 'Intermediário',
     category: 'Renda Variável',
-    url: 'https://edu.b3.com.br/cursos/analise-fundamentalista',
+    url: 'https://edu.b3.com.br/educacao-financeira/cursos/profissionais',
   },
   {
     id: 'etfs-e-bdrs',
@@ -55,7 +57,7 @@ export const B3_COURSES: B3Course[] = [
     duration: '2h',
     level: 'Intermediário',
     category: 'Renda Variável',
-    url: 'https://edu.b3.com.br/cursos/etfs-e-bdrs',
+    url: 'https://edu.b3.com.br/tipos-de-investimentos/renda-variavel',
   },
   {
     id: 'criptoativos-introducao',
@@ -64,7 +66,7 @@ export const B3_COURSES: B3Course[] = [
     duration: '3h',
     level: 'Iniciante',
     category: 'Criptomoedas',
-    url: 'https://edu.b3.com.br/cursos/criptoativos-introducao',
+    url: 'https://edu.b3.com.br/tipos-de-investimentos/renda-variavel/cripto',
   },
   {
     id: 'gestao-carteira',
@@ -73,7 +75,7 @@ export const B3_COURSES: B3Course[] = [
     duration: '3h30',
     level: 'Intermediário',
     category: 'Gestão de Investimentos',
-    url: 'https://edu.b3.com.br/cursos/gestao-de-carteira',
+    url: 'https://edu.b3.com.br/educacao-financeira/cursos/profissionais',
   },
   {
     id: 'opcoes-derivativos',
@@ -82,6 +84,6 @@ export const B3_COURSES: B3Course[] = [
     duration: '5h',
     level: 'Avançado',
     category: 'Derivativos',
-    url: 'https://edu.b3.com.br/cursos/opcoes-e-derivativos',
+    url: 'https://edu.b3.com.br/educacao-financeira/cursos/profissionais',
   },
 ];

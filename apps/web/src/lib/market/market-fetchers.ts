@@ -137,9 +137,12 @@ export async function fetchBrapiDividends(symbol: string): Promise<DividendEntry
   const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
   if (!response.ok) throw new Error(`brapi dividends returned ${response.status} for ${symbol}`);
   const data = await response.json();
-  const raw: Array<{ paymentDate?: string; rate?: number; type?: string }> =
+  const cashDividends: Array<{ paymentDate?: string; rate?: number; type?: string }> =
     data?.results?.[0]?.dividendsData?.cashDividends ?? [];
-  const result = raw.map((d) => ({
+  const stockDividends: Array<{ paymentDate?: string; rate?: number; type?: string }> =
+    data?.results?.[0]?.dividendsData?.stockDividends ?? [];
+  const allDividends = [...cashDividends, ...stockDividends];
+  const result = allDividends.map((d) => ({
     paymentDate: d.paymentDate?.split('T')[0] ?? '',
     value: d.rate != null ? new Decimal(String(d.rate)).toFixed(4) : '0.0000',
     type: d.type ?? 'Dividendo',

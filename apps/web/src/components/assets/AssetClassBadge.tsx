@@ -15,7 +15,7 @@ const variantMap: Record<AssetClass, 'info' | 'neutral' | 'success'> = {
   FII: 'neutral',
   ETF: 'neutral',
   BDR: 'neutral',
-  CRYPTO: 'success',
+  CRYPTO: 'info',
   STOCK_US: 'info',
 };
 

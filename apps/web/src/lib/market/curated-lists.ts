@@ -12,7 +12,11 @@ export const CURATED_LISTS: Record<AssetClass, string[]> = {
   ],
   ETF: ['BOVA11', 'IVVB11', 'SMAL11', 'HASH11', 'XFIX11'],
   BDR: ['AAPL34', 'MSFT34', 'GOGL34', 'AMZO34', 'TSLA34', 'NVDC34', 'META34'],
-  CRYPTO: ['bitcoin', 'ethereum', 'tether', 'solana', 'binancecoin'],
+  CRYPTO: [
+    'bitcoin', 'ethereum', 'tether', 'solana', 'binancecoin',
+    'ripple', 'cardano', 'dogecoin', 'avalanche-2', 'polkadot',
+    'matic-network', 'shiba-inu', 'tron', 'chainlink', 'uniswap',
+  ],
   STOCK_US: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META'],
 };
 
@@ -22,6 +26,16 @@ export const CRYPTO_ID_TO_TICKER: Record<string, string> = {
   tether: 'USDT',
   solana: 'SOL',
   binancecoin: 'BNB',
+  ripple: 'XRP',
+  cardano: 'ADA',
+  dogecoin: 'DOGE',
+  'avalanche-2': 'AVAX',
+  polkadot: 'DOT',
+  'matic-network': 'POL',
+  'shiba-inu': 'SHIB',
+  tron: 'TRX',
+  chainlink: 'LINK',
+  uniswap: 'UNI',
 };
 
 export const CRYPTO_ID_TO_NAME: Record<string, string> = {
@@ -30,6 +44,16 @@ export const CRYPTO_ID_TO_NAME: Record<string, string> = {
   tether: 'Tether',
   solana: 'Solana',
   binancecoin: 'BNB',
+  ripple: 'XRP',
+  cardano: 'Cardano',
+  dogecoin: 'Dogecoin',
+  'avalanche-2': 'Avalanche',
+  polkadot: 'Polkadot',
+  'matic-network': 'Polygon',
+  'shiba-inu': 'Shiba Inu',
+  tron: 'TRON',
+  chainlink: 'Chainlink',
+  uniswap: 'Uniswap',
 };
 
 export const FII_TICKERS = new Set<string>([
