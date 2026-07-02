@@ -33,7 +33,7 @@ dependencies:
   decimal: ^3.2.1
 
   # Internationalisation / number formatting
-  intl: ^0.19.0
+  intl: ^0.20.2
 
   # Fonts (IBM Plex Mono / IBM Plex Sans via google_fonts)
   google_fonts: ^6.2.1
@@ -44,6 +44,9 @@ dependencies:
 
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+
+  flutter_localizations:
     sdk: flutter
 
   flutter_lints: ^6.0.0

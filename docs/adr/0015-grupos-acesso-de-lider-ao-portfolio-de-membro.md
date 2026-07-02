@@ -1,4 +1,4 @@
-# ADR 0013 — Grupos de investimento: acesso de líder ao portfolio de membro
+# ADR 0015 — Grupos de investimento: acesso de líder ao portfolio de membro
 
 - **Status:** Accepted
 - **Data:** 2026-06-17

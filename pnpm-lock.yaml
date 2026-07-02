@@ -20,6 +20,9 @@ importers:
       '@databolsa/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@databolsa/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@databolsa/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -149,7 +152,11 @@ importers:
         specifier: ^5.4.5
         version: 5.9.3
 
-  packages/types: {}
+  packages/types:
+    devDependencies:
+      typescript:
+        specifier: ^5.5.4
+        version: 5.9.3
 
   packages/ui:
     dependencies:

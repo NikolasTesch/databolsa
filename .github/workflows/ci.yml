@@ -67,6 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test-ui]
     env:
+      # Dev/test secrets only. In production, use GitHub Secrets (Settings → Secrets and variables → Actions).
       JWT_REFRESH_SECRET: test-jwt-refresh-secret-32chars!!
       JWT_SECRET: test-access-secret-different-32chars!!
     steps:

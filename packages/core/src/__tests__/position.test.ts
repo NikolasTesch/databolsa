@@ -601,4 +601,21 @@ describe('Branch coverage: sort comparator com datas iguais', () => {
     const qty = calculateCurrentQuantity(transactions);
     expect(qty.toString()).toBe('50');
   });
+
+  it('calculateRealizedGain: transações fora de ordem (branch a.date < b.date)', () => {
+    // Transações em ordem cronológica inversa para forçar a.date < b.date no sort
+    const transactions: Transaction[] = [
+      sell('2024-03-01', 30, '15.00'),
+      buy('2024-02-01', 50, '12.00'),
+      buy('2024-01-01', 100, '10.00'),
+    ];
+    // sorted: buy@01(100), buy@02(50), sell@03(30)
+    // qty: 100 → 150 → 120
+    // avg after first buy: 10
+    // avg after second buy: (100*10 + 50*12) / 150 = 1600/150 = 10.666...7
+    // gain from sell@03: 30 * (15 - 10.666...7) = 30 * 4.333...3 = 130
+    const gain = calculateRealizedGain(transactions);
+    // Decimal: 30*(15-1600/150) = 129.999... com precisão 28; arredonda para 4 casas
+    expect(gain.toFixed(4)).toBe('130.0000');
+  });
 });

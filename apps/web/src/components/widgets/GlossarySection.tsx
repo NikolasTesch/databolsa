@@ -38,7 +38,7 @@ const TERMS: GlossaryTerm[] = [
 
 export default function GlossarySection() {
   return (
-    <section className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12">
+    <section id="glossario" className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12">
       {/* Header */}
       <div className="flex items-center gap-2 mb-6">
         <span className="material-symbols-outlined text-[24px] text-on-surface-variant">

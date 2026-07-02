@@ -3,8 +3,10 @@ import 'package:databolsa_mobile/features/assets/presentation/widgets/price_hist
 import 'package:decimal/decimal.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 
 // TC-03: Widget — PriceHistoryChartMobile com dados reais.
 // TC-04: Widget — PriceHistoryChartMobile com série vazia.
@@ -12,9 +14,18 @@ import 'package:flutter_test/flutter_test.dart';
 
 Widget _wrap(Widget child) => ProviderScope(
       child: MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: const [Locale('pt', 'BR'), Locale('en', 'US')],
+        locale: const Locale('pt', 'BR'),
         home: Scaffold(body: child),
       ),
     );
+
+Future<void> _pumpWidget(WidgetTester tester, Widget child) async {
+  Intl.defaultLocale = 'pt_BR';
+  await tester.pumpWidget(child);
+  await tester.pump();
+}
 
 /// Gera uma série de [count] pontos de preço a partir de [startDate].
 AssetHistorySeries _makeSeries(
@@ -95,12 +106,12 @@ void main() {
     testWidgets('renderiza LineChart quando série tem pontos', (tester) async {
       final series = _makeSeries('PETR4', '1m', 20);
 
-      await tester.pumpWidget(
+      await _pumpWidget(
+        tester,
         _wrap(
           PriceHistoryChartMobile(series: series, range: '1m'),
         ),
       );
-      await tester.pump();
 
       // fl_chart renderiza via LineChart
       expect(find.byType(LineChart), findsOneWidget);
@@ -111,12 +122,12 @@ void main() {
     testWidgets('container tem altura 220', (tester) async {
       final series = _makeSeries('VALE3', '6m', 30);
 
-      await tester.pumpWidget(
+      await _pumpWidget(
+        tester,
         _wrap(
           PriceHistoryChartMobile(series: series, range: '6m'),
         ),
       );
-      await tester.pump();
 
       final sizedBox = tester.widget<SizedBox>(
         find.ancestor(
@@ -131,12 +142,12 @@ void main() {
       // 100 pontos: com stride=3, deve gerar ~34 pontos
       final series = _makeSeries('ITUB4', '1y', 100);
 
-      await tester.pumpWidget(
+      await _pumpWidget(
+        tester,
         _wrap(
           PriceHistoryChartMobile(series: series, range: '1y'),
         ),
       );
-      await tester.pump();
       // O gráfico deve renderizar sem exceção
       expect(find.byType(LineChart), findsOneWidget);
     });
@@ -152,12 +163,12 @@ void main() {
       );
 
       // Não deve lançar exceção
-      await tester.pumpWidget(
+      await _pumpWidget(
+        tester,
         _wrap(
           PriceHistoryChartMobile(series: emptySeries, range: '1y'),
         ),
       );
-      await tester.pump();
 
       expect(find.text('Histórico indisponível'), findsOneWidget);
       // LineChart NÃO deve estar presente
@@ -165,12 +176,12 @@ void main() {
     });
 
     testWidgets('series null exibe placeholder sem exceção', (tester) async {
-      await tester.pumpWidget(
+      await _pumpWidget(
+        tester,
         _wrap(
           const PriceHistoryChartMobile(series: null, range: '1m'),
         ),
       );
-      await tester.pump();
 
       expect(find.text('Histórico indisponível'), findsOneWidget);
       expect(find.byType(LineChart), findsNothing);

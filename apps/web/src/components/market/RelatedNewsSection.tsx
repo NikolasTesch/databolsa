@@ -29,6 +29,7 @@ export async function RelatedNewsSection({
 
   return (
     <section
+      id="noticias"
       className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12"
       aria-label={sectionTitle}
     >

@@ -46,3 +46,6 @@ Thumbs.db
 .codex/
 .superpowers
 
+# OpenCode session/plan files
+.omo/
+

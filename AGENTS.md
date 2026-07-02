@@ -93,7 +93,7 @@ Single-page app at `/ferramentas` with inline navigation. All `'use client'` wit
 ## Architecture
 
 - **API is embedded in Next.js** — Route Handlers at `apps/web/src/app/api/`. No separate API service (ADR-0004). The old `apps/api/` directory was removed entirely.
-- **CI still references `apps/api`** — `.github/workflows/ci.yml` has stale jobs (`test-api`, `build-api`, `e2e`) referencing the old NestJS API. Dead code.
+- **CI jobs for apps/api were removed** — `.github/workflows/ci.yml` previously had stale jobs (`test-api`, `build-api`, `e2e`) referencing the old NestJS API. These were cleaned up. Current CI runs: test-core, test-ui, test-web, build-web, validate-specs, test-mobile.
 - **Auth hybrid**: HttpOnly cookies (BFF) for web, Bearer token for mobile. JWT via `jose`.
 - **Font stack**: IBM Plex Sans (body) + IBM Plex Mono (tabular figures for money). Loaded via `next/font/google`.
 - **Tailwind preset** from `@databolsa/ui/tailwind-preset`.

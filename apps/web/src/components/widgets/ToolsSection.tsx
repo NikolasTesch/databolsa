@@ -48,7 +48,7 @@ const TOOLS: ToolItem[] = [
 
 export default function ToolsSection() {
   return (
-    <section className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12">
+    <section id="ferramentas" className="mx-auto max-w-max-width px-margin-mobile md:px-margin-desktop py-12">
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-on-surface">Ferramentas Analíticas</h2>
         <p className="text-sm text-on-surface-variant mt-1">

@@ -43,5 +43,5 @@ ADRs registrados:
 - [`adr/0011-csv-import-preview-commit.md`](./adr/0011-csv-import-preview-commit.md) — Fluxo em duas etapas (preview e commit) para importação de CSV.
 - [`adr/0012-csv-date-format-disambiguation.md`](./adr/0012-csv-date-format-disambiguation.md) — Heurísticas para desambiguação de formatos de data em importações CSV.
 - [`adr/0013-api-error-envelope.md`](./adr/0013-api-error-envelope.md) — Envelope de erro unificado da API.
-- [`adr/0013-grupos-acesso-de-lider-ao-portfolio-de-membro.md`](./adr/0013-grupos-acesso-de-lider-ao-portfolio-de-membro.md) — Permissões de acesso de líder a portfólio de membros em grupos.
 - [`adr/0014-portfolio-twr-time-series.md`](./adr/0014-portfolio-twr-time-series.md) — Implementação de série temporal real ponderada pelo tempo (TWR) para o dashboard do portfólio.
+- [`adr/0015-grupos-acesso-de-lider-ao-portfolio-de-membro.md`](./adr/0015-grupos-acesso-de-lider-ao-portfolio-de-membro.md) — Permissões de acesso de líder a portfólio de membros em grupos.

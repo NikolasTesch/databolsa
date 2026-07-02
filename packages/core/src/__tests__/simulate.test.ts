@@ -207,3 +207,22 @@ test('TC-09: delta_invested_brl é a diferença entre novo e atual invested', ()
   );
   expect(result2.delta_invested_brl.toString()).toBe('-300');
 });
+
+// ---------------------------------------------------------------------------
+// TC-10: BUY com quantidade zero — new_quantity.isZero() = true (branch)
+// ---------------------------------------------------------------------------
+
+test('TC-10: BUY com quantidade zero — avg price zero (branch new_quantity.isZero)', () => {
+  // current_quantity = 0 + hypothetical.quantity = 0 → new_quantity = 0 → isZero() = true
+  const result = simulatePosition(
+    input({
+      current_quantity: new Decimal('0'),
+      current_avg_price: new Decimal('0'),
+      current_invested_brl: new Decimal('0'),
+      hypothetical: { type: 'BUY', quantity: new Decimal('0'), price: new Decimal('20') },
+    }),
+  );
+  expect(result.new_quantity.isZero()).toBe(true);
+  expect(result.new_avg_price.isZero()).toBe(true);
+  expect(result.new_invested_brl.isZero()).toBe(true);
+});

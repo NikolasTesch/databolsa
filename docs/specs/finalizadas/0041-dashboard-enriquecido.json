@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0041",
   "title": "Dashboard Enriquecido — Yield, Concentração, Benchmark, Dividendos e Aportes",
-  "status": "draft",
+  "status": "verified",
   "type": "feature",
   "created": "2026-07-01",
   "updated": "2026-07-01",
@@ -212,45 +212,45 @@
   "tasks": [
     {
       "id": "T-01",
-      "description": "Criar componente YieldCard exibindo yield_on_cost_pct com cor gain/loss.",
-      "target": "apps/web/src/components/portfolio/YieldCard.tsx",
-      "done": false
+      "description": "Criar componente YieldCard exibindo yield_on_cost_pct com cor gain/loss (fundido em SummaryCards).",
+      "target": "apps/web/src/components/portfolio/SummaryCards.tsx",
+      "done": true
     },
     {
       "id": "T-02",
-      "description": "Criar componente ReturnCard exibindo retorno total R$ e %, consumindo summary.",
-      "target": "apps/web/src/components/portfolio/ReturnCard.tsx",
-      "done": false
+      "description": "Criar componente ReturnCard exibindo retorno total R$ e %, consumindo summary (fundido em SummaryCards).",
+      "target": "apps/web/src/components/portfolio/SummaryCards.tsx",
+      "done": true
     },
     {
       "id": "T-03",
       "description": "Criar componente ConcentrationCards com Recharts PieChart para alocação por ativo e por setor.",
       "target": "apps/web/src/components/portfolio/ConcentrationCards.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-04",
       "description": "Criar componente BenchmarkChart com Recharts LineChart e seletor de benchmark (IBOV/CDI/IPCA/SP500).",
       "target": "apps/web/src/components/portfolio/BenchmarkChart.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-05",
       "description": "Criar componente DividendMiniChart com Recharts BarChart para últimos 6 meses.",
       "target": "apps/web/src/components/portfolio/DividendMiniChart.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-06",
       "description": "Criar componente AportesComparativoChart com barras de depósitos e retiradas mensais.",
       "target": "apps/web/src/components/portfolio/AportesComparativoChart.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-07",
       "description": "Reorganizar página do dashboard com abas Resumo, Composição, Proventos e Atividades.",
       "target": "apps/web/src/app/(app)/dashboard/page.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-08",

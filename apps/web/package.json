@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@databolsa/core": "workspace:*",
+    "@databolsa/types": "workspace:*",
     "@databolsa/ui": "workspace:*",
     "@hookform/resolvers": "^3.9.0",
     "@prisma/client": "^5.22.0",

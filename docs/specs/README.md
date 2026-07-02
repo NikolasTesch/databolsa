@@ -123,6 +123,8 @@ e idealmente um check de CI.
 | SPEC-0037 | Grupos de investimento — modelo de dados, autorização cross-user e papel admin (fase 1/3) | verified |
 | SPEC-0038 | Grupos de investimento — endpoints REST de grupos e convites (fase 2/3) | verified |
 | SPEC-0039 | Grupos de investimento — interface de usuário Next.js (fase 3/3)   | verified |
+| SPEC-0040 | Wishlist / Lista de Desejos — AssetWatch             | verified |
+| SPEC-0041 | Dashboard Enriquecido — Yield, Concentração, Benchmark, Dividendos e Aportes | verified |
 
 ### Em andamento (`em-andamento/`)
 
@@ -132,8 +134,6 @@ _Nenhuma spec em andamento no momento._
 
 | ID        | Título                                              | Status   |
 | --------- | --------------------------------------------------- | -------- |
-| SPEC-0040 | Wishlist / Lista de Desejos — AssetWatch             | draft    |
-| SPEC-0041 | Dashboard Enriquecido — Yield, Concentração, Benchmark, Dividendos e Aportes | draft |
 | SPEC-0042 | Gaps de UI Pública — Navegação, APIs Faltantes e Dados Reais | draft |
 | SPEC-0043 | Páginas de Mercado, Dividendos e Cripto — Full MarketTable, Agenda de Proventos e Panorama Cripto | draft |
 

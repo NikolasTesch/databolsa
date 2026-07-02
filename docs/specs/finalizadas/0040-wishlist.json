@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0040",
   "title": "Wishlist / Lista de Desejos — AssetWatch",
-  "status": "draft",
+  "status": "verified",
   "type": "feature",
   "created": "2026-07-01",
   "updated": "2026-07-01",
