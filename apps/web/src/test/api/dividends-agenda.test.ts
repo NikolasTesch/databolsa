@@ -7,7 +7,7 @@
  * em memória (variável cachedAgenda). Se o teste 200 executar primeiro,
  * o cache persiste e o teste 503 recebe dados antigos.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
 const mockFetchBrapiDividends = vi.hoisted(() => vi.fn());
@@ -25,8 +25,14 @@ const { GET } = await import('@/app/api/market/dividends/agenda/route');
 
 describe('GET /api/market/dividends/agenda', () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-07-01'));
     vi.clearAllMocks();
     mockFetchBrapiDividends.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   // 503 FIRST — before cache is populated by the 200 test

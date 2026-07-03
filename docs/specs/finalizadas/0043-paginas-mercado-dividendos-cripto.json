@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0043",
   "title": "Páginas de Mercado, Dividendos e Cripto – Full MarketTable, Agenda de Proventos e Panorama Cripto",
-  "status": "draft",
+  "status": "verified",
   "type": "feature",
   "created": "2026-07-01",
   "updated": "2026-07-01",
@@ -176,25 +176,25 @@
       "id": "T-01",
       "description": "Criar página /mercados com FullMarketTable, abas por classe, ordenação e paginação client-side.",
       "target": "apps/web/src/app/(public)/mercados/page.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-02",
       "description": "Criar página /dividendos com tabela de agenda, filtro por ticker/mês e calendário visual.",
       "target": "apps/web/src/app/(public)/dividendos/page.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-03",
       "description": "Criar página /cripto com overview, trending cards, notícias e cursos.",
       "target": "apps/web/src/app/(public)/cripto/page.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-04",
       "description": "Atualizar PublicHeader e PublicFooter com links para /mercados, /dividendos, /cripto.",
       "target": "apps/web/src/components/layout/",
-      "done": false
+      "done": true
     },
     {
       "id": "T-05",

@@ -10,6 +10,7 @@ import { PositionTable } from '@/components/portfolio/PositionTable';
 import { AllocationChartDynamic } from '@/components/portfolio/AllocationChartDynamic';
 import { GrowthChartDynamic } from '@/components/portfolio/GrowthChartDynamic';
 import { MonthlyActivityCard } from '@/components/portfolio/MonthlyActivityCard';
+import { DashboardEvents } from '@/components/market/DashboardEvents';
 import { DividendMiniChartDynamic } from '@/components/portfolio/DividendMiniChartDynamic';
 import { BenchmarkChartDynamic } from '@/components/portfolio/BenchmarkChartDynamic';
 import { AportesComparativoChartDynamic } from '@/components/portfolio/AportesComparativoChartDynamic';
@@ -101,6 +102,9 @@ export default function DashboardPage() {
             className="space-y-6"
           >
             <SummaryCards data={data} />
+
+            {/* Próximos Eventos */}
+            <DashboardEvents tickers={data.positions.map((p) => p.ticker)} />
 
             {/* Concentração */}
             <ConcentrationCards positions={data.positions} />

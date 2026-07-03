@@ -77,4 +77,28 @@ describe('getAssetAnalysis', () => {
     });
     expect(mockGetFundamentals.mock.calls.length).toBeLessThanOrEqual(6);
   });
+
+  it('includes dataQuality in the analysis result', async () => {
+    const { getAssetAnalysis } = await import('@/lib/analysis/asset-analysis.service');
+
+    const result = await getAssetAnalysis('PETR4', 'STOCK_BR');
+
+    expect(result.dataQuality).toBeDefined();
+    expect(result.dataQuality!.coverageScore).toBe('67');
+    expect(result.dataQuality!.level).toBe('partial');
+    expect(result.dataQuality!.missingFields).toHaveLength(3); // evEbitda, lastDividend, dailyLiquidity
+  });
+
+  it('includes stale staleFields when fundamentals are stale', async () => {
+    const { getAssetAnalysis } = await import('@/lib/analysis/asset-analysis.service');
+
+    // PETR3 has stale: true and asOf: '2026-07-01T12:00:00.000Z', which is >24h
+    const result = await getAssetAnalysis('PETR3', 'STOCK_BR');
+
+    expect(result.dataQuality).toBeDefined();
+    expect(result.dataQuality!.staleFields.length).toBeGreaterThan(0);
+    expect(result.dataQuality!.sourceWarnings).toContain(
+      'Dados com mais de 24h. Considere atualizar a fonte.',
+    );
+  });
 });

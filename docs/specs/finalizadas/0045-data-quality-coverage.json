@@ -1,0 +1,301 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0045",
+  "title": "Qualidade de Dados e Cobertura de Fontes",
+  "status": "verified",
+  "type": "feature",
+  "created": "2026-07-03",
+  "updated": "2026-07-03",
+  "authors": ["Sisyphus"],
+  "summary": "Criar camada de qualidade de dados que informa o usuario sobre a integridade, atualizacao e cobertura dos indicadores fundamentalistas, com badges visuais, tooltips e pagina de status das fontes. A feature reusa AssetAnalysis existente e nao adiciona novas fontes externas.",
+  "motivation": "A confianca na analise depende da cobertura das fontes. Sem transparencia sobre dados ausentes ou desatualizados, o usuario pode superestimar a precisao dos scores e indicadores. Investidores profissionais avaliam a qualidade do dado antes de decidir — o DataBolsa deve explicitar quando a leitura e forte ou incompleta.",
+  "related": {
+    "prd": ["PRD §5", "PRD §6"],
+    "spec_doc": ["SPEC §6 (fontes externas)", "SPEC §7 (asset analysis)"],
+    "business_rules": ["RN-01", "RN-10"],
+    "adrs": ["ADR-0005", "ADR-0016"],
+    "depends_on": ["SPEC-0044"]
+  },
+  "scope": {
+    "in_scope": [
+      "Interface DataQualityReport com coverageScore, missingFields, staleFields, sourceWarnings e lastUpdatedAt",
+      "Funcao calculateDataQualityScore(reutilizando getFundamentals) que atribui score 0..100 baseado na proporcao de campos preenchidos e atualizados",
+      "Badge visual \"dados completos\" / \"dados parciais\" / \"dados desatualizados\" no AnalysisSummary e no AssetHeader",
+      "Tooltip/hover card com detalhes: campos ausentes, campos stale, ultima atualizacao por campo",
+      "Indicador de stale por campo individual no IndicatorCategoryGrid (icone de schedule ao lado de campos desatualizados)",
+      "Pagina /status-fontes com overview de todas as fontes, ultima sync, taxa de sucesso e cobertura por classe",
+      "Integracao com AssetAnalysis existente — estender AssetAnalysis com campo opcional dataQuality",
+      "Testes unitarios para calculo de coverageScore, badges, tooltips e pagina de status"
+    ],
+    "out_of_scope": [
+      "Monitoramento ativo ou alerta de queda de qualidade (futuro SPEC-0047)",
+      "Nova fonte de dados fundamentalistas",
+      "Scraping de sites externos",
+      "Modificacao no modelo de dados do banco",
+      "Metricas de qualidade por usuario"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "DataQualityReport deve incluir coverageScore (decimal 0..100), missingFields (string[]), staleFields (string[]), sourceWarnings (string[]), lastUpdatedAt (ISO string).",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "calculateDataQualityScore deve usar NormalizedFundamentals e comparar campos conhecidos contra a lista completa de indicadores esperados por classe de ativo, retornando proporcao de campos preenchidos como score.",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "CoverageScore >= 80 deve renderizar badge \"Dados completos\" (verde), 40..79 \"Dados parciais\" (amarelo), < 40 \"Dados insuficientes\" (cinza).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Dados com mais de 24h desde o ultimo fetch (fetched_at) devem ser marcados como stale no report e renderizar icone de schedule na UI.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Tooltip/hover card deve listar campos ausentes e stale ao passar o mouse sobre o badge de qualidade.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "IndicatorCategoryGrid deve mostrar icone de stale junto ao valor de indicadores individuais desatualizados.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-07",
+      "description": "Pagina /status-fontes deve exibir tabela com todas as fontes (BRAPI, CoinGecko, Finnhub), status (online/offline), ultima sync, taxa de sucesso estimada, cobertura por classe de ativo e numero de ativos monitorados.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-08",
+      "description": "O report deve ser calculado sem novas chamadas de API externa — apenas metadados de cache existentes e ultima resposta conhecida.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-09",
+      "description": "AssetAnalysis deve ser estendido com campo opcional dataQuality: DataQualityReport para que a UI consuma do mesmo contrato.",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-10",
+      "description": "Toda UI nova deve usar tokens M3 e nao usar text-content, text-content-muted ou text-content-subtle.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "AssetFundamentalsCache",
+      "change": "none",
+      "notes": "Reutilizado para verificar fetched_at e campos disponiveis. Sem alteracao."
+    },
+    {
+      "entity": "QuoteCache",
+      "change": "none",
+      "notes": "Reutilizado para verificar stale de cotacao. Sem alteracao."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/[ticker]/data-quality",
+      "auth": false,
+      "request": "Path ticker; query opcional class.",
+      "response": "{ ticker, assetClass, coverageScore, level, missingFields, staleFields, sourceWarnings, lastUpdatedAt }",
+      "errors": ["404 para ticker desconhecido", "200 com coverageScore 0 quando sem dados"],
+      "notes": "Usa apenas dados de cache existentes. Sem chamadas externas."
+    },
+    {
+      "method": "GET",
+      "path": "/api/market/source-status",
+      "auth": false,
+      "request": "Nenhum",
+      "response": "{ sources: SourceStatus[], globalCoverage: number, asOf: string }",
+      "notes": "Agrega estado de todas as fontes externas. Cache de 5min."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "um ativo com todos os 12 indicadores fundamentalistas preenchidos e atualizados ha menos de 1h",
+      "when": "o data quality report e calculado",
+      "then": "coverageScore = 100, level = 'complete', badge mostra \"Dados completos\" em verde"
+    },
+    {
+      "id": "AC-02",
+      "given": "um ativo com 6 de 12 indicadores preenchidos",
+      "when": "o report e calculado",
+      "then": "coverageScore entre 40 e 79, level = 'partial', badge mostra \"Dados parciais\" em amarelo"
+    },
+    {
+      "id": "AC-03",
+      "given": "um ativo com 3 ou menos indicadores preenchidos",
+      "when": "o report e calculado",
+      "then": "coverageScore < 40, level = 'insufficient', badge mostra \"Dados insuficientes\" em cinza"
+    },
+    {
+      "id": "AC-04",
+      "given": "o usuario passa o mouse sobre o badge de qualidade",
+      "when": "o tooltip e exibido",
+      "then": "mostra lista de campos ausentes, campos stale e ultima atualizacao"
+    },
+    {
+      "id": "AC-05",
+      "given": "um campo especifico do IndicatorCategoryGrid esta stale",
+      "when": "o componente renderiza",
+      "then": "exibe icone de schedule ao lado do valor do indicador"
+    },
+    {
+      "id": "AC-06",
+      "given": "o usuario acessa /status-fontes",
+      "when": "a pagina carrega",
+      "then": "exibe BRAPI, CoinGecko e Finnhub com status, ultima sync e cobertura por classe"
+    },
+    {
+      "id": "AC-07",
+      "given": "nenhum cache existe para um ticker",
+      "when": "GET /api/market/[ticker]/data-quality",
+      "then": "retorna coverageScore = 0, level 'insufficient', staleFields vazio, sem erro 500"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "calculateDataQualityScore: 12/12 campos preenchidos → score 100, level complete.",
+      "kind": "unit",
+      "covers": ["REQ-01", "REQ-02", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "calculateDataQualityScore: 6/12 campos → score 50, level partial.",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "calculateDataQualityScore: 0/12 campos → score 0, level insufficient.",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-03"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "calculateDataQualityScore: stale fields sao identificados por fetched_at > 24h.",
+      "kind": "unit",
+      "covers": ["REQ-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-05",
+      "description": "DataQualityBadge renderiza cores corretas para cada level.",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-01", "AC-02", "AC-03"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-06",
+      "description": "DataQualityTooltip exibe campos ausentes e stale quando presente.",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-04"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-07",
+      "description": "IndicatorCategoryGrid exibe stale icon para indicadores desatualizados.",
+      "kind": "unit",
+      "covers": ["REQ-06", "AC-05"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-08",
+      "description": "GET /api/market/[ticker]/data-quality retorna report valido para ticker conhecido.",
+      "kind": "integration",
+      "covers": ["REQ-08", "AC-07"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-09",
+      "description": "GET /api/market/source-status retorna lista de fontes com metadados.",
+      "kind": "integration",
+      "covers": ["REQ-07", "AC-06"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-10",
+      "description": "Pagina /status-fontes renderiza tabela com dados mockados.",
+      "kind": "unit",
+      "covers": ["REQ-07", "AC-06"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar tipos DataQualityReport e funcao calculateDataQualityScore em lib/analysis/data-quality.ts.",
+      "target": "apps/web/src/lib/analysis/data-quality.ts",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar componente DataQualityBadge com tooltip em components/analysis/.",
+      "target": "apps/web/src/components/analysis/DataQualityBadge.tsx",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Estender IndicatorCategoryGrid para mostrar stale icon por indicador.",
+      "target": "apps/web/src/components/market/IndicatorCategoryGrid.tsx",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Criar GET /api/market/[ticker]/data-quality e GET /api/market/source-status.",
+      "target": "apps/web/src/app/api/market/",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Estender AssetAnalysis com campo dataQuality opcional e integration no service.",
+      "target": "apps/web/src/lib/analysis/",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Criar pagina /status-fontes com tabela de fontes e cobertura.",
+      "target": "apps/web/src/app/(public)/status-fontes/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-07",
+      "description": "Adicionar DataQualityBadge no AnalysisSummary e AssetHeader.",
+      "target": "apps/web/src/components/market/",
+      "done": false
+    },
+    {
+      "id": "T-08",
+      "description": "Escrever testes TC-01 a TC-10.",
+      "target": "apps/web/src/test/",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Cobertura pode ser consistentemente baixa para ativos com dados gratuitos limitados — mitigar com UI clara que normalize expectativa.",
+    "Taxa de sucesso das fontes pode ser enganosa se o periodo de amostra for pequeno — usar minimo de 24h de dados.",
+    "Tooltips muito densos podem poluir a UI em mobile — usar acordeao ou pagina dedicada como fallback."
+  ],
+  "observability": [
+    "Log de coverageScore medio por classe de ativo (prefixo [data-quality]).",
+    "Log de fonte offline detectada em /api/market/source-status."
+  ],
+  "rollback": "Remover APIs /api/market/[ticker]/data-quality e /api/market/source-status, remover componentes novos, reverter extensoes de componentes existentes. Sem migration necessaria."
+}

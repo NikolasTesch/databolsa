@@ -32,6 +32,10 @@ export async function GET(request: NextRequest) {
     return jsonError('INVALID_INPUT', 'Parâmetro q é obrigatório', 400);
   }
 
+  if (q.length > 100) {
+    return jsonError('INVALID_INPUT', 'Consulta muito longa (máx. 100 caracteres)', 400);
+  }
+
   const upper = q.toUpperCase();
   const limit = 10;
 

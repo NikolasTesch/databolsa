@@ -1,0 +1,308 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0047",
+  "title": "Watchlist Analítica e Alertas Fundamentalistas",
+  "status": "verified",
+  "type": "feature",
+  "created": "2026-07-03",
+  "updated": "2026-07-03",
+  "authors": ["Sisyphus"],
+  "summary": "Evoluir a AssetWatch (wishlist) para uma watchlist analitica com colunas de score e ultimo fundamento, mais alertas fundamentalistas configuraveis por usuario: DY, P/VP, P/L, ROE, score e stale. Novo modelo AnalysisAlertRule separado do PriceAlert.",
+  "motivation": "A wishlist atual apenas salva ativos. Investidores querem monitorar ativos com criterios fundamentalistas: \"me avise quando DY cair abaixo de 6%\" ou \"quando P/VP subir acima de 2\". Isso transforma a watchlist em ferramenta ativa de monitoramento, nao apenas lista de desejos.",
+  "related": {
+    "prd": ["PRD §6 (RF-09 Alertas)", "PRD §7"],
+    "spec_doc": ["SPEC §7 (asset analysis)"],
+    "business_rules": ["RN-01", "RN-10", "RN-11"],
+    "adrs": ["ADR-0010", "ADR-0016"],
+    "depends_on": ["SPEC-0040", "SPEC-0044"]
+  },
+  "scope": {
+    "in_scope": [
+      "Modelo Prisma AnalysisAlertRule com user_id, ticker, metric, condition (ABOVE|BELOW), target_value Decimal, is_active, triggered_at",
+      "CRUD API /api/analysis-alerts com isolamento por user_id (RN-11)",
+      "Avaliacao lazy de gatilhos no momento da leitura (sem worker, mesmo padrao do ADR-0010)",
+      "Coluna de score na tabela da wishlist, puxando de getAssetAnalysis",
+      "Coluna \"ultimo fundamento\" com valor mais recente da metrica monitorada",
+      "Chips de alerta ativo por ativo na wishlist",
+      "Botao \"Criar alerta de fundamento\" com modal de configuracao",
+      "Indicador visual de alerta disparado (triggered_at preenchido)"
+    ],
+    "out_of_scope": [
+      "Notificacao push ou email para alertas (apenas indicacao in-app)",
+      "Alertas de preco (ja existe PriceAlert)",
+      "Alertas de carteira (concentracao, P/L — coberto por PortfolioDiagnostics)",
+      "Historico de alertas disparados (apenas ultimo triggered_at)"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Criar modelo AnalysisAlertRule com user_id, ticker, metric (dy|pe|pb|roe|score|stale), condition (ABOVE|BELOW), target_value Decimal(18,4), is_active, triggered_at.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "GET /api/analysis-alerts deve retornar apenas alertas do usuario autenticado.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "POST /api/analysis-alerts deve criar alerta com validacao de metricas permitidas e target_value positivo.",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "PATCH /api/analysis-alerts/[id] deve permitir alterar is_active, target_value e condition.",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "DELETE /api/analysis-alerts/[id] deve remover alerta, retornando 404 para id de outro usuario.",
+      "rule_ref": "RN-11",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "A avaliacao de gatilhos deve ser lazy: ao ler os alertas, comparar target_value com o valor atual da metrica via getAssetAnalysis. Se condicao for satisfeita, marcar triggered_at.",
+      "rule_ref": "ADR-0010",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-07",
+      "description": "A wishlist (/wishlist) deve exibir coluna de score total do ativo usando getAssetAnalysis com fallback para \"—\" se falhar.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-08",
+      "description": "A wishlist deve exibir coluna \"ultimo fundamento\" com o valor mais recente da metrica configurada no alerta ativo.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-09",
+      "description": "Chips \"Alerta ativo\" devem aparecer ao lado de tickers que possuem alertas configurados e ativos.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-10",
+      "description": "Modal de configuracao de alerta deve ter select de metrica, condicao (acima/abaixo), input de valor alvo e botao salvar.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-11",
+      "description": "Toda UI nova deve usar tokens M3 atuais.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "AnalysisAlertRule",
+      "change": "create",
+      "fields": [
+        "id String @id @default(uuid())",
+        "user_id String",
+        "ticker String",
+        "metric String (dy|pe|pb|roe|score|stale)",
+        "condition AlertCondition (ABOVE|BELOW)",
+        "target_value Decimal @db.Decimal(18,4)",
+        "is_active Boolean @default(true)",
+        "triggered_at DateTime?",
+        "created_at DateTime @default(now())"
+      ],
+      "notes": "Novo modelo. Reutiliza enum AlertCondition existente. Isolado por user_id com cascade delete."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/analysis-alerts",
+      "auth": true,
+      "request": "Query opcional ticker para filtrar.",
+      "response": "{ alerts: AnalysisAlertRule[], evaluatedAt: string }",
+      "errors": ["401 sem autenticacao"],
+      "notes": "Avalia gatilhos lazy antes de retornar. Atualiza triggered_at se condicao for satisfeita."
+    },
+    {
+      "method": "POST",
+      "path": "/api/analysis-alerts",
+      "auth": true,
+      "request": "{ ticker, metric, condition, target_value }",
+      "response": "{ alert: AnalysisAlertRule }",
+      "errors": ["400 para metrica invalida", "400 para target_value negativo ou zero"],
+      "notes": "Cria alerta. user_id extraido do token."
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/analysis-alerts/[id]",
+      "auth": true,
+      "request": "{ is_active?, target_value?, condition? }",
+      "response": "{ alert: AnalysisAlertRule }",
+      "errors": ["404 para id inexistente ou de outro usuario"],
+      "notes": "Reseta triggered_at se is_active voltar a true."
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analysis-alerts/[id]",
+      "auth": true,
+      "request": "Nenhum",
+      "response": "{ deleted: true }",
+      "errors": ["404 para id inexistente ou de outro usuario"],
+      "notes": "Remove alerta. Verifica user_id antes de deletar."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuario autenticado cria alerta para PETR4 com metric=dy, condition=ABOVE, target=6",
+      "when": "POST /api/analysis-alerts",
+      "then": "retorna alerta com id, is_active=true, triggered_at=null"
+    },
+    {
+      "id": "AC-02",
+      "given": "alerta existe com dy target 6 e PETR4 tem dy=8",
+      "when": "GET /api/analysis-alerts e chamado",
+      "then": "triggered_at e preenchido com timestamp atual"
+    },
+    {
+      "id": "AC-03",
+      "given": "usuario autenticado acessa /wishlist",
+      "when": "a pagina carrega",
+      "then": "cada ativo com alerta configurado exibe chip \"Alerta ativo\" e coluna de score"
+    },
+    {
+      "id": "AC-04",
+      "given": "usuario clica em \"Criar alerta\" na wishlist",
+      "when": "o modal abre",
+      "then": "exibe ticker pre-preenchido, select de metrica, condicao, input de valor e botao salvar"
+    },
+    {
+      "id": "AC-05",
+      "given": "usuario tenta acessar alerta de outro usuario via PATCH /api/analysis-alerts/[id]",
+      "when": "o id nao pertence ao usuario",
+      "then": "retorna 404"
+    },
+    {
+      "id": "AC-06",
+      "given": "usuario desativa alerta com PATCH is_active=false",
+      "when": "alerta e avaliado novamente",
+      "then": "triggered_at nao e atualizado"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "POST /api/analysis-alerts cria alerta com dados validos e retorna 201.",
+      "kind": "integration",
+      "covers": ["REQ-01", "REQ-03", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "POST /api/analysis-alerts rejeita metrica invalida com 400.",
+      "kind": "integration",
+      "covers": ["REQ-03"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "GET /api/analysis-alerts retorna apenas alertas do usuario autenticado.",
+      "kind": "integration",
+      "covers": ["REQ-02", "RN-11"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "Avaliacao lazy: alerta com condicao satisfeita preenche triggered_at.",
+      "kind": "unit",
+      "covers": ["REQ-06", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "PATCH /api/analysis-alerts/[id] altera is_active e reseta triggered_at.",
+      "kind": "integration",
+      "covers": ["REQ-04", "AC-06"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-06",
+      "description": "DELETE /api/analysis-alerts/[id] de outro usuario retorna 404.",
+      "kind": "integration",
+      "covers": ["REQ-05", "AC-05"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-07",
+      "description": "Wishlist renderiza coluna de score e chip Alerta ativo.",
+      "kind": "unit",
+      "covers": ["REQ-07", "REQ-08", "REQ-09", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-08",
+      "description": "Modal de configuracao de alerta renderiza campos e salva.",
+      "kind": "unit",
+      "covers": ["REQ-10", "AC-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-09",
+      "description": "Edge case: target_value Decimal sem perda de precisao.",
+      "kind": "edge_case",
+      "covers": ["REQ-01", "RN-01"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar migration Prisma para modelo AnalysisAlertRule + enum AlertCondition (reutilizar existente).",
+      "target": "apps/web/prisma/schema.prisma",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar servico lib/analysis/analysis-alert.service.ts com CRUD e avaliacao lazy.",
+      "target": "apps/web/src/lib/analysis/analysis-alert.service.ts",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar API routes /api/analysis-alerts com GET, POST, PATCH, DELETE.",
+      "target": "apps/web/src/app/api/analysis-alerts/",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Atualizar pagina /wishlist para incluir score, ultimo fundamento e chips de alerta.",
+      "target": "apps/web/src/app/(app)/wishlist/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Criar componente AlertRuleModal e hook useAlertRules.",
+      "target": "apps/web/src/components/analysis/",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Escrever testes TC-01 a TC-09.",
+      "target": "apps/web/src/test/",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Avaliacao lazy pode ficar lenta com muitos alertas — cache de fundamentals por ticker na mesma request e batch de alertas por usuario.",
+    "Metricas de stale exigem logica de data — usar fetched_at do AssetFundamentalsCache com TTL de 24h para determinar stale.",
+    "Muitos alertas disparados simultaneamente podem poluir a UI — mostrar apenas contagem e expandir sob demanda."
+  ],
+  "observability": [
+    "Log de alertas avaliados com resultado (gatilho disparado ou nao) — prefixo [analysis-alert].",
+    "Log de criacao/remocao de alerta por usuario (sem dado pessoal).",
+    "Contagem de alertas ativos por usuario (metrica agregada)."
+  ],
+  "rollback": "Reverter migration do AnalysisAlertRule, remover API routes, reverter wishlist page. Rollback de migration: pnpm --filter web exec prisma migrate down."
+}

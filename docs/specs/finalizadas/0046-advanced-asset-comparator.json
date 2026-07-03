@@ -1,0 +1,264 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0046",
+  "title": "Comparador Avançado de Ativos",
+  "status": "verified",
+  "type": "feature",
+  "created": "2026-07-03",
+  "updated": "2026-07-03",
+  "authors": ["Sisyphus"],
+  "summary": "Criar pagina dedicada de comparacao de ate 6 ativos lado a lado, com fundamentos, scores, dividendos, historico de precos normalizado e exportacao CSV. Reutiliza APIs existentes de analysis, history e dividends, mais endpoint batch opcional.",
+  "motivation": "O comparador atual da carteira foca nas posicoes do usuario. Falta um comparador publico para ativos pesquisados, permitindo avaliar fundamentos, dividendos e risco de multiplos ativos simultaneamente sem sair do DataBolsa — funcionalidade presente em Investidor10 e Status Invest.",
+  "related": {
+    "prd": ["PRD §5", "PRD §6"],
+    "spec_doc": ["SPEC §5 (API market/*)", "SPEC §7 (asset analysis)"],
+    "business_rules": ["RN-01", "RN-10"],
+    "adrs": ["ADR-0016"],
+    "depends_on": ["SPEC-0044"]
+  },
+  "scope": {
+    "in_scope": [
+      "Pagina /ferramentas/comparador-avancado com comparacao de ate 6 ativos",
+      "Busca publica de tickers para adicionar a comparacao",
+      "Comparacao lado a lado de indicadores fundamentalistas agrupados por categoria",
+      "Score total e por categoria para cada ativo",
+      "Tabela de dividendos comparada (DY, ultimo provento, total no periodo)",
+      "Grafico de precos normalizado (base 100) para comparacao de performance",
+      "Destaque visual do melhor/pior indicador sem recomendacao financeira",
+      "Exportacao da tabela de comparacao em CSV",
+      "Reuso de GET /api/market/[ticker]/analysis e GET /api/market/[ticker]/history",
+      "API batch GET /api/market/compare?tickers=... para reduzir chamadas",
+      "Tratamento de dados ausentes sem NaN e fallback gracioso para tickers sem dados"
+    ],
+    "out_of_scope": [
+      "Comparacao com indices de mercado (IBOV, CDI — ja existe no dashboard)",
+      "Comparacao de carteiras de usuario",
+      "Alertas de diferenca entre ativos",
+      "Historico de indicadores fundamentalistas (SPEC-0049)",
+      "Analise setorial agregada (SPEC-0051)"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "A pagina deve permitir comparar de 2 a 6 ativos simultaneamente, com busca por ticker para adicionar/remover.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "A comparacao deve exibir para cada ativo: score total, score por categoria (valuation, qualidade, dividendos, risco), P/L, P/VP, DY, ROE, margem liquida, divida/PL.",
+      "rule_ref": "RN-01",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Ativos de classes diferentes devem exibir apenas indicadores comuns ou separar categorias por classe.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "O melhor e pior valor de cada indicador deve ser destacado visualmente (verde para melhor, vermelho para pior) sem recomendacao financeira explicita.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "Grafico de precos normalizado (base 100) deve permitir comparar performance historica dos ativos selecionados no mesmo grafico.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Tabela de dividendos comparada deve mostrar DY, ultimo provento, total de proventos no periodo carregado e quantidade de eventos.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-07",
+      "description": "Botao de exportacao CSV deve gerar arquivo com todas as linhas da tabela de comparacao.",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-08",
+      "description": "Falha em um ticker nao deve quebrar a comparacao dos demais — usar Promise.allSettled e mostrar estado de erro por ativo.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-09",
+      "description": "Dados stale devem ser sinalizados com icone e asOf visivel.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-10",
+      "description": "Toda UI nova deve usar tokens M3 atuais.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "nenhuma",
+      "change": "none",
+      "notes": "Toda a comparacao usa dados publicos cacheados. Sem alteracao no schema do banco."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/compare",
+      "auth": false,
+      "request": "tickers (string separado por virgula, max 6), opcional class.",
+      "response": "{ items: AssetAnalysis[], failedTickers: string[], asOf: string }",
+      "errors": ["400 para mais de 6 tickers", "200 com failedTickers quando alguns falham"],
+      "notes": "Wrapper batch que chama getAssetAnalysis em paralelo com Promise.allSettled."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuario acessa /ferramentas/comparador-avancado",
+      "when": "a pagina carrega",
+      "then": "ve campo de busca de ticker, area de comparacao vazia e instrucao para adicionar ativos"
+    },
+    {
+      "id": "AC-02",
+      "given": "usuario adiciona PETR4 e VALE3 a comparacao",
+      "when": "os dados carregam",
+      "then": "ve duas colunas com score, indicadores por categoria, tabela de dividendos e grafico de precos"
+    },
+    {
+      "id": "AC-03",
+      "given": "um dos ativos falha ao carregar",
+      "when": "a comparacao e renderizada",
+      "then": "os demais ativos aparecem normalmente e o falho mostra estado de erro"
+    },
+    {
+      "id": "AC-04",
+      "given": "usuario clica em exportar CSV",
+      "when": "o arquivo e gerado",
+      "then": "contem cabecalho com indicadores e linhas com valores de cada ativo"
+    },
+    {
+      "id": "AC-05",
+      "given": "usuario tenta adicionar mais de 6 ativos",
+      "when": "clica em adicionar",
+      "then": "a UI informa limite de 6 ativos e nao adiciona"
+    },
+    {
+      "id": "AC-06",
+      "given": "PETR4 e BTC-USD sao comparados (classes diferentes)",
+      "when": "a tabela renderiza",
+      "then": "mostra apenas indicadores comuns (DY, liquidity) ou separa categorias por classe"
+    },
+    {
+      "id": "AC-07",
+      "given": "GET /api/market/compare?tickers=PETR4,VALE3,INVALIDO",
+      "when": "a API responde",
+      "then": "retorna 200 com items para PETR4 e VALE3, failedTickers inclui INVALIDO"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "GET /api/market/compare retorna analise para tickers validos e lista falhas.",
+      "kind": "integration",
+      "covers": ["REQ-08", "AC-07"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-02",
+      "description": "GET /api/market/compare rejeita mais de 6 tickers com 400.",
+      "kind": "integration",
+      "covers": ["AC-05"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-03",
+      "description": "Componente AdvancedComparator renderiza estado vazio inicial.",
+      "kind": "unit",
+      "covers": ["REQ-01", "AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-04",
+      "description": "Componente renderiza duas colunas de comparacao com scores.",
+      "kind": "unit",
+      "covers": ["REQ-02", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "Falha parcial em um ticker nao quebra a UI.",
+      "kind": "unit",
+      "covers": ["REQ-08", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-06",
+      "description": "Classes diferentes exibem apenas indicadores comuns ou separam categorias.",
+      "kind": "unit",
+      "covers": ["REQ-03", "AC-06"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-07",
+      "description": "Export CSV gera cabecalho e linhas corretos.",
+      "kind": "unit",
+      "covers": ["REQ-07", "AC-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-08",
+      "description": "Best/worst indicator destacado visualmente sem texto de recomendacao.",
+      "kind": "unit",
+      "covers": ["REQ-04"],
+      "mocks_external": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar GET /api/market/compare com validacao, Promise.allSettled e resposta parcial.",
+      "target": "apps/web/src/app/api/market/compare/route.ts",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar componente AdvancedComparator com busca, adicao/remocao de ativos e tabela comparativa.",
+      "target": "apps/web/src/components/tools/AdvancedComparator.tsx",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Adicionar grafico de precos normalizado (base 100) com Recharts.",
+      "target": "apps/web/src/components/tools/ComparatorPriceChart.tsx",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Adicionar tabela de dividendos comparada e export CSV.",
+      "target": "apps/web/src/components/tools/ComparatorDividendsTable.tsx",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Criar pagina /ferramentas/comparador-avancado com layout responsivo.",
+      "target": "apps/web/src/app/(public)/ferramentas/comparador-avancado/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Escrever testes TC-01 a TC-08.",
+      "target": "apps/web/src/test/",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Grafico com 6 ativos pode ficar poluido — limitar a 6 e usar cores da paleta categorical do design system.",
+    "Busca de ticker pode ser lenta se bater na API a cada keystroke — usar debounce de 300ms e cache de resultados.",
+    "Export CSV com formatacao brasileira (virgula decimal) pode quebrar em Excel — usar ponto como separador e documentar."
+  ],
+  "observability": [
+    "Log de comparacoes realizadas com contagem de ativos (prefixo [comparator]).",
+    "Log de falha em ticker individual durante comparacao batch."
+  ],
+  "rollback": "Remover /api/market/compare e pagina /ferramentas/comparador-avancado. Sem migration necessaria."
+}

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { AssetClass } from '@/types/api';
 import type { HighlightItem } from '@/lib/market/highlights-data';
 
 const mockFetchBrapiQuote = vi.hoisted(() => vi.fn());
@@ -15,7 +16,7 @@ vi.mock('@/lib/market/market-cache', () => ({
 }));
 
 describe('fetchAssetsForB3', () => {
-  let fetchAssetsForB3: (tickers: string[], assetClass: string) => Promise<HighlightItem[]>;
+  let fetchAssetsForB3: (tickers: string[], assetClass: AssetClass) => Promise<HighlightItem[]>;
 
   beforeEach(async () => {
     vi.clearAllMocks();

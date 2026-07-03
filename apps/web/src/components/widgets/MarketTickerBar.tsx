@@ -55,7 +55,7 @@ export default function MarketTickerBar() {
 
   return (
     <section className="mx-auto mt-6 max-w-max-width px-margin-mobile md:mt-8 md:px-margin-desktop" aria-label="Cotações de mercado">
-      <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar snap-x snap-mandatory">
+      <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar snap-x snap-mandatory justify-start min-[1130px]:justify-center">
         {indices.map((idx) => {
           const trend = detectTrend(idx.changePercent);
           return (

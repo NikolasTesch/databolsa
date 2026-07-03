@@ -35,6 +35,9 @@ export async function GET(request: NextRequest) {
 
   const typeParam = request.nextUrl.searchParams.get('type') ?? 'STOCK_BR';
   const limitParam = parseInt(request.nextUrl.searchParams.get('limit') ?? '10', 10);
+  if (Number.isNaN(limitParam) || limitParam < 1) {
+    return NextResponse.json({ message: 'limit inválido' }, { status: 400 });
+  }
   const limit = Math.min(limitParam, MAX_LIMIT);
 
   if (!VALID_TYPES.has(typeParam)) {

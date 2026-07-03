@@ -76,7 +76,8 @@ export async function getCryptoOverview(): Promise<CryptoOverviewResult> {
       .slice(0, 3);
 
     return { assets: items, trending };
-  } catch {
+  } catch (err) {
+    console.warn(`[crypto-overview] fetch failed: ${err instanceof Error ? err.message : String(err)}`);
     return { assets: [], trending: [] };
   }
 }

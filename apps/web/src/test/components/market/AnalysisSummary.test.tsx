@@ -58,6 +58,36 @@ describe('AnalysisSummary', () => {
     expect(screen.queryByText(/venda/i)).not.toBeInTheDocument();
   });
 
+  it('renders DataQualityBadge when dataQuality is present', () => {
+    render(
+      <AnalysisSummary
+        analysis={{
+          ...baseAnalysis,
+          dataQuality: {
+            coverageScore: '100',
+            level: 'complete',
+            missingFields: [],
+            staleFields: [],
+            sourceWarnings: [],
+            lastUpdatedAt: '2026-07-03T12:00:00.000Z',
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText('Dados completos')).toBeInTheDocument();
+    const scores = screen.getAllByText('100%');
+    expect(scores.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('does not render DataQualityBadge when dataQuality is absent', () => {
+    render(<AnalysisSummary analysis={baseAnalysis} />);
+
+    expect(screen.queryByText('Dados completos')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dados parciais')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dados insuficientes')).not.toBeInTheDocument();
+  });
+
   it('renders insufficient data instead of NaN for unknown score', () => {
     render(
       <AnalysisSummary

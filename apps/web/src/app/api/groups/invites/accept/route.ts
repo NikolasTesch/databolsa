@@ -84,11 +84,12 @@ export async function POST(request: NextRequest) {
       { success: true, group_id: result.group_id, role: result.role },
       { status: 200 },
     );
-  } catch (err: any) {
-    if (err.status) {
+  } catch (err: unknown) {
+    if (err instanceof Error && 'status' in err) {
+      const apiErr = err as Error & { status: number; code?: string };
       return NextResponse.json(
-        { message: err.message, error: { code: err.code } },
-        { status: err.status },
+        { message: apiErr.message, error: { code: apiErr.code } },
+        { status: apiErr.status },
       );
     }
     throw err;

@@ -1,4 +1,5 @@
 import type { AssetAnalysis, AnalysisScoreBreakdown } from '@/lib/analysis/asset-analysis.types';
+import { DataQualityBadge } from '@/components/analysis/DataQualityBadge';
 
 interface AnalysisSummaryProps {
   analysis: AssetAnalysis;
@@ -38,14 +39,18 @@ export function AnalysisSummary({ analysis }: AnalysisSummaryProps) {
           </p>
         </div>
 
-        <div
-          className={
-            hasInsufficientData
-              ? 'rounded-lg border border-border bg-surface-container-low px-4 py-2 text-sm font-semibold text-on-surface-variant'
-              : 'rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary'
-          }
-        >
-          {scoreLabel(analysis)}
+        <div className="flex items-center gap-3">
+          {analysis.dataQuality && <DataQualityBadge report={analysis.dataQuality} />}
+
+          <div
+            className={
+              hasInsufficientData
+                ? 'rounded-lg border border-border bg-surface-container-low px-4 py-2 text-sm font-semibold text-on-surface-variant'
+                : 'rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary'
+            }
+          >
+            {scoreLabel(analysis)}
+          </div>
         </div>
       </div>
 

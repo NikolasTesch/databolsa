@@ -1,4 +1,5 @@
 import { Decimal } from 'decimal.js';
+import { coinGeckoFetch } from './coingecko-fetch';
 
 export interface MarketQuote {
   price: Decimal;
@@ -45,8 +46,7 @@ export async function fetchCoinGeckoMulti(
   coinIds: string[],
 ): Promise<Record<string, MarketQuote>> {
   const ids = coinIds.join(',');
-  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=brl&include_24hr_change=true&include_24hr_vol=true`;
-  const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  const response = await coinGeckoFetch(`/simple/price?ids=${ids}&vs_currencies=brl&include_24hr_change=true&include_24hr_vol=true`);
   if (!response.ok) throw new Error(`CoinGecko returned ${response.status}`);
   const data = await response.json();
   const result: Record<string, MarketQuote> = {};
@@ -121,6 +121,7 @@ export async function fetchUsdBrlRate(): Promise<{ price: Decimal; changePercent
 
 export interface DividendEntry {
   paymentDate: string;
+  lastDatePrior: string;
   value: string;
   type: string;
 }
@@ -137,15 +138,13 @@ export async function fetchBrapiDividends(symbol: string): Promise<DividendEntry
   const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
   if (!response.ok) throw new Error(`brapi dividends returned ${response.status} for ${symbol}`);
   const data = await response.json();
-  const cashDividends: Array<{ paymentDate?: string; rate?: number; type?: string }> =
+  const cashDividends: Array<{ paymentDate?: string; rate?: number; label?: string; lastDatePrior?: string }> =
     data?.results?.[0]?.dividendsData?.cashDividends ?? [];
-  const stockDividends: Array<{ paymentDate?: string; rate?: number; type?: string }> =
-    data?.results?.[0]?.dividendsData?.stockDividends ?? [];
-  const allDividends = [...cashDividends, ...stockDividends];
-  const result = allDividends.map((d) => ({
+  const result = cashDividends.map((d) => ({
     paymentDate: d.paymentDate?.split('T')[0] ?? '',
+    lastDatePrior: d.lastDatePrior?.split('T')[0] ?? '',
     value: d.rate != null ? new Decimal(String(d.rate)).toFixed(4) : '0.0000',
-    type: d.type ?? 'Dividendo',
+    type: d.label ?? 'Dividendo',
   }));
   dividendCache.set(symbol, { data: result, expiresAt: Date.now() + DIVIDEND_TTL_MS });
   return result;

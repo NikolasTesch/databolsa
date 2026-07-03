@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Decimal } from 'decimal.js';
 import { inferAssetClassForFundamentals } from '@/lib/fundamentals/fundamentals.service';
 import { CRYPTO_TICKER_MAP } from '@/lib/quotes/ticker-map';
+import { coinGeckoFetch } from '@/lib/market/coingecko-fetch';
 
 type Range = '1d' | '1w' | '15d' | '1m' | '6m' | '1y' | '5y';
 
@@ -10,7 +11,8 @@ const VALID_RANGES = new Set<string>(['1d', '1w', '15d', '1m', '6m', '1y', '5y']
 const RANGE_TO_BRAPI: Record<Range, string> = {
   '1d': '1d',
   '1w': '5d',
-  '15d': '15d',
+  // Brapi não suporta '15d'; buscamos '1mo' e truncamos no servidor
+  '15d': '1mo',
   '1m': '1mo',
   '6m': '6mo',
   '1y': '1y',
@@ -41,12 +43,19 @@ async function fetchBrapiHistory(symbol: string, range: Range) {
   console.debug(`[brapi] results count: ${data?.results?.length}, has historicalDataPrice: ${!!data?.results?.[0]?.historicalDataPrice}`);
   const prices: Array<{ date: string; close: number }> = data?.results?.[0]?.historicalDataPrice ?? [];
 
-  return prices.map((p) => ({
+  const mapped = prices.map((p) => ({
     date: typeof p.date === 'number'
       ? new Date(p.date * 1000).toISOString().split('T')[0]
       : String(p.date).split('T')[0],
     close: new Decimal(String(p.close)).toFixed(2),
   }));
+
+  // Para o range '15d', buscamos 1mo na Brapi e truncamos para os últimos 15 pontos
+  if (range === '15d') {
+    return mapped.slice(-15);
+  }
+
+  return mapped;
 }
 
 async function fetchCoinGeckoHistory(symbol: string, range: Range) {
@@ -54,10 +63,9 @@ async function fetchCoinGeckoHistory(symbol: string, range: Range) {
   if (!coinId) throw new Error(`Unknown crypto: ${symbol}`);
 
   const days = RANGE_TO_DAYS[range];
-  const url = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=brl&days=${days}&interval=daily`;
 
-  console.debug(`[coingecko] GET ${url}`);
-  const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  console.debug(`[coingecko] fetching market_chart for ${coinId}, days=${days}`);
+  const response = await coinGeckoFetch(`/coins/${coinId}/market_chart?vs_currency=brl&days=${days}&interval=daily`);
   console.debug(`[coingecko] response status ${response.status}`);
   if (!response.ok) throw new Error(`CoinGecko returned ${response.status}`);
   const data = await response.json();

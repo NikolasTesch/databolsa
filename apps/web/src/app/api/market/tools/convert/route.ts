@@ -3,6 +3,7 @@ import { Decimal } from 'decimal.js';
 import { createMemoryCache } from '@/lib/cache/memory-cache';
 import { CRYPTO_TICKER_MAP } from '@/lib/quotes/ticker-map';
 import prisma from '@/lib/prisma';
+import { coinGeckoFetch } from '@/lib/market/coingecko-fetch';
 
 const RATE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -127,10 +128,9 @@ async function fetchCryptoRate(from: string, to: string): Promise<{ rate: Decima
     if (!coinId) throw new Error(`Unknown crypto ticker: ${from}`);
 
     const vsCurrency = to.toLowerCase();
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=${vsCurrency}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-    if (!res.ok) throw new Error(`CoinGecko returned ${res.status}`);
-    const data = await res.json();
+    const response = await coinGeckoFetch(`/simple/price?ids=${coinId}&vs_currencies=${vsCurrency}`);
+    if (!response.ok) throw new Error(`CoinGecko returned ${response.status}`);
+    const data = await response.json();
 
     const price = data?.[coinId]?.[vsCurrency];
     if (price == null) throw new Error(`No price for ${from} in ${to}`);

@@ -3,6 +3,7 @@ import type { AssetClass } from '@/types/api';
 import type { FundamentalsAdapter, NormalizedFundamentals } from './fundamentals-adapter.interface';
 import { EMPTY_FUNDAMENTALS } from './fundamentals-adapter.interface';
 import { CRYPTO_TICKER_MAP } from '@/lib/quotes/ticker-map';
+import { coinGeckoFetch } from '@/lib/market/coingecko-fetch';
 
 function safeDecimalStr(value: unknown): string | null {
   if (value === null || value === undefined || value === '') return null;
@@ -23,10 +24,8 @@ export class CoinGeckoFundamentalsAdapter implements FundamentalsAdapter {
     const upper = symbol.toUpperCase();
     const coinId = CRYPTO_TICKER_MAP[upper] ?? symbol.toLowerCase();
 
-    const url = `https://api.coingecko.com/api/v3/coins/${coinId}?market_data=true&community_data=false&developer_data=false`;
-
     try {
-      const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      const response = await coinGeckoFetch(`/coins/${coinId}?market_data=true&community_data=false&developer_data=false`);
       if (!response.ok) {
         console.warn(`[fundamentals] coingecko returned ${response.status} for ${coinId}`);
         return { ...EMPTY_FUNDAMENTALS };

@@ -1,0 +1,284 @@
+{
+  "$schema": "../spec.schema.json",
+  "id": "SPEC-0048",
+  "title": "Eventos Corporativos e Calendário de Resultados",
+  "status": "verified",
+  "type": "feature",
+  "created": "2026-07-03",
+  "updated": "2026-07-03",
+  "authors": ["Sisyphus"],
+  "summary": "Adicionar infraestrutura de eventos corporativos: datas com/ex de dividendos, pagamentos de JCP, resultados trimestrais, assembleias e desdobramentos. Criar cache dedicado, API publica, pagina de calendario e integracao na pagina do ativo — substituindo o placeholder atual de \"Proximos Eventos\".",
+  "motivation": "A pagina de ativo tem um bloco \"Proximos Eventos\" que atualmente exibe apenas placeholder. Eventos sao parte central da analise de ativos — investidores tomam decisoes baseadas em calendario de proventos e resultados.",
+  "related": {
+    "prd": ["PRD §5", "PRD §6"],
+    "spec_doc": ["SPEC §6 (fontes externas)", "SPEC §7 (asset analysis)"],
+    "business_rules": ["RN-01", "RN-10"],
+    "adrs": ["ADR-0005", "ADR-0016"],
+    "depends_on": ["SPEC-0044"]
+  },
+  "scope": {
+    "in_scope": [
+      "Modelo CorporateEventCache com symbol, source, event_type, event_date, description, data (Json), fetched_at",
+      "Fetchers para dados de eventos: brapi dividendos (existente), dados curados para eventos principais, fallback estatico para ativos sem cobertura",
+      "API GET /api/market/events com filtros por ticker, type, from, to, limit (max 50)",
+      "API GET /api/market/[ticker]/events — wrapper para eventos de um ticker especifico",
+      "Pagina publica /calendario-eventos com visualizacao por mes e filtros",
+      "Bloco de eventos real na pagina /ativos/[ticker] substituindo o placeholder",
+      "Secao de eventos no dashboard para ativos da carteira"
+    ],
+    "out_of_scope": [
+      "Fontes pagas de eventos corporativos",
+      "Webhook ou notificacao de novos eventos",
+      "Edicao manual de eventos pelo usuario",
+      "Historico de eventos passados (apenas proximos 12 meses)",
+      "Integracao com calendario externo (Google Calendar, etc.)"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "description": "Criar tabela CorporateEventCache com symbol, source, event_type (DIVIDEND_EX, DIVIDEND_PAYMENT, EARNINGS, SHAREHOLDER_MEETING, SPLIT, REVERSE_SPLIT, FILING), event_date, description, data Json, fetched_at.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-02",
+      "description": "GET /api/market/events deve aceitar query params: ticker, type, from (data inicio), to (data fim), limit (max 50).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-03",
+      "description": "Eventos devem ser populados inicialmente de fontes ja existentes: brapi dividendos e lista curada de datas de resultados.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-04",
+      "description": "Cache de eventos deve ter TTL de 6 horas com fallback stale conforme RN-10.",
+      "rule_ref": "RN-10",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-05",
+      "description": "A pagina /ativos/[ticker] deve substituir o placeholder de eventos pelo bloco real, mostrando ate 5 proximos eventos ordenados por data.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-06",
+      "description": "Pagina /calendario-eventos deve exibir grid mensal com cards de eventos, filtros por tipo e ticker, e link para /ativos/[ticker].",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-07",
+      "description": "Dashboard deve ter secao \"Proximos eventos da carteira\" listando eventos dos ativos que o usuario possui.",
+      "rule_ref": "RN-11",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-08",
+      "description": "Toda UI nova deve usar tokens M3 atuais.",
+      "priority": "must"
+    }
+  ],
+  "data_model": [
+    {
+      "entity": "CorporateEventCache",
+      "change": "create",
+      "fields": [
+        "id String @id @default(uuid())",
+        "symbol String",
+        "source DataSource",
+        "event_type String",
+        "event_date DateTime @db.Date",
+        "description String?",
+        "data Json?",
+        "fetched_at DateTime @default(now())"
+      ],
+      "notes": "Novo modelo. Unique index em [symbol, event_type, event_date]. Sem chave estrangeira — eventos sao publicos."
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/market/events",
+      "auth": false,
+      "request": "Query: ticker (opcional), type (opcional), from (ISO date), to (ISO date), limit (default 20, max 50).",
+      "response": "{ data: CorporateEvent[], total: number, asOf: string, stale: boolean }",
+      "errors": ["400 para datas invalidas", "400 para limit > 50"],
+      "notes": "Cache de 6h. Busca de fonte externa quando necessario."
+    },
+    {
+      "method": "GET",
+      "path": "/api/market/[ticker]/events",
+      "auth": false,
+      "request": "Path ticker; query from, to, limit.",
+      "response": "{ data: CorporateEvent[], asOf: string }",
+      "errors": ["404 para ticker invalido"],
+      "notes": "Wrapper que chama GET /api/market/events com ticker preenchido."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-01",
+      "given": "usuario acessa /ativos/PETR4",
+      "when": "a pagina carrega com eventos disponiveis",
+      "then": "o bloco de eventos exibe ate 5 cards com data, tipo e descricao, ordenados por data"
+    },
+    {
+      "id": "AC-02",
+      "given": "usuario acessa /calendario-eventos",
+      "when": "a pagina carrega",
+      "then": "exibe grid mensal com eventos, filtro por tipo e ticker"
+    },
+    {
+      "id": "AC-03",
+      "given": "GET /api/market/events?ticker=PETR4&from=2026-07-01&to=2026-12-31",
+      "when": "a API responde",
+      "then": "retorna eventos para PETR4 no periodo, ordenados por event_date"
+    },
+    {
+      "id": "AC-04",
+      "given": "fonte externa falha e existe cache valido",
+      "when": "GET /api/market/events e chamado",
+      "then": "retorna dados do cache com stale:true"
+    },
+    {
+      "id": "AC-05",
+      "given": "fonte externa falha e nao existe cache",
+      "when": "GET /api/market/events e chamado",
+      "then": "retorna 503 com mensagem de dados indisponiveis"
+    },
+    {
+      "id": "AC-06",
+      "given": "usuario autenticado acessa o dashboard",
+      "when": "existem eventos para ativos da carteira",
+      "then": "secao \"Proximos eventos\" lista ate 5 eventos ordenados"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "TC-01",
+      "description": "CorporateEventCache: inserir e ler evento confirmando campos.",
+      "kind": "unit",
+      "covers": ["REQ-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-02",
+      "description": "GET /api/market/events retorna eventos com filtro de ticker e periodo.",
+      "kind": "integration",
+      "covers": ["REQ-02", "AC-03"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-03",
+      "description": "GET /api/market/events retorna stale:true quando cache expirado e fonte falha.",
+      "kind": "integration",
+      "covers": ["REQ-04", "AC-04"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-04",
+      "description": "GET /api/market/events retorna 503 sem cache disponivel.",
+      "kind": "integration",
+      "covers": ["AC-05"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-05",
+      "description": "Pagina /ativos/[ticker] renderiza bloco de eventos.",
+      "kind": "unit",
+      "covers": ["REQ-05", "AC-01"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-06",
+      "description": "Pagina /calendario-eventos renderiza grid mensal com eventos mockados.",
+      "kind": "unit",
+      "covers": ["REQ-06", "AC-02"],
+      "mocks_external": true
+    },
+    {
+      "id": "TC-07",
+      "description": "Eventos futuros sao ordenados por data ascendente.",
+      "kind": "unit",
+      "covers": ["AC-01"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-08",
+      "description": "Edge case: evento sem descricao nao quebra renderizacao.",
+      "kind": "edge_case",
+      "covers": ["REQ-05"],
+      "mocks_external": false
+    },
+    {
+      "id": "TC-09",
+      "description": "GET /api/market/events rejeita limit > 50 com 400.",
+      "kind": "integration",
+      "covers": ["REQ-02"],
+      "mocks_external": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-01",
+      "description": "Criar migration Prisma para modelo CorporateEventCache.",
+      "target": "apps/web/prisma/schema.prisma",
+      "done": false
+    },
+    {
+      "id": "T-02",
+      "description": "Criar fetchers de eventos em lib/market/event-fetchers.ts (brapi dividendos + curated).",
+      "target": "apps/web/src/lib/market/event-fetchers.ts",
+      "done": false
+    },
+    {
+      "id": "T-03",
+      "description": "Criar servico getEvents em lib/market/events.service.ts com cache, stale e integracao de fontes.",
+      "target": "apps/web/src/lib/market/events.service.ts",
+      "done": false
+    },
+    {
+      "id": "T-04",
+      "description": "Criar API GET /api/market/events e GET /api/market/[ticker]/events.",
+      "target": "apps/web/src/app/api/market/",
+      "done": false
+    },
+    {
+      "id": "T-05",
+      "description": "Criar componente EventsList e substituir placeholder em /ativos/[ticker]/page.tsx.",
+      "target": "apps/web/src/components/market/EventsList.tsx",
+      "done": false
+    },
+    {
+      "id": "T-06",
+      "description": "Criar pagina /calendario-eventos com grid mensal e filtros.",
+      "target": "apps/web/src/app/(public)/calendario-eventos/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-07",
+      "description": "Adicionar secao de eventos no dashboard para ativos da carteira.",
+      "target": "apps/web/src/app/(app)/dashboard/page.tsx",
+      "done": false
+    },
+    {
+      "id": "T-08",
+      "description": "Escrever testes TC-01 a TC-09.",
+      "target": "apps/web/src/test/",
+      "done": false
+    }
+  ],
+  "risks": [
+    "Fontes gratuitas podem nao cobrir todos os tipos de evento — mitigar com lista curada para ativos principais e fallback gracioso.",
+    "Eventos duplicados entre fontes — usar unique index [symbol, event_type, event_date] com upsert.",
+    "Timezone de datas pode causar off-by-one — armazenar como Date sem timezone e exibir no fuso do usuario."
+  ],
+  "observability": [
+    "Log de eventos cacheados vs buscados (prefixo [events]).",
+    "Log de falha de fonte externa de eventos.",
+    "Contagem de eventos por tipo (metrica agregada)."
+  ],
+  "rollback": "Reverter migration CorporateEventCache, remover API routes e paginas. Rollback: pnpm --filter web exec prisma migrate down."
+}

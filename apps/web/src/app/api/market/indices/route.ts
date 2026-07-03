@@ -41,7 +41,8 @@ async function fetchCdiRate(): Promise<string> {
     );
     if (cached?.name && cached.name !== 'CDI') return cached.name;
     return '10,65%';
-  } catch {
+  } catch (err) {
+    console.warn(`[indices] CDI fetch failed: ${err instanceof Error ? err.message : String(err)}`);
     return '10,65%';
   }
 }

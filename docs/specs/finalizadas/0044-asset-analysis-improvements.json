@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0044",
   "title": "Melhorias de analise de ativos, score e screener",
-  "status": "approved",
+  "status": "verified",
   "type": "feature",
   "created": "2026-07-02",
   "updated": "2026-07-02",
@@ -354,31 +354,31 @@
       "id": "T-06",
       "description": "Criar componentes AnalysisSummary, IndicatorCategoryGrid, PeerComparisonTable e DividendAnalysisPanel em apps/web/src/components/market/.",
       "target": "apps/web/src/components/market/",
-      "done": false
+      "done": true
     },
     {
       "id": "T-07",
       "description": "Atualizar apps/web/src/app/(public)/ativos/[ticker]/page.tsx para consumir getAssetAnalysis e renderizar os novos blocos sem remover historico, setor, noticias e eventos.",
       "target": "apps/web/src/app/(public)/ativos/[ticker]/page.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-08",
       "description": "Criar FundamentalScreener e manter ScreenerAvaliador como wrapper/export compat, usando query keys se o consumo for client-side.",
       "target": "apps/web/src/components/tools/",
-      "done": false
+      "done": true
     },
     {
       "id": "T-09",
       "description": "Criar PortfolioDiagnostics e adicionar aba diagnostico em apps/web/src/app/(app)/portfolio/page.tsx usando summary.positions e assets ja autorizados.",
       "target": "apps/web/src/components/portfolio/PortfolioDiagnostics.tsx; apps/web/src/app/(app)/portfolio/page.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-10",
       "description": "Adicionar testes Vitest/API/componentes cobrindo TC-01..TC-15, com APIs externas mockadas e sem rede.",
       "target": "apps/web/src/test/",
-      "done": false
+      "done": true
     }
   ],
   "risks": [

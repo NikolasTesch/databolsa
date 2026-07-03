@@ -58,9 +58,9 @@ export default async function DividendsSection() {
               </tr>
             </thead>
             <tbody>
-              {rows.length > 0 ? rows.map((row) => (
+              {rows.length > 0 ? rows.map((row, idx) => (
                 <tr
-                  key={row.ticker}
+                  key={`${row.ticker}-${idx}`}
                   className="border-b border-border/50 last:border-b-0 hover:bg-surface-muted/50 transition-colors cursor-pointer focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary rounded"
                 >
                   <td className="px-4 py-3">

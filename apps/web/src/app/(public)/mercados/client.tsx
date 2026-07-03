@@ -28,6 +28,10 @@ interface HighlightItem {
   price: string;
   changePercent: string;
   stale: boolean;
+  pl: string | null;
+  dy: string | null;
+  volume: string | null;
+  mktCap: string | null;
 }
 
 interface NewsArticle {
@@ -303,7 +307,7 @@ export function MercadosClient() {
 
       try {
         const [highlightsRes, newsRes] = await Promise.all([
-          fetch(`/api/market/highlights?type=${activeTab}&limit=50`),
+          fetch(`/api/market/highlights/full?type=${activeTab}&limit=50`),
           fetch('/api/market/news?limit=4'),
         ]);
 
@@ -407,10 +411,10 @@ export function MercadosClient() {
       price: h.price,
       changePercent: h.changePercent,
       trend: detectTrend(h.changePercent) as 'up' | 'down' | 'flat',
-      pl: '—',
-      dy: '—',
-      volume: '—',
-      mktCap: '—',
+      pl: h.pl ?? '—',
+      dy: h.dy ?? '—',
+      volume: h.volume ?? '—',
+      mktCap: h.mktCap ?? '—',
     }));
 
     return { rows, totalPages: total };

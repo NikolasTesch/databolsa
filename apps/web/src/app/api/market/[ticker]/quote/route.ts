@@ -7,6 +7,7 @@ import { inferAssetClassForFundamentals } from '@/lib/fundamentals/fundamentals.
 import { CRYPTO_TICKER_MAP } from '@/lib/quotes/ticker-map';
 import { CRYPTO_ID_TO_NAME } from '@/lib/market/curated-lists';
 import { jsonError } from '@/lib/http/errors';
+import { coinGeckoFetch } from '@/lib/market/coingecko-fetch';
 
 const CRYPTO_TICKER_TO_ID: Record<string, string> = Object.fromEntries(
   Object.entries(CRYPTO_TICKER_MAP).map(([ticker, id]) => [ticker, id]),
@@ -66,8 +67,7 @@ async function fetchFinnhubQuote(symbol: string) {
 async function fetchCoinGeckoQuote(symbol: string) {
   const coinId = CRYPTO_TICKER_TO_ID[symbol.toUpperCase()];
   if (!coinId) throw new Error(`Unknown crypto: ${symbol}`);
-  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=brl&include_24hr_change=true`;
-  const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  const response = await coinGeckoFetch(`/simple/price?ids=${coinId}&vs_currencies=brl&include_24hr_change=true`);
   if (!response.ok) throw new Error(`CoinGecko returned ${response.status}`);
   const data = await response.json();
   if (!data[coinId]?.brl) throw new Error(`No price for ${symbol}`);

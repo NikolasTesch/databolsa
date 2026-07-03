@@ -3,6 +3,7 @@ import { getFundamentals } from '@/lib/fundamentals/fundamentals.service';
 import type { NormalizedFundamentals } from '@/lib/fundamentals/fundamentals-adapter.interface';
 import { getRelatedTickers, getSectorInfo } from '@/lib/market/sector-data';
 import { calculateAssetAnalysisScore } from './asset-analysis-score';
+import { calculateDataQualityScore } from './data-quality';
 import type { AssetAnalysis, PeerComparisonItem } from './asset-analysis.types';
 
 const MAX_PEERS = 5;
@@ -61,6 +62,12 @@ export async function getAssetAnalysis(
     result.status === 'fulfilled' ? [result.value] : [],
   );
 
+  const dataQuality = calculateDataQualityScore(
+    fundamentals.indicators,
+    fundamentals.assetClass,
+    fundamentals.asOf,
+  );
+
   return {
     ticker: symbol,
     name: symbol,
@@ -75,5 +82,6 @@ export async function getAssetAnalysis(
     breakdown: score.breakdown,
     alerts: score.alerts,
     peers,
+    dataQuality,
   };
 }

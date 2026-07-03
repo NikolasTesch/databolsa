@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: any;
+  let body: { email?: unknown; password?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -35,8 +35,11 @@ export async function POST(request: NextRequest) {
   }
 
   const { email, password } = body;
-  if (!email || !password) {
-    return jsonError('INVALID_INPUT', 'Email e senha são obrigatórios', 400);
+  if (typeof email !== 'string' || !email.trim()) {
+    return jsonError('INVALID_EMAIL', 'Email inválido', 400);
+  }
+  if (typeof password !== 'string' || !password) {
+    return jsonError('INVALID_PASSWORD', 'Senha é obrigatória', 400);
   }
 
   const user = await prisma.user.findUnique({

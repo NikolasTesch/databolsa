@@ -3,11 +3,16 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { AssetClass } from '@/types/api';
 import { inferAssetClassForFundamentals, getFundamentals } from '@/lib/fundamentals/fundamentals.service';
+import { getAssetAnalysis } from '@/lib/analysis/asset-analysis.service';
 import { AssetHeader } from '@/components/market/AssetHeader';
-import { IndicatorGrid } from '@/components/market/IndicatorGrid';
+import { AnalysisSummary } from '@/components/market/AnalysisSummary';
+import { IndicatorCategoryGrid } from '@/components/market/IndicatorCategoryGrid';
 import { PriceHistorySection } from '@/components/market/PriceHistorySection';
+import { PeerComparisonTable } from '@/components/market/PeerComparisonTable';
 import { DividendsTable } from '@/components/market/DividendsTable';
+import { DividendAnalysisPanel } from '@/components/market/DividendAnalysisPanel';
 import { RelatedNewsSection } from '@/components/market/RelatedNewsSection';
+import { EventsList } from '@/components/market/EventsList';
 import { Decimal } from 'decimal.js';
 import { DataSource } from '@prisma/client';
 import { fetchCachedMarketValue } from '@/lib/market/market-cache';
@@ -109,10 +114,11 @@ export default async function AssetAnalysisPage({ params, searchParams }: PagePr
   const classHint = searchParams.class as AssetClass | undefined;
   const assetClass = classHint ?? inferAssetClassForFundamentals(ticker);
 
-  const [quoteResult, fundamentalsResult, usdBrlResult] = await Promise.allSettled([
+  const [quoteResult, fundamentalsResult, usdBrlResult, analysisResult] = await Promise.allSettled([
     getQuoteData(ticker, assetClass),
     getFundamentals(ticker, assetClass),
     fetchUsdBrlRate(),
+    getAssetAnalysis(ticker, assetClass),
   ]);
 
   if (quoteResult.status === 'rejected' || quoteResult.value.cached === null) {
@@ -167,15 +173,28 @@ export default async function AssetAnalysisPage({ params, searchParams }: PagePr
         industry={sectorInfo?.industry}
       />
 
+      {/* Analysis Summary */}
+      {analysisResult.status === 'fulfilled' && (
+        <section className="mt-6">
+          <AnalysisSummary analysis={analysisResult.value} />
+        </section>
+      )}
+
+      {/* Indicadores Fundamentalistas */}
       {fundamentals && (
         <section className="mt-8">
           <div className="flex items-center gap-2 mb-4">
             <span className="material-symbols-outlined text-primary">monitoring</span>
             <h2 className="text-lg font-semibold text-on-surface">Indicadores Fundamentalistas</h2>
           </div>
-          <IndicatorGrid
+          <IndicatorCategoryGrid
             indicators={fundamentals.indicators}
             assetClass={assetClass}
+            staleFields={
+              analysisResult.status === 'fulfilled'
+                ? analysisResult.value.dataQuality?.staleFields
+                : undefined
+            }
           />
         </section>
       )}
@@ -201,7 +220,48 @@ export default async function AssetAnalysisPage({ params, searchParams }: PagePr
         </section>
       )}
 
-      {/* Ativos Relacionados (mesmo setor) */}
+      {/* Pares comparaveis da analise */}
+      {analysisResult.status === 'fulfilled' && analysisResult.value.peers.length > 0 && (
+        <section className="mt-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-primary">compare_arrows</span>
+            <h2 className="text-lg font-semibold text-on-surface">Comparacao com Pares</h2>
+          </div>
+          <PeerComparisonTable peers={analysisResult.value.peers} />
+        </section>
+      )}
+
+      {/* Histórico de Preços */}
+      <section className="mt-8">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="material-symbols-outlined text-primary">show_chart</span>
+          <h2 className="text-lg font-semibold text-on-surface">Histórico de Preços</h2>
+        </div>
+        <PriceHistorySection ticker={ticker} />
+      </section>
+
+      {/* Proventos */}
+      {hasDividends && dividends.length > 0 && (
+        <section className="mt-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-primary">payments</span>
+            <h2 className="text-lg font-semibold text-on-surface">Proventos</h2>
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <DividendAnalysisPanel dividends={dividends} assetClass={assetClass} />
+            <DividendsTable dividends={dividends} assetClass={assetClass} />
+          </div>
+        </section>
+      )}
+
+      {/* Notícias Relacionadas */}
+      <section className="mt-8">
+        <Suspense fallback={null}>
+          <RelatedNewsSection ticker={ticker} limit={6} />
+        </Suspense>
+      </section>
+
+      {/* Ativos Relacionados (mesmo setor) — movido para o final */}
       {relatedTickers.length > 0 && (
         <section className="mt-8">
           <div className="flex items-center gap-2 mb-4">
@@ -230,48 +290,15 @@ export default async function AssetAnalysisPage({ params, searchParams }: PagePr
         </section>
       )}
 
-      <section className="mt-8">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="material-symbols-outlined text-primary">show_chart</span>
-          <h2 className="text-lg font-semibold text-on-surface">Histórico de Preços</h2>
-        </div>
-        <PriceHistorySection ticker={ticker} />
-      </section>
-
-      {hasDividends && dividends.length > 0 && (
-        <section className="mt-8">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="material-symbols-outlined text-primary">payments</span>
-            <h2 className="text-lg font-semibold text-on-surface">Proventos</h2>
-          </div>
-          <DividendsTable dividends={dividends} assetClass={assetClass} />
-        </section>
-      )}
-
-      <section className="mt-8">
-        <Suspense fallback={null}>
-          <RelatedNewsSection ticker={ticker} limit={6} />
-        </Suspense>
-      </section>
-
       {/* Próximos Eventos */}
       <section className="mt-8">
         <div className="flex items-center gap-2 mb-4">
           <span className="material-symbols-outlined text-primary">event</span>
           <h2 className="text-lg font-semibold text-on-surface">Próximos Eventos</h2>
         </div>
-        <div className="bg-surface border border-border rounded-lg p-8 flex flex-col items-center justify-center text-center gap-3">
-          <span className="material-symbols-outlined text-[2.5rem] text-on-surface-variant/50">
-            event_busy
-          </span>
-          <p className="text-sm text-on-surface-variant">
-            Nenhum evento encontrado para os próximos dias.
-          </p>
-          <p className="text-caption text-on-surface-variant/60 max-w-md">
-            Os eventos corporativos como assembleias, pagamentos de proventos e
-            divulgação de resultados aparecerão aqui quando disponíveis.
-          </p>
-        </div>
+        <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-surface-muted" />}>
+          <EventsList ticker={ticker} limit={5} />
+        </Suspense>
       </section>
     </div>
   );

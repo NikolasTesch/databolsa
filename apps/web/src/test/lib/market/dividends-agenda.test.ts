@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Decimal } from 'decimal.js';
 import type { AgendaItem } from '@/lib/market/dividends-agenda';
 
@@ -18,6 +18,8 @@ describe('getDividendsAgenda', () => {
   let getDividendsAgenda: () => Promise<AgendaItem[]>;
 
   beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-07-01'));
     vi.clearAllMocks();
     mockFetchBrapiDividends.mockReset();
     mockFetchCachedMarketValue.mockReset();
@@ -28,9 +30,13 @@ describe('getDividendsAgenda', () => {
     getDividendsAgenda = mod.getDividendsAgenda;
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('retorna array de AgendaItem quando fetch funciona', async () => {
     mockFetchBrapiDividends.mockResolvedValue([
-      { paymentDate: '2026-07-15', value: '1.50', type: 'Dividendo' },
+      { paymentDate: '2026-07-15', lastDatePrior: '2026-07-10', value: '1.50', type: 'Dividendo' },
     ]);
 
     const result = await getDividendsAgenda();
@@ -43,7 +49,7 @@ describe('getDividendsAgenda', () => {
 
   it('mapeia "Juros Sobre Capital Próprio" para "JCP"', async () => {
     mockFetchBrapiDividends.mockResolvedValue([
-      { paymentDate: '2026-08-01', value: '0.75', type: 'Juros Sobre Capital Próprio' },
+      { paymentDate: '2026-08-01', lastDatePrior: '2026-07-20', value: '0.75', type: 'Juros Sobre Capital Próprio' },
     ]);
 
     const result = await getDividendsAgenda();
@@ -52,7 +58,7 @@ describe('getDividendsAgenda', () => {
 
   it('mapeia "Dividendo" corretamente', async () => {
     mockFetchBrapiDividends.mockResolvedValue([
-      { paymentDate: '2026-08-01', value: '1.00', type: 'Dividendo' },
+      { paymentDate: '2026-08-01', lastDatePrior: '2026-07-20', value: '1.00', type: 'Dividendo' },
     ]);
 
     const result = await getDividendsAgenda();
@@ -61,7 +67,7 @@ describe('getDividendsAgenda', () => {
 
   it('usa data formatada pt-BR para dateCom e payment', async () => {
     mockFetchBrapiDividends.mockResolvedValue([
-      { paymentDate: '2026-07-15', value: '1.00', type: 'Dividendo' },
+      { paymentDate: '2026-07-15', lastDatePrior: '2026-07-10', value: '1.00', type: 'Dividendo' },
     ]);
 
     const result = await getDividendsAgenda();
@@ -72,7 +78,7 @@ describe('getDividendsAgenda', () => {
 
   it('usa "—" para paymentDate ausente', async () => {
     mockFetchBrapiDividends.mockResolvedValue([
-      { paymentDate: null, value: '1.00', type: 'Dividendo' },
+      { paymentDate: null as any, lastDatePrior: null as any, value: '1.00', type: 'Dividendo' },
     ]);
 
     const result = await getDividendsAgenda();
@@ -82,7 +88,7 @@ describe('getDividendsAgenda', () => {
 
   it('calcula yieldPct como (value / price) * 100', async () => {
     mockFetchBrapiDividends.mockResolvedValue([
-      { paymentDate: '2026-07-15', value: '0.50', type: 'Dividendo' },
+      { paymentDate: '2026-07-15', lastDatePrior: '2026-07-10', value: '0.50', type: 'Dividendo' },
     ]);
     mockFetchCachedMarketValue.mockResolvedValue({
       price: new Decimal('38.50'),
@@ -100,7 +106,7 @@ describe('getDividendsAgenda', () => {
 
   it('usa "—" para yieldPct quando price não disponível', async () => {
     mockFetchBrapiDividends.mockResolvedValue([
-      { paymentDate: '2026-07-15', value: '1.00', type: 'Dividendo' },
+      { paymentDate: '2026-07-15', lastDatePrior: '2026-07-10', value: '1.00', type: 'Dividendo' },
     ]);
     mockFetchCachedMarketValue.mockResolvedValue(null);
 

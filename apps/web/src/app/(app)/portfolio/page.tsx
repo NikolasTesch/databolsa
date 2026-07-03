@@ -14,6 +14,7 @@ import { RentabilidadePanel } from '@/components/portfolio/RentabilidadePanel';
 import { ComposicaoCharts } from '@/components/portfolio/ComposicaoCharts';
 import { ProventosTable } from '@/components/portfolio/ProventosTable';
 import { AssetComparison } from '@/components/portfolio/AssetComparison';
+import PortfolioDiagnostics from '@/components/portfolio/PortfolioDiagnostics';
 import type { Transaction, DividendsResponse, DividendProjectionResponse } from '@/types/api';
 
 const tabs = [
@@ -22,6 +23,7 @@ const tabs = [
   { id: 'composicao', label: 'Composição' },
   { id: 'proventos', label: 'Proventos' },
   { id: 'comparacao', label: 'Comparação' },
+  { id: 'diagnostico', label: 'Diagnóstico' },
 ] as const;
 
 type TabId = (typeof tabs)[number]['id'];
@@ -146,6 +148,9 @@ function PortfolioPageInner() {
             ))}
           {activeTab === 'comparacao' && (
             <AssetComparison summary={summary} assets={assets} />
+          )}
+          {activeTab === 'diagnostico' && (
+            <PortfolioDiagnostics summary={summary} assets={assets} />
           )}
         </>
       )}

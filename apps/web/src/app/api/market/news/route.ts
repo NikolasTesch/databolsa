@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
   const q = searchParams.get('q') ?? undefined;
   const limitRaw = searchParams.get('limit');
 
+  let limit = DEFAULT_LIMIT;
   if (limitRaw !== null) {
     const parsed = parseInt(limitRaw, 10);
     if (Number.isNaN(parsed) || parsed <= 0 || parsed > MAX_LIMIT) {
@@ -43,6 +44,7 @@ export async function GET(request: NextRequest) {
         { status: 400 },
       );
     }
+    limit = parsed;
   }
 
   if (q && q.trim().length > 0 && !isValidTicker(q.trim())) {
@@ -51,8 +53,6 @@ export async function GET(request: NextRequest) {
       { status: 400 },
     );
   }
-
-  const limit = limitRaw !== null ? Math.min(parseInt(limitRaw, 10), MAX_LIMIT) : DEFAULT_LIMIT;
 
   const { articles, cached } =
     q && q.trim().length > 0

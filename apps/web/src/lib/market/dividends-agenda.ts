@@ -11,6 +11,7 @@ export interface AgendaItem {
   payment: string;
   value: string;
   yieldPct: string;
+  paymentDateRaw?: string;
 }
 
 // Cache em memória
@@ -59,6 +60,13 @@ export async function getDividendsAgenda(): Promise<AgendaItem[]> {
           } else {
             yieldPct = '—';
           }
+          const dateComFormatted = d.lastDatePrior
+            ? new Date(d.lastDatePrior + 'T00:00:00').toLocaleDateString('pt-BR')
+            : '—';
+          const paymentFormatted = d.paymentDate
+            ? new Date(d.paymentDate + 'T00:00:00').toLocaleDateString('pt-BR')
+            : '—';
+
           return {
             ticker,
             assetClass,
@@ -68,14 +76,11 @@ export async function getDividendsAgenda(): Promise<AgendaItem[]> {
                 : d.type === 'Dividendo'
                   ? 'Dividendo'
                   : d.type,
-            dateCom: d.paymentDate
-              ? new Date(d.paymentDate).toLocaleDateString('pt-BR')
-              : '—',
-            payment: d.paymentDate
-              ? new Date(d.paymentDate).toLocaleDateString('pt-BR')
-              : '—',
+            dateCom: dateComFormatted,
+            payment: paymentFormatted,
             value: d.value,
             yieldPct,
+            paymentDateRaw: d.paymentDate,
           };
         });
       }),
@@ -86,7 +91,24 @@ export async function getDividendsAgenda(): Promise<AgendaItem[]> {
     if (batches.length > 1) await delay(200);
   }
 
-  results.sort((a, b) => a.payment.localeCompare(b.payment));
-  cachedAgenda = { data: results, expiresAt: Date.now() + TTL_MS };
-  return results;
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+
+  const futureDividends = results.filter(
+    (item) => !item.paymentDateRaw || item.paymentDateRaw >= todayStr
+  );
+
+  futureDividends.sort((a, b) => {
+    if (!a.paymentDateRaw) return 1;
+    if (!b.paymentDateRaw) return -1;
+    return a.paymentDateRaw.localeCompare(b.paymentDateRaw);
+  });
+
+  const finalResults: AgendaItem[] = futureDividends.map(({ paymentDateRaw, ...rest }) => rest);
+
+  cachedAgenda = { data: finalResults, expiresAt: Date.now() + TTL_MS };
+  return finalResults;
 }

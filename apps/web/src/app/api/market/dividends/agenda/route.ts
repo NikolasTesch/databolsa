@@ -88,20 +88,34 @@ export async function GET(request: NextRequest) {
     if (batches.length > 1) await delay(200);
   }
 
-  if (results.length === 0) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+
+  const futureResults = results.filter(
+    (item) => !item.paymentDate || item.paymentDate >= todayStr
+  );
+
+  if (futureResults.length === 0) {
     return NextResponse.json(
       { message: 'Nenhum dividendo disponível no momento.', data: [] },
       { status: 503 },
     );
   }
 
-  // Ordena por paymentDate ascendente (mais próximos primeiro)
-  results.sort((a, b) => a.paymentDate.localeCompare(b.paymentDate));
+  // Ordena por paymentDate ascendente (mais próximos primeiro, nulos no fim)
+  futureResults.sort((a, b) => {
+    if (!a.paymentDate) return 1;
+    if (!b.paymentDate) return -1;
+    return a.paymentDate.localeCompare(b.paymentDate);
+  });
 
-  cachedAgenda = { data: results, expiresAt: Date.now() + AGENDA_TTL_MS };
+  cachedAgenda = { data: futureResults, expiresAt: Date.now() + AGENDA_TTL_MS };
 
   return NextResponse.json({
-    data: results,
+    data: futureResults,
     asOf: new Date().toISOString(),
     stale: false,
   });

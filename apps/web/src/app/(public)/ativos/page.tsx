@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { cn } from '@/components/ui/cn';
 import { fetchAssetsForClass } from '@/lib/market/highlights-data';
+import type { AssetClass } from '@/types/api';
 import type { HighlightItem } from '@/lib/market/highlights-data';
 
 export const revalidate = 300;
@@ -19,14 +20,17 @@ interface PageProps {
 }
 
 export default async function AtivosPage({ searchParams }: PageProps) {
-  const activeClass = (ASSET_CLASSES.find((c) => c.key === searchParams.classe)?.key ?? 'STOCK_BR') as any;
+  const activeClass: AssetClass = (ASSET_CLASSES.find((c) => c.key === searchParams.classe)?.key ?? 'STOCK_BR') as AssetClass;
   const sort = searchParams.sort ?? 'change';
   const page = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
   const limit = 20;
 
   let items: HighlightItem[] = [];
   try { items = await fetchAssetsForClass(activeClass); }
-  catch { items = []; }
+  catch (err) {
+    console.warn(`[ativos] fetchAssetsForClass failed for ${activeClass}: ${err instanceof Error ? err.message : String(err)}`);
+    items = [];
+  }
 
   // Ordenação
   const sorted = [...items].sort((a, b) => {

@@ -103,7 +103,7 @@ export async function POST(
         date: new Date(date as string),
         unit_price: new Decimal(unit_price as string).toString(),
         quantity: new Decimal(quantity as string).toString(),
-        fees: fees ? new Decimal(fees as string).toString() : '0',
+        fees: fees ? (() => { const d = new Decimal(fees as string); if (d.isNegative()) throw new Error('fees cannot be negative'); return d.toString(); })() : '0',
       },
     });
 

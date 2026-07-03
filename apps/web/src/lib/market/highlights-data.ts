@@ -56,7 +56,7 @@ export async function fetchAssetsForCrypto(coinIds: string[]): Promise<Highlight
       if (cached) items.push({ ticker, name: cached.name, assetClass: 'CRYPTO', price: `R$ ${cached.price.toFixed(2)}`, changePercent: formatChangePercent(cached.changePercent), stale: cached.isStale });
     }
     return items;
-  } catch { return []; }
+  } catch (err) { console.warn(`[highlights-data] fetchAssetsForCrypto failed: ${err instanceof Error ? err.message : String(err)}`); return []; }
 }
 
 export async function fetchAssetsForUS(tickers: string[]): Promise<HighlightItem[]> {

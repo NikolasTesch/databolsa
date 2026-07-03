@@ -59,6 +59,7 @@ model User {
   created_groups       Group[]           @relation("GroupCreator")
   created_invites      GroupInvite[]     @relation("InviteCreator")
   watches              AssetWatch[]
+  analysis_alerts      AnalysisAlertRule[]
 
   @@map("users")
 }
@@ -170,6 +171,22 @@ model PriceAlert {
   @@map("price_alerts")
 }
 
+model AnalysisAlertRule {
+  id           String         @id @default(uuid())
+  user_id      String
+  ticker       String
+  metric       String
+  condition    AlertCondition
+  target_value Decimal        @db.Decimal(18, 4)
+  is_active    Boolean        @default(true)
+  triggered_at DateTime?
+  created_at   DateTime       @default(now())
+  user         User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("analysis_alert_rules")
+}
+
 model QuoteCache {
   id            String     @id @default(uuid())
   symbol        String
@@ -205,4 +222,20 @@ model AssetFundamentalsCache {
 
   @@unique([symbol, source])
   @@map("asset_fundamentals_cache")
+}
+
+model CorporateEventCache {
+  id          String     @id @default(uuid())
+  symbol      String
+  source      DataSource
+  event_type  String
+  event_date  DateTime   @db.Date
+  description String?
+  data        Json?
+  fetched_at  DateTime   @default(now())
+
+  @@unique([symbol, event_type, event_date])
+  @@index([event_date])
+  @@index([symbol, event_date])
+  @@map("corporate_event_cache")
 }

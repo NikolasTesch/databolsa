@@ -17,6 +17,7 @@ interface IndicatorCategory {
 interface IndicatorCategoryGridProps {
   assetClass: AssetClass;
   indicators: NormalizedFundamentals;
+  staleFields?: string[];
 }
 
 const CATEGORIES_BY_CLASS: Record<AssetClass, IndicatorCategory[]> = {
@@ -64,8 +65,9 @@ function formatIndicator(value: string | null, format: IndicatorDef['format'] = 
   return parsed.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export function IndicatorCategoryGrid({ assetClass, indicators }: IndicatorCategoryGridProps) {
+export function IndicatorCategoryGrid({ assetClass, indicators, staleFields }: IndicatorCategoryGridProps) {
   const categories = CATEGORIES_BY_CLASS[assetClass] ?? CATEGORIES_BY_CLASS.STOCK_BR;
+  const staleSet = new Set(staleFields ?? []);
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -75,7 +77,14 @@ export function IndicatorCategoryGrid({ assetClass, indicators }: IndicatorCateg
           <dl className="mt-3 grid grid-cols-2 gap-3">
             {category.indicators.map((indicator) => (
               <div key={indicator.key} className="rounded-md bg-surface-container-low p-3">
-                <dt className="text-xs text-on-surface-variant">{indicator.label}</dt>
+                <dt className="flex items-center gap-1 text-xs text-on-surface-variant">
+                  {indicator.label}
+                  {staleSet.has(indicator.key) && (
+                    <span className="material-symbols-outlined text-[12px] text-stale" title="Dado desatualizado">
+                      schedule
+                    </span>
+                  )}
+                </dt>
                 <dd className="mt-1 font-mono text-sm font-semibold text-on-surface">
                   {formatIndicator(indicators[indicator.key], indicator.format)}
                 </dd>

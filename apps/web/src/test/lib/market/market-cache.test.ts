@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Decimal } from 'decimal.js';
+import type { DataSource } from '@prisma/client';
 import type { MarketCacheResult } from '@/lib/market/market-cache';
 
 const mockPrisma = vi.hoisted(() => ({
@@ -16,7 +17,7 @@ vi.mock('@/lib/prisma', () => ({
 describe('fetchCachedMarketValue', () => {
   let fetchCachedMarketValue: (
     symbol: string,
-    source: string,
+    source: DataSource,
     ttlMs: number,
     fetcher: () => Promise<any>,
   ) => Promise<MarketCacheResult | null>;

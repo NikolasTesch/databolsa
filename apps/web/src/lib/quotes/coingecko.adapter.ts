@@ -1,6 +1,7 @@
 import { Decimal } from 'decimal.js';
 import { CRYPTO_TICKER_MAP } from './ticker-map';
 import { QuoteAdapter, QuoteResult } from './quote-adapter.interface';
+import { coinGeckoFetch } from '@/lib/market/coingecko-fetch';
 
 export class CoinGeckoAdapter implements QuoteAdapter {
   async fetch(symbol: string): Promise<QuoteResult> {
@@ -9,9 +10,8 @@ export class CoinGeckoAdapter implements QuoteAdapter {
       throw new Error(`Unknown crypto symbol: ${symbol}`);
     }
 
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=brl`;
     console.log(`Fetching CoinGecko quote for ${symbol} (${coinId})`);
-    const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const response = await coinGeckoFetch(`/simple/price?ids=${coinId}&vs_currencies=brl`);
     if (!response.ok) {
       throw new Error(`CoinGecko returned ${response.status}`);
     }

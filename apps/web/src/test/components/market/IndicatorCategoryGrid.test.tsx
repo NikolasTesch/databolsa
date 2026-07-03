@@ -27,6 +27,53 @@ describe('IndicatorCategoryGrid', () => {
     expect(screen.getByText('8,00')).toBeInTheDocument();
   });
 
+  it('shows schedule icon for stale fields', () => {
+    render(
+      <IndicatorCategoryGrid
+        assetClass="STOCK_BR"
+        indicators={{
+          ...EMPTY_FUNDAMENTALS,
+          pe: '8',
+          pb: '1.1',
+          roe: '18',
+          dy: '7',
+          debtToEquity: '0.6',
+        }}
+        staleFields={['pe', 'dy']}
+      />,
+    );
+
+    // The "schedule" icon should appear for stale fields
+    const scheduleIcons = document.querySelectorAll('.material-symbols-outlined');
+    const scheduleEls = Array.from(scheduleIcons).filter(
+      (el) => el.textContent === 'schedule',
+    );
+    expect(scheduleEls.length).toBe(2);
+  });
+
+  it('does not render schedule icon when staleFields is empty', () => {
+    render(
+      <IndicatorCategoryGrid
+        assetClass="STOCK_BR"
+        indicators={{
+          ...EMPTY_FUNDAMENTALS,
+          pe: '8',
+          pb: '1.1',
+          roe: '18',
+          dy: '7',
+          debtToEquity: '0.6',
+        }}
+        staleFields={[]}
+      />,
+    );
+
+    const scheduleIcons = document.querySelectorAll('.material-symbols-outlined');
+    const scheduleEls = Array.from(scheduleIcons).filter(
+      (el) => el.textContent === 'schedule',
+    );
+    expect(scheduleEls.length).toBe(0);
+  });
+
   it('does not render stock valuation categories for crypto', () => {
     render(
       <IndicatorCategoryGrid

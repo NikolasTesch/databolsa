@@ -2,7 +2,7 @@
   "$schema": "../spec.schema.json",
   "id": "SPEC-0042",
   "title": "Gaps de UI Pública — Navegação, APIs Faltantes e Dados Reais",
-  "status": "draft",
+  "status": "verified",
   "type": "feature",
   "created": "2026-07-01",
   "updated": "2026-07-01",
@@ -202,73 +202,73 @@
       "id": "T-01",
       "description": "Adicionar IDs de âncora (id='...') nas seções da home pública.",
       "target": "apps/web/src/app/(public)/page.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-02",
       "description": "Revisar e corrigir todos os links do footer (PublicFooter) apontando para rotas existentes.",
       "target": "apps/web/src/components/layout/PublicFooter.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-03",
       "description": "Garantir que AssetMiniCard e cards de destaque tenham href via next/Link para /ativos/[ticker].",
       "target": "apps/web/src/components/market/AssetMiniCard.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-04",
       "description": "Padronizar uso do componente TrendBadge em IndexBar, MarketSection, AssetMiniCard e página de ativo.",
       "target": "apps/web/src/components/ui/TrendBadge.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-05",
       "description": "Implementar /api/market/dividends/agenda com fetchBrapiDividends, cache 1h e rate limit 15 req/min.",
       "target": "apps/web/src/app/api/market/dividends/agenda/route.ts",
-      "done": false
+      "done": true
     },
     {
       "id": "T-06",
       "description": "Implementar /api/market/crypto/overview com CoinGecko, cache 5min e rate limit 30 req/min.",
       "target": "apps/web/src/app/api/market/crypto/overview/route.ts",
-      "done": false
+      "done": true
     },
     {
       "id": "T-07",
       "description": "Criar helpers fetchBrapiDividends e adaptador dividend-agenda no lib/market.",
       "target": "apps/web/src/lib/market/market-fetchers.ts",
-      "done": false
+      "done": true
     },
     {
       "id": "T-08",
       "description": "Criar função getCryptoOverview no lib/market/crypto-overview.ts com tratamento de stale.",
       "target": "apps/web/src/lib/market/crypto-overview.ts",
-      "done": false
+      "done": true
     },
     {
       "id": "T-09",
       "description": "Escrever páginas /termos, /privacidade, /compliance, /ajuda com conteúdo real.",
       "target": "apps/web/src/app/(public)/",
-      "done": false
+      "done": true
     },
     {
       "id": "T-10",
       "description": "Adicionar breadcrumbs nas páginas /ativos/[ticker], /cursos, /ferramentas, /dividendos.",
       "target": "apps/web/src/components/ui/Breadcrumbs.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-11",
       "description": "Verificar e corrigir rotas do PublicHeader nav para garantir que todas existem.",
       "target": "apps/web/src/components/layout/PublicHeader.tsx",
-      "done": false
+      "done": true
     },
     {
       "id": "T-12",
       "description": "Escrever testes TC-01 a TC-06.",
       "target": "apps/web/src/test/",
-      "done": false
+      "done": true
     }
   ],
   "risks": [

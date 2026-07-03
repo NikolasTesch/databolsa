@@ -59,6 +59,16 @@ export interface AssetAnalysis {
   breakdown: AnalysisScoreBreakdown[];
   alerts: AnalysisAlert[];
   peers: PeerComparisonItem[];
+  dataQuality?: DataQualityReport;
+}
+
+export interface DataQualityReport {
+  coverageScore: string;
+  level: 'complete' | 'partial' | 'insufficient';
+  missingFields: string[];
+  staleFields: string[];
+  sourceWarnings: string[];
+  lastUpdatedAt: string;
 }
 
 export interface AssetAnalysisScoreResult {
